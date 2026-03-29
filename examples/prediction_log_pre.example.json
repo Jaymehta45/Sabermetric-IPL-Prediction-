@@ -1,0 +1,26 @@
+{
+  "match_key": "match1-rcb-vs-srh-2026-03-28",
+  "match_date": "2026-03-28",
+  "venue": "M Chinnaswamy Stadium, Bengaluru",
+  "team1_name": "Sunrisers Hyderabad",
+  "team2_name": "Royal Challengers Bengaluru",
+  "team1_bats_first": true,
+  "pred_winner": "Royal Challengers Bengaluru",
+  "pred_p_team1_win": 0.39,
+  "pred_best_bat": "ishan-kishan",
+  "pred_best_bowl": "JD Unadkat",
+  "pred_top5_bats": [
+    "ishan-kishan",
+    "V Kohli",
+    "TH David",
+    "RM Patidar",
+    "TM Head"
+  ],
+  "pred_top3_bowls": ["JD Unadkat", "KH Pandya", "Suyash Sharma"],
+  "pred_potm": "V Kohli",
+  "pred_extra": {
+    "ensemble_p_team1": 0.39,
+    "sims": 200,
+    "notes": "Replace with your real run output"
+  }
+}

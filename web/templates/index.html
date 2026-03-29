@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Home · IPLpred{% endblock %}
+{% set active = 'home' %}
+{% block content %}
+
+<section class="hero hero--simple">
+  <h1 class="hero-title">Guess IPL match results from the teams you pick</h1>
+  <p class="hero-lead hero-lead--wide">
+    You enter the two squads (11 players each) and a few match details. The tool estimates who might win and standout players.
+    After the real match, you can log what actually happened and see side‑by‑side if you were close.
+  </p>
+  <div class="hero-actions">
+    <a href="/predict" class="btn btn-primary">Start a prediction</a>
+    <a href="/history" class="btn btn-ghost">See predictions vs real results</a>
+  </div>
+</section>
+
+<section class="steps-panel panel">
+  <h2 class="panel-title">How to use this (3 steps)</h2>
+  <ol class="steps-list">
+    <li><strong>Predict a match</strong> — Choose teams, paste both XIs, say who bats first if you know it, then run the model.</li>
+    <li><strong>Save the output</strong> — Copy the JSON or use your usual workflow to append a row to the prediction log.</li>
+    <li><strong>Add the real result</strong> — When the game is over, fill in winner, top scorer, POTM, etc. Then open <em>Compare to results</em> to see the table.</li>
+  </ol>
+</section>
+
+<section class="stats-row stats-row--plain">
+  <article class="stat-card">
+    <span class="stat-label">Predictions saved</span>
+    <span class="stat-value">{{ stats.n_logged }}</span>
+    <span class="stat-sub">rows in your log file</span>
+  </article>
+  <article class="stat-card">
+    <span class="stat-label">Games with a real result filled in</span>
+    <span class="stat-value">{{ stats.n_with_actual }}</span>
+    <span class="stat-sub">so we can compare</span>
+  </article>
+  <article class="stat-card">
+    <span class="stat-label">Winner: you vs reality</span>
+    <span class="stat-value">{{ stats.winner_pct_label }}</span>
+    <span class="stat-sub">
+      {% if stats.winner_total > 0 %}
+        {{ stats.winner_hits }} right out of {{ stats.winner_total }} checked
+      {% else %}
+        add results to your log to score this
+      {% endif %}
+    </span>
+  </article>
+  <article class="stat-card">
+    <span class="stat-label">Player of the match (official)</span>
+    <span class="stat-value">{{ stats.potm_pct_label }}</span>
+    <span class="stat-sub">
+      {% if stats.potm_total > 0 %}
+        {{ stats.potm_hits }} match out of {{ stats.potm_total }}
+      {% else %}
+        needs post‑match POTM in the log
+      {% endif %}
+    </span>
+  </article>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2 class="panel-title">Latest comparisons</h2>
+    <a href="/history" class="text-link">Open full table →</a>
+  </div>
+  {% if recent %}
+  <div class="table-wrap">
+    <table class="data-table data-table--compare">
+      <thead>
+        <tr>
+          <th>When</th>
+          <th>Matchup</th>
+          <th>Model pick</th>
+          <th>Who won (real)</th>
+          <th>Winner</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in recent %}
+        <tr>
+          <td>{{ r.match_date or "—" }}</td>
+          <td>{{ r.teams }}</td>
+          <td>{{ r.pred_winner }}</td>
+          <td>{{ r.actual_winner }}</td>
+          <td>
+            {% if r.winner_grade == 'right' %}<span class="badge badge-hit">Match</span>
+            {% elif r.winner_grade == 'wrong' %}<span class="badge badge-miss">Miss</span>
+            {% elif r.winner_grade == 'waiting' %}<span class="badge badge-pending">Waiting</span>
+            {% else %}<span class="badge badge-pending">—</span>{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="empty-hint">Nothing in the log yet. Go to <strong>Predict a match</strong> and save a run, then add results when the game finishes.</p>
+  {% endif %}
+</section>
+{% endblock %}

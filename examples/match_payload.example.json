@@ -1,0 +1,13 @@
+{
+  "match_id": "IPL2026-M01",
+  "team1_name": "Sunrisers Hyderabad",
+  "team2_name": "Royal Challengers Bengaluru",
+  "venue": "M Chinnaswamy Stadium, Bengaluru",
+  "toss_winner": "Sunrisers Hyderabad",
+  "elected_to": "field",
+  "xi1": ["Abhishek Sharma", "TM Head", "Ishan Kishan", "H Klaasen", "Aniket Verma", "Nithish Kumar Reddy", "Harsh Dubey", "HV Patel", "JD Unadkat", "E Malinga", "Anmolpreet Singh"],
+  "xi2": ["V Kohli", "PD Salt", "RM Patidar", "JM Sharma", "TH David", "R Shepherd", "KH Pandya", "B Kumar", "Rasikh Salam", "JR Hazlewood", "Suyash Sharma"],
+  "batting_first": "team2",
+  "pitch_text": "Good batting surface, short boundaries, prefer to chase later.",
+  "notes": "Manual example — replace with real IDs; use --use-registry to resolve names."
+}

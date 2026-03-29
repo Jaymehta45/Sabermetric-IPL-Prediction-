@@ -1,0 +1,253 @@
+#!/usr/bin/env python3
+"""
+Append or update rows in data/processed/prediction_log.csv for pre-match and post-match records.
+
+  Pre-match (one row per match_key):
+    python3 scripts/log_prediction.py pre examples/prediction_log_pre.example.json
+
+  Post-match (updates same match_key):
+    python3 scripts/log_prediction.py post examples/prediction_log_post.example.json
+
+JSON fields — pre: match_key, match_date, venue, team1_name, team2_name, team1_bats_first,
+  pred_winner, pred_p_team1_win, pred_best_bat, pred_best_bowl,
+  pred_top5_bats (list), pred_top3_bowls (list), pred_potm, pred_extra (optional dict).
+
+Post: match_key, actual_winner, actual_top_scorer, actual_top_scorer_runs (optional),
+  actual_top_wicket_bowler, actual_top_wickets (optional), official_potm,
+  bbb_match_file, post_notes (optional).
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+import pandas as pd
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from iplpred.paths import PROCESSED_DIR
+
+LOG_PATH = PROCESSED_DIR / "prediction_log.csv"
+
+REQUIRED_PRE = [
+    "match_key",
+    "match_date",
+    "venue",
+    "team1_name",
+    "team2_name",
+    "team1_bats_first",
+    "pred_winner",
+    "pred_p_team1_win",
+    "pred_best_bat",
+    "pred_best_bowl",
+    "pred_top5_bats",
+    "pred_top3_bowls",
+    "pred_potm",
+]
+
+POST_KEYS = [
+    "actual_winner",
+    "actual_top_scorer",
+    "actual_top_scorer_runs",
+    "actual_top_wicket_bowler",
+    "actual_top_wickets",
+    "official_potm",
+    "bbb_match_file",
+    "post_notes",
+]
+
+
+def _load_json(path: Path) -> dict:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise SystemExit("JSON root must be an object")
+    return data
+
+
+def _ensure_columns(df: pd.DataFrame) -> pd.DataFrame:
+    base = [
+        "match_key",
+        "match_date",
+        "venue",
+        "team1_name",
+        "team2_name",
+        "team1_bats_first",
+        "pred_winner",
+        "pred_p_team1_win",
+        "pred_best_bat",
+        "pred_best_bowl",
+        "pred_top5_bats",
+        "pred_top3_bowls",
+        "pred_potm",
+        "pred_extra_json",
+        "actual_winner",
+        "actual_top_scorer",
+        "actual_top_scorer_runs",
+        "actual_top_wicket_bowler",
+        "actual_top_wickets",
+        "official_potm",
+        "bbb_match_file",
+        "post_notes",
+        "winner_correct",
+        "potm_correct",
+        "logged_at_pre",
+        "logged_at_post",
+    ]
+    for c in base:
+        if c not in df.columns:
+            df[c] = pd.NA
+    return df[base]
+
+
+def cmd_pre(args: argparse.Namespace) -> None:
+    data = _load_json(Path(args.json))
+    for k in REQUIRED_PRE:
+        if k not in data:
+            raise SystemExit(f"Missing required field: {k}")
+
+    pred_extra = data.get("pred_extra")
+    pred_extra_json = json.dumps(pred_extra) if pred_extra is not None else ""
+
+    top5 = data["pred_top5_bats"]
+    top3 = data["pred_top3_bowls"]
+    if not isinstance(top5, list) or len(top5) != 5:
+        raise SystemExit("pred_top5_bats must be a list of 5 player ids")
+    if not isinstance(top3, list) or len(top3) != 3:
+        raise SystemExit("pred_top3_bowls must be a list of 3 player ids")
+
+    row = {
+        "match_key": str(data["match_key"]).strip(),
+        "match_date": str(data["match_date"]).strip(),
+        "venue": str(data["venue"]).strip(),
+        "team1_name": str(data["team1_name"]).strip(),
+        "team2_name": str(data["team2_name"]).strip(),
+        "team1_bats_first": bool(data["team1_bats_first"]),
+        "pred_winner": str(data["pred_winner"]).strip(),
+        "pred_p_team1_win": float(data["pred_p_team1_win"]),
+        "pred_best_bat": str(data["pred_best_bat"]).strip(),
+        "pred_best_bowl": str(data["pred_best_bowl"]).strip(),
+        "pred_top5_bats": json.dumps(top5),
+        "pred_top3_bowls": json.dumps(top3),
+        "pred_potm": str(data["pred_potm"]).strip(),
+        "pred_extra_json": pred_extra_json,
+        "actual_winner": "",
+        "actual_top_scorer": "",
+        "actual_top_scorer_runs": pd.NA,
+        "actual_top_wicket_bowler": "",
+        "actual_top_wickets": pd.NA,
+        "official_potm": "",
+        "bbb_match_file": "",
+        "post_notes": "",
+        "winner_correct": "",
+        "potm_correct": "",
+        "logged_at_pre": datetime.now(timezone.utc).isoformat(),
+        "logged_at_post": "",
+    }
+
+    PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
+    if LOG_PATH.is_file():
+        df = pd.read_csv(LOG_PATH, low_memory=False)
+        df = _ensure_columns(df)
+        if row["match_key"] in df["match_key"].astype(str).values and not args.force:
+            raise SystemExit(
+                f"match_key {row['match_key']!r} already exists; use --force to replace that row"
+            )
+        if args.force and row["match_key"] in df["match_key"].astype(str).values:
+            df = df[df["match_key"].astype(str) != row["match_key"]]
+        df = pd.concat([df, pd.DataFrame([row])], ignore_index=True)
+    else:
+        df = pd.DataFrame([row])
+
+    df = _ensure_columns(df)
+    df.to_csv(LOG_PATH, index=False)
+    print(f"Wrote pre-match row -> {LOG_PATH} (match_key={row['match_key']})")
+
+
+def _normalize(s: str) -> str:
+    return " ".join(str(s).lower().strip().split())
+
+
+def _df_for_update() -> pd.DataFrame:
+    df = pd.read_csv(LOG_PATH, low_memory=False)
+    df = _ensure_columns(df)
+    for c in df.columns:
+        df[c] = df[c].astype(object)
+    return df
+
+
+def cmd_post(args: argparse.Namespace) -> None:
+    data = _load_json(Path(args.json))
+    if "match_key" not in data:
+        raise SystemExit("post JSON must include match_key")
+    mk = str(data["match_key"]).strip()
+    if not LOG_PATH.is_file():
+        raise SystemExit(f"No log file at {LOG_PATH}; run pre first")
+
+    df = _df_for_update()
+    idx = df.index[df["match_key"].astype(str) == mk]
+    if len(idx) != 1:
+        raise SystemExit(f"Expected exactly one row for match_key={mk!r}, found {len(idx)}")
+
+    i = idx[0]
+    for k in POST_KEYS:
+        if k in data:
+            if k in ("actual_top_scorer_runs", "actual_top_wickets"):
+                v = data[k]
+                df.iat[i, df.columns.get_loc(k)] = (
+                    "" if v is None or v == "" else float(v)
+                )
+            else:
+                df.iat[i, df.columns.get_loc(k)] = (
+                    "" if data[k] is None else str(data[k])
+                )
+
+    df.iat[i, df.columns.get_loc("logged_at_post")] = datetime.now(
+        timezone.utc
+    ).isoformat()
+
+    pred_w = _normalize(str(df.iat[i, df.columns.get_loc("pred_winner")]))
+    act_w = _normalize(str(df.iat[i, df.columns.get_loc("actual_winner")]))
+    if act_w:
+        df.iat[i, df.columns.get_loc("winner_correct")] = (
+            pred_w == act_w if pred_w else ""
+        )
+
+    pp = _normalize(str(df.iat[i, df.columns.get_loc("pred_potm")]))
+    op = _normalize(str(df.iat[i, df.columns.get_loc("official_potm")]))
+    if op:
+        df.iat[i, df.columns.get_loc("potm_correct")] = pp == op if pp else ""
+
+    df.to_csv(LOG_PATH, index=False)
+    print(f"Updated post-match fields -> {LOG_PATH} (match_key={mk})")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Log pre/post match predictions to prediction_log.csv")
+    sub = parser.add_subparsers(dest="cmd", required=True)
+
+    p_pre = sub.add_parser("pre", help="Append pre-match prediction row")
+    p_pre.add_argument("json", type=str, help="Path to JSON with required pre fields")
+    p_pre.add_argument(
+        "--force",
+        action="store_true",
+        help="Replace existing row with same match_key",
+    )
+
+    p_post = sub.add_parser("post", help="Fill actuals for existing match_key")
+    p_post.add_argument("json", type=str, help="Path to JSON with match_key + actual fields")
+
+    args = parser.parse_args()
+    if args.cmd == "pre":
+        cmd_pre(args)
+    else:
+        cmd_post(args)
+
+
+if __name__ == "__main__":
+    main()

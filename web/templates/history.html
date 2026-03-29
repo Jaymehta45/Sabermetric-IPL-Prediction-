@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+{% block title %}Compare to results · IPLpred{% endblock %}
+{% set active = 'history' %}
+{% block content %}
+
+<section class="page-head">
+  <h1 class="page-title">Predictions vs what really happened</h1>
+  <p class="page-desc">
+    Each <strong>match</strong> is its own card below. Inside the card, read <strong>down the rows</strong>: each line is one thing we tried to predict, with what the model said before the game and what you logged after.
+  </p>
+</section>
+
+{% if log_exists and stats.n_logged > 0 %}
+<section class="stats-row stats-row--plain history-stats">
+  <article class="stat-card">
+    <span class="stat-label">Saved predictions</span>
+    <span class="stat-value">{{ stats.n_logged }}</span>
+  </article>
+  <article class="stat-card">
+    <span class="stat-label">With final result</span>
+    <span class="stat-value">{{ stats.n_with_actual }}</span>
+  </article>
+  <article class="stat-card">
+    <span class="stat-label">Winner calls correct</span>
+    <span class="stat-value">{{ stats.winner_pct_label }}</span>
+    <span class="stat-sub">{{ stats.winner_hits }}/{{ stats.winner_total }} graded</span>
+  </article>
+  <article class="stat-card">
+    <span class="stat-label">Official POTM matched</span>
+    <span class="stat-value">{{ stats.potm_pct_label }}</span>
+    <span class="stat-sub">{{ stats.potm_hits }}/{{ stats.potm_total }} graded</span>
+  </article>
+</section>
+{% endif %}
+
+<div class="panel toolbar-panel">
+  <div class="toolbar">
+    <label class="field toolbar-field">
+      <span class="field-label">Match</span>
+      <select id="match-filter" class="input" aria-label="Filter by match">
+        <option value="">All matches</option>
+        {% for opt in match_filter_options %}
+        <option value="{{ opt.value }}">{{ opt.label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="field toolbar-field toolbar-field--grow">
+      <span class="field-label">Search</span>
+      <input type="search" id="log-filter" class="input" placeholder="Team or player name…" autocomplete="off" />
+    </label>
+    <div class="view-toggle" role="group" aria-label="View mode">
+      <button type="button" class="view-toggle-btn is-active" id="view-table-btn" data-view="table">Comparison</button>
+      <button type="button" class="view-toggle-btn" id="view-charts-btn" data-view="charts">Charts</button>
+    </div>
+  </div>
+  <p class="toolbar-hint" id="compare-count"></p>
+</div>
+
+<div id="view-table" class="view-panel">
+  {% if comparison_rows %}
+  <div class="explain-box panel">
+    <p class="explain-box-title">How to read this</p>
+    <ul class="explain-list">
+      <li>Read <strong>down</strong> each card: left column is the question, middle is the model before the game, right is what you added after.</li>
+      <li><strong>Rough win split</strong> — Only the model fills this (e.g. SH 39% · RCB 61%). Left team in the title = first number. Not a betting price.</li>
+      <li><strong>Match?</strong> — Own column for <span class="badge badge-hit">Match</span> / <span class="badge badge-miss">Miss</span> so names are not glued to the tag.</li>
+      <li><strong>Top 5 / Top 3</strong> — After column uses your <code>bbb_match_file</code> ball-by-ball CSV: top 5 batters by runs, top 3 bowlers by wickets. <strong>Match</strong> = model list and actual list are the same in the same order (IDs compared after normalizing). No file or short lists → —.</li>
+      <li><strong>Top runs / wickets (pick)</strong> — Single “best” picks: <strong>Match</strong> if model best bat/bowl equals the logged top scorer / top wicket-taker (same person).</li>
+    </ul>
+  </div>
+
+  <div class="compare-cards" id="compare-cards">
+    {% for r in comparison_rows %}
+    <article class="compare-card panel" data-match-key="{{ r.match_key }}">
+      <header class="compare-card-head">
+        <span class="compare-card-date">{{ r.match_date or "—" }}</span>
+        <h3 class="compare-card-title">{{ r.teams }}</h3>
+      </header>
+      <div class="compare-vertical-wrap">
+      <table class="compare-vertical">
+        <thead>
+          <tr>
+            <th scope="col" class="compare-vertical-label">What</th>
+            <th scope="col">Before the game (model)</th>
+            <th scope="col">After the game (your log)</th>
+            <th scope="col" class="compare-vertical-col-grade">Match?</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">Winner</th>
+            <td>{{ r.pred_winner }}</td>
+            <td>{{ r.actual_winner }}</td>
+            <td class="compare-grade-cell">
+              {% if r.winner_grade == 'right' %}<span class="badge badge-hit">Match</span>
+              {% elif r.winner_grade == 'wrong' %}<span class="badge badge-miss">Miss</span>
+              {% elif r.winner_grade == 'waiting' %}<span class="badge badge-pending">Waiting</span>
+              {% else %}<span class="compare-na">—</span>{% endif %}
+            </td>
+          </tr>
+          <tr>
+            <th scope="row">Rough win split</th>
+            <td class="odds-cell" {% if r.win_chance_note %}title="{{ r.win_chance_note | e }}"{% endif %}>{{ r.win_chance_readable }}</td>
+            <td class="compare-na">—</td>
+            <td class="compare-na compare-grade-cell">—</td>
+          </tr>
+          <tr>
+            <th scope="row">Top 5 batters <span class="row-hint">(model order)</span></th>
+            <td>
+              {% if r.pred_top5_list %}
+              <ol class="compare-name-list">{% for p in r.pred_top5_list %}<li class="mono">{{ p }}</li>{% endfor %}</ol>
+              {% else %}<span class="compare-na">—</span>{% endif %}
+            </td>
+            <td>
+              {% if r.actual_top5_bbb_list %}
+              <ol class="compare-name-list compare-name-list--actual">{% for p in r.actual_top5_bbb_list %}<li class="mono">{{ p }}</li>{% endfor %}</ol>
+              <p class="bbb-caption">From ball-by-ball file (by runs)</p>
+              {% elif r.actual_top_runs != '—' %}
+              Top scorer (logged): <span class="mono">{{ r.actual_top_runs }}</span>
+              <p class="bbb-caption">Point <code>bbb_match_file</code> at a ball-by-ball CSV to fill actual top 5 here and grade the full list.</p>
+              {% else %}<span class="compare-na">—</span>{% endif %}
+            </td>
+            <td class="compare-grade-cell">
+              {% if r.top5_list_grade == 'right' %}<span class="badge badge-hit">Match</span>
+              {% elif r.top5_list_grade == 'wrong' %}<span class="badge badge-miss">Miss</span>
+              {% elif r.top5_list_grade == 'waiting' %}<span class="badge badge-pending">Waiting</span>
+              {% elif r.top5_list_grade == 'na' %}<span class="compare-na">—</span>
+              {% else %}<span class="compare-na">—</span>{% endif %}
+            </td>
+          </tr>
+          <tr>
+            <th scope="row">Top 3 bowlers <span class="row-hint">(model order)</span></th>
+            <td>
+              {% if r.pred_top3_list %}
+              <ol class="compare-name-list">{% for p in r.pred_top3_list %}<li class="mono">{{ p }}</li>{% endfor %}</ol>
+              {% else %}<span class="compare-na">—</span>{% endif %}
+            </td>
+            <td>
+              {% if r.actual_top3_bbb_list %}
+              <ol class="compare-name-list compare-name-list--actual">{% for p in r.actual_top3_bbb_list %}<li class="mono">{{ p }}</li>{% endfor %}</ol>
+              <p class="bbb-caption">From ball-by-ball file (by wickets)</p>
+              {% elif r.actual_top_wickets != '—' %}
+              Top wickets (logged): <span class="mono">{{ r.actual_top_wickets }}</span>
+              <p class="bbb-caption">Use <code>bbb_match_file</code> for full top 3 bowlers from the match file.</p>
+              {% else %}<span class="compare-na">—</span>{% endif %}
+            </td>
+            <td class="compare-grade-cell">
+              {% if r.top3_list_grade == 'right' %}<span class="badge badge-hit">Match</span>
+              {% elif r.top3_list_grade == 'wrong' %}<span class="badge badge-miss">Miss</span>
+              {% elif r.top3_list_grade == 'waiting' %}<span class="badge badge-pending">Waiting</span>
+              {% elif r.top3_list_grade == 'na' %}<span class="compare-na">—</span>
+              {% else %}<span class="compare-na">—</span>{% endif %}
+            </td>
+          </tr>
+          <tr>
+            <th scope="row">Top runs (pick)</th>
+            <td class="mono">{{ r.pred_top_runs }}</td>
+            <td class="mono">{{ r.actual_top_runs }}</td>
+            <td class="compare-grade-cell">
+              {% if r.best_bat_pick_grade == 'right' %}<span class="badge badge-hit">Match</span>
+              {% elif r.best_bat_pick_grade == 'wrong' %}<span class="badge badge-miss">Miss</span>
+              {% elif r.best_bat_pick_grade == 'waiting' %}<span class="badge badge-pending">Waiting</span>
+              {% else %}<span class="compare-na">—</span>{% endif %}
+            </td>
+          </tr>
+          <tr>
+            <th scope="row">Top wickets (pick)</th>
+            <td class="mono">{{ r.pred_top_wickets }}</td>
+            <td class="mono">{{ r.actual_top_wickets }}</td>
+            <td class="compare-grade-cell">
+              {% if r.best_bowl_pick_grade == 'right' %}<span class="badge badge-hit">Match</span>
+              {% elif r.best_bowl_pick_grade == 'wrong' %}<span class="badge badge-miss">Miss</span>
+              {% elif r.best_bowl_pick_grade == 'waiting' %}<span class="badge badge-pending">Waiting</span>
+              {% else %}<span class="compare-na">—</span>{% endif %}
+            </td>
+          </tr>
+          <tr>
+            <th scope="row">Player of the match</th>
+            <td class="mono">{{ r.pred_star_player }}</td>
+            <td class="mono">{{ r.actual_star_player }}</td>
+            <td class="compare-grade-cell">
+              {% if r.star_player_grade == 'right' %}<span class="badge badge-hit">Match</span>
+              {% elif r.star_player_grade == 'wrong' %}<span class="badge badge-miss">Miss</span>
+              {% elif r.star_player_grade == 'waiting' %}<span class="badge badge-pending">Waiting</span>
+              {% else %}<span class="compare-na">—</span>{% endif %}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+  {% elif not log_exists %}
+  <p class="empty-hint panel">No log file yet. After you run a prediction, save it under <code>data/processed/prediction_log.csv</code> (see project scripts).</p>
+  {% else %}
+  <p class="empty-hint panel">Your log file is empty. Add a row from a prediction run first.</p>
+  {% endif %}
+</div>
+
+<div id="view-charts" class="view-panel hidden" hidden>
+  {% if log_exists and stats.n_logged > 0 %}
+  <p class="chart-intro">Quick read on how often picks line up with results. More matches → more meaningful charts.</p>
+
+  <div class="chart-grid">
+    <div class="panel chart-panel">
+      <h2 class="panel-title chart-title">Winner picks</h2>
+      <p class="chart-caption">Match, Miss, or still waiting on the result.</p>
+      <div class="chart-wrap chart-wrap--doughnut">
+        <canvas id="chart-winner" role="img" aria-label="Winner outcomes"></canvas>
+      </div>
+    </div>
+    <div class="panel chart-panel">
+      <h2 class="panel-title chart-title">Player of the match</h2>
+      <p class="chart-caption">Your POTM pick vs the official award (where graded).</p>
+      <div class="chart-wrap chart-wrap--doughnut">
+        <canvas id="chart-potm" role="img" aria-label="POTM outcomes"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel chart-panel chart-panel--wide">
+    <h2 class="panel-title chart-title">Win chance for the team on the left (in each log row)</h2>
+    <p class="chart-caption">Same “left team %” as the table: bar height = model’s chance for that side. Green = Match; red = Miss; grey = not graded yet.</p>
+    <div class="chart-wrap chart-wrap--bars">
+      <canvas id="chart-timeline" role="img" aria-label="Win probability by match"></canvas>
+    </div>
+  </div>
+
+  <div class="panel chart-panel chart-panel--wide">
+    <h2 class="panel-title chart-title">Accuracy by confidence band</h2>
+    <p class="chart-caption">Of games with a result: how often the winner pick was right within each probability range (needs many games to be useful).</p>
+    <div class="chart-wrap chart-wrap--cal">
+      <canvas id="chart-calibration" role="img" aria-label="Calibration"></canvas>
+    </div>
+  </div>
+
+  {% set p = chart_summary.picks %}
+  {% if p.top_bat_total > 0 or p.top_bowl_total > 0 %}
+  <div class="infographic-strip">
+    <div class="info-chip">
+      <span class="info-chip-label">Top run-scorer ID</span>
+      <span class="info-chip-value">
+        {% if p.top_bat_total > 0 %}
+          {{ p.top_bat_match }}/{{ p.top_bat_total }}
+          <span class="info-chip-pct">({{ "%.0f"|format(100 * p.top_bat_match / p.top_bat_total) }}%)</span>
+        {% else %}—{% endif %}
+      </span>
+    </div>
+    <div class="info-chip">
+      <span class="info-chip-label">Top wicket-taker ID</span>
+      <span class="info-chip-value">
+        {% if p.top_bowl_total > 0 %}
+          {{ p.top_bowl_match }}/{{ p.top_bowl_total }}
+          <span class="info-chip-pct">({{ "%.0f"|format(100 * p.top_bowl_match / p.top_bowl_total) }}%)</span>
+        {% else %}—{% endif %}
+      </span>
+    </div>
+  </div>
+  {% endif %}
+
+  <script type="application/json" id="chart-summary-data">{{ chart_summary | tojson }}</script>
+  {% else %}
+  <p class="empty-hint panel">Add predictions to the log to see charts.</p>
+  {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+<script src="/static/js/history.js?v={{ asset_version }}" defer></script>
+{% endblock %}

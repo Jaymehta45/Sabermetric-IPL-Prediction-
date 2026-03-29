@@ -1,0 +1,71 @@
+match_no,date,day_of_week,start_time,home_team,away_team,venue_city
+1,2026-03-28,Sat,7:30 PM,Royal Challengers Bengaluru,Sunrisers Hyderabad,Bengaluru
+2,2026-03-29,Sun,7:30 PM,Mumbai Indians,Kolkata Knight Riders,Mumbai
+3,2026-03-30,Mon,7:30 PM,Rajasthan Royals,Chennai Super Kings,Guwahati
+4,2026-03-31,Tue,7:30 PM,Punjab Kings,Gujarat Titans,New Chandigarh
+5,2026-04-01,Wed,7:30 PM,Lucknow Super Giants,Delhi Capitals,Lucknow
+6,2026-04-02,Thu,7:30 PM,Kolkata Knight Riders,Sunrisers Hyderabad,Kolkata
+7,2026-04-03,Fri,7:30 PM,Chennai Super Kings,Punjab Kings,Chennai
+8,2026-04-04,Sat,3:30 PM,Delhi Capitals,Mumbai Indians,Delhi
+9,2026-04-04,Sat,7:30 PM,Gujarat Titans,Rajasthan Royals,Ahmedabad
+10,2026-04-05,Sun,3:30 PM,Sunrisers Hyderabad,Lucknow Super Giants,Hyderabad
+11,2026-04-05,Sun,7:30 PM,Royal Challengers Bengaluru,Chennai Super Kings,Bengaluru
+12,2026-04-06,Mon,7:30 PM,Kolkata Knight Riders,Punjab Kings,Kolkata
+13,2026-04-07,Tue,7:30 PM,Rajasthan Royals,Mumbai Indians,Guwahati
+14,2026-04-08,Wed,7:30 PM,Delhi Capitals,Gujarat Titans,Delhi
+15,2026-04-09,Thu,7:30 PM,Kolkata Knight Riders,Lucknow Super Giants,Kolkata
+16,2026-04-10,Fri,7:30 PM,Rajasthan Royals,Royal Challengers Bengaluru,Guwahati
+17,2026-04-11,Sat,3:30 PM,Punjab Kings,Sunrisers Hyderabad,New Chandigarh
+18,2026-04-11,Sat,7:30 PM,Chennai Super Kings,Delhi Capitals,Chennai
+19,2026-04-12,Sun,3:30 PM,Lucknow Super Giants,Gujarat Titans,Lucknow
+20,2026-04-12,Sun,7:30 PM,Mumbai Indians,Royal Challengers Bengaluru,Mumbai
+21,2026-04-13,Mon,7:30 PM,Sunrisers Hyderabad,Rajasthan Royals,Hyderabad
+22,2026-04-14,Tue,7:30 PM,Chennai Super Kings,Kolkata Knight Riders,Chennai
+23,2026-04-15,Wed,7:30 PM,Royal Challengers Bengaluru,Lucknow Super Giants,Bengaluru
+24,2026-04-16,Thu,7:30 PM,Mumbai Indians,Punjab Kings,Mumbai
+25,2026-04-17,Fri,7:30 PM,Gujarat Titans,Kolkata Knight Riders,Ahmedabad
+26,2026-04-18,Sat,3:30 PM,Royal Challengers Bengaluru,Delhi Capitals,Bengaluru
+27,2026-04-18,Sat,7:30 PM,Sunrisers Hyderabad,Chennai Super Kings,Hyderabad
+28,2026-04-19,Sun,3:30 PM,Kolkata Knight Riders,Rajasthan Royals,Kolkata
+29,2026-04-19,Sun,7:30 PM,Punjab Kings,Lucknow Super Giants,New Chandigarh
+30,2026-04-20,Mon,7:30 PM,Gujarat Titans,Mumbai Indians,Ahmedabad
+31,2026-04-21,Tue,7:30 PM,Sunrisers Hyderabad,Delhi Capitals,Hyderabad
+32,2026-04-22,Wed,7:30 PM,Lucknow Super Giants,Rajasthan Royals,Lucknow
+33,2026-04-23,Thu,7:30 PM,Mumbai Indians,Chennai Super Kings,Mumbai
+34,2026-04-24,Fri,7:30 PM,Royal Challengers Bengaluru,Gujarat Titans,Bengaluru
+35,2026-04-25,Sat,3:30 PM,Delhi Capitals,Punjab Kings,Delhi
+36,2026-04-25,Sat,7:30 PM,Rajasthan Royals,Sunrisers Hyderabad,Jaipur
+37,2026-04-26,Sun,3:30 PM,Gujarat Titans,Chennai Super Kings,Ahmedabad
+38,2026-04-26,Sun,7:30 PM,Lucknow Super Giants,Kolkata Knight Riders,Lucknow
+39,2026-04-27,Mon,7:30 PM,Delhi Capitals,Royal Challengers Bengaluru,Delhi
+40,2026-04-28,Tue,7:30 PM,Punjab Kings,Rajasthan Royals,New Chandigarh
+41,2026-04-29,Wed,7:30 PM,Mumbai Indians,Sunrisers Hyderabad,Mumbai
+42,2026-04-30,Thu,7:30 PM,Gujarat Titans,Royal Challengers Bengaluru,Ahmedabad
+43,2026-05-01,Fri,7:30 PM,Rajasthan Royals,Delhi Capitals,Jaipur
+44,2026-05-02,Sat,7:30 PM,Chennai Super Kings,Mumbai Indians,Chennai
+45,2026-05-03,Sun,3:30 PM,Sunrisers Hyderabad,Kolkata Knight Riders,Hyderabad
+46,2026-05-03,Sun,7:30 PM,Gujarat Titans,Punjab Kings,Ahmedabad
+47,2026-05-04,Mon,7:30 PM,Mumbai Indians,Lucknow Super Giants,Mumbai
+48,2026-05-05,Tue,7:30 PM,Delhi Capitals,Chennai Super Kings,Delhi
+49,2026-05-06,Wed,7:30 PM,Sunrisers Hyderabad,Punjab Kings,Hyderabad
+50,2026-05-07,Thu,7:30 PM,Lucknow Super Giants,Royal Challengers Bengaluru,Lucknow
+51,2026-05-08,Fri,7:30 PM,Delhi Capitals,Kolkata Knight Riders,Delhi
+52,2026-05-09,Sat,7:30 PM,Rajasthan Royals,Gujarat Titans,Jaipur
+53,2026-05-10,Sun,3:30 PM,Chennai Super Kings,Lucknow Super Giants,Chennai
+54,2026-05-10,Sun,7:30 PM,Royal Challengers Bengaluru,Mumbai Indians,Raipur
+55,2026-05-11,Mon,7:30 PM,Punjab Kings,Delhi Capitals,Dharamshala
+56,2026-05-12,Tue,7:30 PM,Gujarat Titans,Sunrisers Hyderabad,Ahmedabad
+57,2026-05-13,Wed,7:30 PM,Royal Challengers Bengaluru,Kolkata Knight Riders,Raipur
+58,2026-05-14,Thu,7:30 PM,Punjab Kings,Mumbai Indians,Dharamshala
+59,2026-05-15,Fri,7:30 PM,Lucknow Super Giants,Chennai Super Kings,Lucknow
+60,2026-05-16,Sat,7:30 PM,Kolkata Knight Riders,Gujarat Titans,Kolkata
+61,2026-05-17,Sun,3:30 PM,Punjab Kings,Royal Challengers Bengaluru,Dharamshala
+62,2026-05-17,Sun,7:30 PM,Delhi Capitals,Rajasthan Royals,Delhi
+63,2026-05-18,Mon,7:30 PM,Chennai Super Kings,Sunrisers Hyderabad,Chennai
+64,2026-05-19,Tue,7:30 PM,Rajasthan Royals,Lucknow Super Giants,Jaipur
+65,2026-05-20,Wed,7:30 PM,Kolkata Knight Riders,Mumbai Indians,Kolkata
+66,2026-05-21,Thu,7:30 PM,Chennai Super Kings,Gujarat Titans,Chennai
+67,2026-05-22,Fri,7:30 PM,Sunrisers Hyderabad,Royal Challengers Bengaluru,Hyderabad
+68,2026-05-23,Sat,7:30 PM,Lucknow Super Giants,Punjab Kings,Lucknow
+69,2026-05-24,Sun,3:30 PM,Mumbai Indians,Rajasthan Royals,Mumbai
+70,2026-05-24,Sun,7:30 PM,Kolkata Knight Riders,Delhi Capitals,Kolkata

@@ -1,0 +1,11 @@
+{
+  "match_key": "match1-rcb-vs-srh-2026-03-28",
+  "actual_winner": "Royal Challengers Bengaluru",
+  "actual_top_scorer": "Ishan Kishan",
+  "actual_top_scorer_runs": 80,
+  "actual_top_wicket_bowler": "Jacob Duffy",
+  "actual_top_wickets": 3,
+  "official_potm": "Jacob Duffy",
+  "bbb_match_file": "matches/match1_rcb_vs_srh.csv",
+  "post_notes": "Winner correct; POTM differed — model used composite score vs official award."
+}
