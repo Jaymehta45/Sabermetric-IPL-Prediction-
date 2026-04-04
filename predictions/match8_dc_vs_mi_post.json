@@ -1,13 +1,13 @@
 {
   "match_key": "match8-dc-mi-2026-04-04",
-  "actual_winner": "Mumbai Indians",
+  "actual_winner": "Delhi Capitals",
   "actual_top_scorer": "Sameer Rizvi",
-  "actual_top_scorer_runs": 76,
+  "actual_top_scorer_runs": 93,
   "actual_top_wicket_bowler": "Mukesh Kumar",
   "actual_top_wickets": 2,
   "official_potm": "Sameer Rizvi",
   "bbb_match_file": "matches/match8_dc_vs_mi.csv",
-  "actual_first_innings_team_runs": 165,
-  "actual_second_innings_team_runs": 133,
-  "post_notes": "BBB cross-check (runs_batter+extras per innings): MI 165 (1st), DC 133 (2nd) → Mumbai Indians win chase defence. Top runs: sameer-rizvi 76. Top wickets: mukesh-kumar 2 (others 1). Innings wkts from file: 6 / 2. Pred MI ~52% — winner_correct."
+  "actual_first_innings_team_runs": 162,
+  "actual_second_innings_team_runs": 164,
+  "post_notes": "BBB recheck (current file): MI 162 (1st inn), DC 164 (2nd inn) → Delhi Capitals won chase. Top runs sameer-rizvi 93. Top wkts mukesh-kumar 2 (several on 1). Innings wkts 6/4. Pred had Mumbai Indians — winner miss. POTM Sameer Rizvi vs pred KL Rahul."
 }
