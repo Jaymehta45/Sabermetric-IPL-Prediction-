@@ -24,6 +24,9 @@ from iplpred.paths import PROCESSED_DIR
 
 LOG_PATH = PROCESSED_DIR / "prediction_log.csv"
 
+# Public repo — used when VERCEL_* slug/ref are missing in the Python runtime.
+_DEFAULT_GITHUB_REPO = "Jaymehta45/Sabermetric-IPL-Prediction-"
+
 _CACHE_LOCK = threading.Lock()
 _CACHE_T: float | None = None
 _CACHE_DF: pd.DataFrame | None = None
@@ -46,6 +49,20 @@ def _resolved_remote_url() -> str | None:
     if repo:
         return (
             f"https://raw.githubusercontent.com/{repo}/{branch}"
+            "/data/processed/prediction_log.csv"
+        )
+    # Vercel: system git env vars are sometimes unset in the serverless runtime.
+    if os.environ.get("VERCEL", "").strip() == "1" or bool(
+        os.environ.get("VERCEL_ENV", "").strip()
+    ):
+        ref = (
+            os.environ.get("VERCEL_GIT_COMMIT_REF", "").strip()
+            or os.environ.get("PREDICTION_LOG_GITHUB_BRANCH", "").strip()
+            or "main"
+        )
+        r = os.environ.get("PREDICTION_LOG_GITHUB_REPO", "").strip() or _DEFAULT_GITHUB_REPO
+        return (
+            f"https://raw.githubusercontent.com/{r}/{ref}"
             "/data/processed/prediction_log.csv"
         )
     return None
