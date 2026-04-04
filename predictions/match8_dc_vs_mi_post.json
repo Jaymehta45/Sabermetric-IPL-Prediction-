@@ -7,5 +7,7 @@
   "actual_top_wickets": 2,
   "official_potm": "Sameer Rizvi",
   "bbb_match_file": "matches/match8_dc_vs_mi.csv",
-  "post_notes": "BBB: MI 165 / DC 133. MI won defending. Top wickets: Mukesh Kumar 2; several bowlers on 1. POTM aligned with top score (76). Model had MI ~52% — winner_correct."
+  "actual_first_innings_team_runs": 165,
+  "actual_second_innings_team_runs": 133,
+  "post_notes": "BBB cross-check (runs_batter+extras per innings): MI 165 (1st), DC 133 (2nd) → Mumbai Indians win chase defence. Top runs: sameer-rizvi 76. Top wickets: mukesh-kumar 2 (others 1). Innings wkts from file: 6 / 2. Pred MI ~52% — winner_correct."
 }
