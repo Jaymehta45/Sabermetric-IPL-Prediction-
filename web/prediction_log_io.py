@@ -40,6 +40,10 @@ def _resolved_remote_url() -> str | None:
     slug = os.environ.get("VERCEL_GIT_REPO_SLUG", "").strip()
     ref = os.environ.get("VERCEL_GIT_COMMIT_REF", "").strip()
     if slug and ref:
+        # Vercel often sets SLUG to repo name only — raw.githubusercontent.com needs owner/repo.
+        if "/" not in slug:
+            owner = os.environ.get("VERCEL_GIT_REPO_OWNER", "").strip() or "Jaymehta45"
+            slug = f"{owner}/{slug}"
         return (
             f"https://raw.githubusercontent.com/{slug}/{ref}"
             "/data/processed/prediction_log.csv"
