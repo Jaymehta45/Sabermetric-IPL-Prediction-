@@ -46,7 +46,7 @@ from web.prediction_log_io import prediction_log_meta, read_prediction_log_dataf
 WEB_DIR = Path(__file__).resolve().parent
 templates = Jinja2Templates(directory=str(WEB_DIR / "templates"))
 # Bump when CSS/JS change so browsers fetch fresh static files (cache-bust query string).
-UI_BUILD_ID = "202604281"
+UI_BUILD_ID = "202604282"
 templates.env.globals["asset_version"] = UI_BUILD_ID
 templates.env.globals["ui_build_id"] = UI_BUILD_ID
 
@@ -393,16 +393,28 @@ def _grade_best_pick(pred: str, actual: str, has_actual: bool) -> str:
     return "right" if pair_slug_match(pred, actual) else "wrong"
 
 
+def _sort_log_for_display(df: pd.DataFrame) -> pd.DataFrame:
+    """Newest match_date first; same calendar day → lexicographically later match_key first (match9 before match8)."""
+    if df.empty:
+        return df
+    d = df.copy()
+    if "match_date" not in d.columns:
+        return d.sort_index(ascending=False)
+    d["_sort"] = pd.to_datetime(d["match_date"], errors="coerce")
+    if "match_key" in d.columns:
+        d["_mk"] = d["match_key"].astype(str)
+        d = d.sort_values(["_sort", "_mk"], ascending=[False, False], na_position="last")
+        d = d.drop(columns=["_mk"], errors="ignore")
+    else:
+        d = d.sort_values("_sort", ascending=False, na_position="last")
+    return d.drop(columns=["_sort"], errors="ignore")
+
+
 def _comparison_rows(df: pd.DataFrame) -> list[dict]:
     """Human-readable predicted vs actual rows for the UI (newest first)."""
     if df.empty:
         return []
-    d = df.copy()
-    if "match_date" in d.columns:
-        d["_sort"] = pd.to_datetime(d["match_date"], errors="coerce")
-        d = d.sort_values("_sort", ascending=False, na_position="last")
-    else:
-        d = d.sort_index(ascending=False)
+    d = _sort_log_for_display(df)
     rows: list[dict] = []
     for _, row in d.iterrows():
         mk = _safe_str(row.get("match_key"))
@@ -555,10 +567,7 @@ def _match_filter_options(df: pd.DataFrame) -> list[dict]:
     """Dropdown: value = match_key, label = date + teams."""
     if df.empty or "match_key" not in df.columns:
         return []
-    d = df.copy()
-    if "match_date" in d.columns:
-        d["_sort"] = pd.to_datetime(d["match_date"], errors="coerce")
-        d = d.sort_values("_sort", ascending=False, na_position="last")
+    d = _sort_log_for_display(df)
     opts = []
     seen: set[str] = set()
     for _, row in d.iterrows():
