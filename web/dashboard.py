@@ -1,9 +1,17 @@
 """
-IPLpred web UI — FastAPI + Jinja2.
+IPLpred web UI — FastAPI + Jinja2 (read-only: prediction log + pred vs actual).
 
 Run from repository root:
   pip install -r requirements-web.txt
-  uvicorn web.app:app --reload --host 0.0.0.0 --port 8000
+  uvicorn web.dashboard:app --reload --host 127.0.0.1 --port 8000
+
+Vercel: root ``app.py`` re-exports this app (Fluid / zero-config). Install ``pip install -r requirements.txt``.
+
+For a public URL via Cloudflare Try, use ``make tunnel`` (see ``scripts/cloudflared_tunnel.sh``)
+after the app responds on the same host/port (``127.0.0.1`` avoids some localhost DNS issues).
+
+Pre-match predictions: use predict_match_outcomes.py and scripts/log_prediction.py;
+this app does not accept XI or match parameters.
 """
 
 from __future__ import annotations
@@ -17,23 +25,17 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from pydantic import BaseModel, Field
 from starlette.middleware.base import BaseHTTPMiddleware
 
 import pandas as pd
 
-from iplpred.cli.predict_match_outcomes import (
-    PLAYING_XI_SIZE,
-    build_prediction_log_payload,
-    predict_match_outcomes,
-)
-from iplpred.core.match_context import MatchContext, parse_batting_first
-from iplpred.core.fixtures import get_match, load_fixtures, venue_hint
 from iplpred.paths import PROCESSED_DIR
+
+from iplpred.core.bbb_innings_totals import innings_runs_and_wickets_from_bbb
 
 from web.bbb_utils import (
     ordered_lists_match_slugs,
@@ -41,13 +43,12 @@ from web.bbb_utils import (
     top3_bowlers_from_bbb,
     top5_batters_from_bbb,
 )
-from web.serialize import make_json_safe, six_to_payload, slim_simulation
 
 LOG_PATH = PROCESSED_DIR / "prediction_log.csv"
 WEB_DIR = Path(__file__).resolve().parent
 templates = Jinja2Templates(directory=str(WEB_DIR / "templates"))
 # Bump when CSS/JS change so browsers fetch fresh static files (cache-bust query string).
-UI_BUILD_ID = "202603295"
+UI_BUILD_ID = "202603311"
 templates.env.globals["asset_version"] = UI_BUILD_ID
 templates.env.globals["ui_build_id"] = UI_BUILD_ID
 
@@ -69,30 +70,6 @@ app.add_middleware(NoCacheStaticMiddleware)
 app.mount("/static", StaticFiles(directory=str(WEB_DIR / "static")), name="static")
 
 
-def parse_xi_text(s: str) -> list[str]:
-    """Comma or newline separated player names/ids."""
-    s = s.replace("\n", ",")
-    return [p.strip() for p in s.split(",") if p.strip()]
-
-
-class PredictRequest(BaseModel):
-    team1_name: str = Field(..., min_length=1)
-    team2_name: str = Field(..., min_length=1)
-    xi1: str = Field(..., description="11 players, comma or newline separated")
-    xi2: str = Field(...)
-    batting_first: str | None = None
-    pitch_text: str | None = None
-    match_date: str | None = None
-    venue: str | None = None
-    match_key: str | None = None
-    use_registry: bool = True
-    no_squad_check: bool = True
-    sims: int = Field(400, ge=0, le=2000)
-    use_shrinkage: bool = True
-    team1_impact: str | None = None
-    team2_impact: str | None = None
-
-
 @app.get("/", response_class=HTMLResponse)
 def page_home(request: Request):
     stats = _dashboard_stats()
@@ -104,29 +81,6 @@ def page_home(request: Request):
         request,
         "index.html",
         {"request": request, "stats": stats, "recent": recent},
-    )
-
-
-@app.get("/predict", response_class=HTMLResponse)
-def page_predict(request: Request):
-    fixtures = []
-    df = load_fixtures()
-    if not df.empty and "match_no" in df.columns:
-        sub = df.head(74)
-        for _, r in sub.iterrows():
-            fixtures.append(
-                {
-                    "match_no": int(r["match_no"]),
-                    "date": str(r["date"])[:10] if pd.notna(r.get("date")) else "",
-                    "home": str(r.get("home_team", "")),
-                    "away": str(r.get("away_team", "")),
-                    "city": str(r.get("venue_city", "")),
-                }
-            )
-    return templates.TemplateResponse(
-        request,
-        "predict.html",
-        {"request": request, "fixtures": fixtures},
     )
 
 
@@ -164,21 +118,44 @@ def page_history(request: Request):
     )
 
 
+def _process_step_flags(row: pd.Series) -> tuple[bool, bool, bool]:
+    """P1 pre logged, P2 post/actuals logged, P3 review logged (see DAILY_WORKFLOW)."""
+    p1 = bool(_safe_str(row.get("logged_at_pre")))
+    p2 = bool(_safe_str(row.get("logged_at_post"))) and bool(
+        _safe_str(row.get("actual_winner"))
+    )
+    p3 = bool(_safe_str(row.get("process3_completed_at")))
+    return p1, p2, p3
+
+
 def _dashboard_stats() -> dict:
     out = {
         "n_logged": 0,
         "n_with_actual": 0,
+        "n_process1": 0,
+        "n_process2": 0,
+        "n_process3": 0,
         "winner_hits": 0,
         "winner_total": 0,
         "potm_hits": 0,
         "potm_total": 0,
         "winner_pct_label": "—",
         "potm_pct_label": "—",
+        "innings_mae_avg_label": "—",
+        "innings_mae_n": 0,
     }
     if not LOG_PATH.is_file():
         return out
     df = pd.read_csv(LOG_PATH, low_memory=False)
     out["n_logged"] = len(df)
+    for _, row in df.iterrows():
+        p1, p2, p3 = _process_step_flags(row)
+        if p1:
+            out["n_process1"] += 1
+        if p2:
+            out["n_process2"] += 1
+        if p3:
+            out["n_process3"] += 1
     if "actual_winner" not in df.columns:
         return out
     has = df["actual_winner"].fillna("").astype(str).str.strip().ne("")
@@ -204,6 +181,18 @@ def _dashboard_stats() -> dict:
         out["winner_pct_label"] = f"{round(100 * out['winner_hits'] / out['winner_total'])}%"
     if out["potm_total"] > 0:
         out["potm_pct_label"] = f"{round(100 * out['potm_hits'] / out['potm_total'])}%"
+
+    mae_list: list[float] = []
+    for _, row in df.iterrows():
+        pex = _parse_pred_extra_json(row.get("pred_extra_json"))
+        a1 = _parse_optional_float(row.get("actual_first_innings_team_runs"))
+        a2 = _parse_optional_float(row.get("actual_second_innings_team_runs"))
+        _, mae = _innings_run_compare(pex, a1, a2)
+        if mae is not None:
+            mae_list.append(mae)
+    if mae_list:
+        out["innings_mae_n"] = len(mae_list)
+        out["innings_mae_avg_label"] = f"{sum(mae_list) / len(mae_list):.1f}"
     return out
 
 
@@ -246,6 +235,110 @@ def _grade_label(wc: bool | None, has_actual: bool) -> str:
     if wc is False:
         return "wrong"
     return "unknown"
+
+
+def _parse_pred_extra_json(val) -> dict:
+    """Decode pred_extra_json column from the prediction log (may be empty)."""
+    if val is None or (isinstance(val, float) and pd.isna(val)):
+        return {}
+    s = str(val).strip()
+    if not s or s.lower() in ("nan", "none", "<na>"):
+        return {}
+    try:
+        j = json.loads(s)
+        return j if isinstance(j, dict) else {}
+    except (json.JSONDecodeError, TypeError):
+        return {}
+
+
+def _parse_optional_float(val) -> float | None:
+    if val is None or (isinstance(val, float) and pd.isna(val)):
+        return None
+    s = str(val).strip()
+    if not s or s.lower() in ("nan", "none", "<na>"):
+        return None
+    try:
+        return float(s)
+    except ValueError:
+        return None
+
+
+def _format_pred_innings_line(
+    team1_name: str,
+    team2_name: str,
+    pex: dict,
+) -> str:
+    """Human-readable runs/wickets per innings from pred_extra (team1 = 1st)."""
+    if not pex:
+        return ""
+    try:
+        r1 = pex.get("pred_first_innings_team_runs")
+        r2 = pex.get("pred_second_innings_team_runs")
+        w1 = pex.get("pred_first_innings_team_wickets")
+        w2 = pex.get("pred_second_innings_team_wickets")
+        if r1 is None or r2 is None:
+            return ""
+        a1 = _team_initials(team1_name)
+        a2 = _team_initials(team2_name)
+        if w1 is not None and w2 is not None:
+            return (
+                f"{a1} {float(r1):.0f}/{float(w1):.0f} (1st) · "
+                f"{a2} {float(r2):.0f}/{float(w2):.0f} (2nd)"
+            )
+        return f"{a1} {float(r1):.0f} (1st) · {a2} {float(r2):.0f} (2nd)"
+    except (TypeError, ValueError):
+        return ""
+
+
+def _format_actual_innings_line(
+    team1_name: str,
+    team2_name: str,
+    runs1: float | None,
+    runs2: float | None,
+    wk1: int | None,
+    wk2: int | None,
+) -> str:
+    """Same shape as pred line when we have actual runs (wk optional)."""
+    if runs1 is None or runs2 is None:
+        return ""
+    try:
+        a1 = _team_initials(team1_name)
+        a2 = _team_initials(team2_name)
+        r1, r2 = float(runs1), float(runs2)
+        if wk1 is not None and wk2 is not None:
+            return (
+                f"{a1} {r1:.0f}/{int(wk1)} (1st) · "
+                f"{a2} {r2:.0f}/{int(wk2)} (2nd)"
+            )
+        return f"{a1} {r1:.0f} (1st) · {a2} {r2:.0f} (2nd)"
+    except (TypeError, ValueError):
+        return ""
+
+
+def _innings_run_compare(
+    pex: dict,
+    actual_r1: float | None,
+    actual_r2: float | None,
+) -> tuple[str, float | None]:
+    """
+    Returns (short summary string, MAE in runs) for pred vs actual team totals.
+    Delta = actual − predicted (positive ⇒ team scored more than predicted).
+    """
+    if not pex or actual_r1 is None or actual_r2 is None:
+        return "", None
+    try:
+        pr1 = pex.get("pred_first_innings_team_runs")
+        pr2 = pex.get("pred_second_innings_team_runs")
+        if pr1 is None or pr2 is None:
+            return "", None
+        pr1, pr2 = float(pr1), float(pr2)
+        d1 = float(actual_r1) - pr1
+        d2 = float(actual_r2) - pr2
+        mae = (abs(d1) + abs(d2)) / 2.0
+        s = f"1st Δ {d1:+.0f} · 2nd Δ {d2:+.0f} · MAE {mae:.1f}"
+        return s, mae
+    except (TypeError, ValueError):
+        return "", None
 
 
 def _parse_player_list(val) -> list[str]:
@@ -398,11 +491,35 @@ def _comparison_rows(df: pd.DataFrame) -> list[dict]:
             pred_best_bowl, actual_tb, has_logged_top_wicket
         )
 
+        p1_done, p2_done, p3_done = _process_step_flags(row)
+        p3_notes = _safe_str(row.get("process3_notes"))
+        pex = _parse_pred_extra_json(row.get("pred_extra_json"))
+        pred_innings_line = _format_pred_innings_line(t1, t2, pex)
+
+        ar1 = _parse_optional_float(row.get("actual_first_innings_team_runs"))
+        ar2 = _parse_optional_float(row.get("actual_second_innings_team_runs"))
+        aw1: int | None = None
+        aw2: int | None = None
+        bbb_path_innings = _resolve_bbb_path(_safe_str(row.get("bbb_match_file")))
+        if bbb_path_innings is not None and ar1 is not None and ar2 is not None:
+            try:
+                _, _, w1b, w2b = innings_runs_and_wickets_from_bbb(bbb_path_innings)
+                aw1, aw2 = w1b, w2b
+            except Exception:
+                aw1, aw2 = None, None
+        actual_innings_line = _format_actual_innings_line(t1, t2, ar1, ar2, aw1, aw2)
+        innings_err_summary, innings_mae = _innings_run_compare(pex, ar1, ar2)
+        has_innings_actual = ar1 is not None and ar2 is not None
+
         rows.append(
             {
                 "match_key": mk,
                 "match_date": md,
                 "teams": teams,
+                "process_p1_done": p1_done,
+                "process_p2_done": p2_done,
+                "process_p3_done": p3_done,
+                "process3_notes": p3_notes,
                 "team1_short": t1,
                 "team2_short": t2,
                 "pred_winner": pred_w or "—",
@@ -426,6 +543,11 @@ def _comparison_rows(df: pd.DataFrame) -> list[dict]:
                 "best_bowl_pick_grade": best_bowl_pick_grade,
                 "win_chance_readable": win_chance_readable,
                 "win_chance_note": win_chance_note,
+                "pred_innings_line": pred_innings_line,
+                "actual_innings_line": actual_innings_line,
+                "innings_err_summary": innings_err_summary,
+                "innings_mae": innings_mae,
+                "has_innings_actual": has_innings_actual,
             }
         )
     return rows
@@ -578,35 +700,6 @@ def _log_chart_summary(df: pd.DataFrame) -> dict:
     return empty
 
 
-@app.get("/api/fixtures")
-def api_fixtures():
-    df = load_fixtures()
-    if df.empty:
-        return {"fixtures": []}
-    records = []
-    for _, r in df.iterrows():
-        records.append(
-            {
-                "match_no": int(r["match_no"]),
-                "date": str(r["date"])[:10] if pd.notna(r.get("date")) else None,
-                "home_team": str(r.get("home_team", "")),
-                "away_team": str(r.get("away_team", "")),
-                "venue_city": str(r.get("venue_city", "")),
-                "venue_canonical": venue_hint(str(r.get("venue_city", ""))),
-            }
-        )
-    return {"fixtures": records}
-
-
-@app.get("/api/fixtures/{match_no:int}")
-def api_fixture_one(match_no: int):
-    m = get_match(match_no)
-    if m is None:
-        raise HTTPException(404, "Match not found")
-    d = {k: (v.isoformat() if hasattr(v, "isoformat") else v) for k, v in m.items()}
-    return d
-
-
 @app.get("/api/prediction-log")
 def api_prediction_log():
     if not LOG_PATH.is_file():
@@ -614,105 +707,6 @@ def api_prediction_log():
     df = pd.read_csv(LOG_PATH, low_memory=False)
     df = df.fillna("")
     return {"rows": df.to_dict(orient="records")}
-
-
-@app.post("/api/predict")
-def api_predict(body: PredictRequest):
-    xi1 = parse_xi_text(body.xi1)
-    xi2 = parse_xi_text(body.xi2)
-    if len(xi1) != PLAYING_XI_SIZE or len(xi2) != PLAYING_XI_SIZE:
-        raise HTTPException(
-            400,
-            f"Need exactly {PLAYING_XI_SIZE} players per side; got {len(xi1)} and {len(xi2)}.",
-        )
-
-    bf = None
-    if body.batting_first and body.batting_first.strip():
-        bf = parse_batting_first(body.batting_first)
-        if bf is None:
-            raise HTTPException(400, "batting_first must be team1 or team2")
-
-    ven = (body.venue or "").strip() or None
-    mc = None
-    if bf is not None or (body.pitch_text and body.pitch_text.strip()) or ven:
-        mc = MatchContext(
-            batting_first=bf,
-            pitch_text=(body.pitch_text or "").strip() or None,
-            venue=ven,
-        )
-
-    try:
-        out = predict_match_outcomes(
-            xi1,
-            xi2,
-            team1_name=body.team1_name.strip(),
-            team2_name=body.team2_name.strip(),
-            n_monte_carlo=body.sims,
-            validate_squad=not body.no_squad_check,
-            match_context=mc,
-            use_player_registry=body.use_registry,
-            use_recent_form_shrinkage=body.use_shrinkage,
-            team1_impact=(body.team1_impact or "").strip() or None,
-            team2_impact=(body.team2_impact or "").strip() or None,
-        )
-    except Exception as e:
-        raise HTTPException(400, str(e)) from e
-
-    sim = out["simulation"]
-    six = out["six"]
-    t1n, t2n = body.team1_name.strip(), body.team2_name.strip()
-    t1_eff, t2_eff = t1n, t2n
-    if out.get("batting_order_swapped"):
-        t1_eff, t2_eff = t2n, t1n
-
-    payload_six = make_json_safe(six_to_payload(six))
-    payload_sim = make_json_safe(slim_simulation(sim))
-
-    export_obj = None
-    md = (body.match_date or "").strip()
-    if md:
-        mk = (body.match_key or "").strip() or None
-        ven = (body.venue or "").strip()
-        export_obj = build_prediction_log_payload(
-            six,
-            sim,
-            team1_first_innings_name=t1_eff,
-            team2_chase_name=t2_eff,
-            match_key=mk or f"{t1_eff}-{t2_eff}-{md}".lower().replace(" ", "-")[:80],
-            match_date=md,
-            venue=ven,
-            n_sims=body.sims,
-            batting_order_swapped=bool(out.get("batting_order_swapped")),
-        )
-
-    name_res = out.get("name_resolutions")
-    nr_out = None
-    if name_res:
-        nr_out = {}
-        for k, v in name_res.items():
-            if isinstance(v, list):
-                nr_out[k] = [
-                    {
-                        "input_raw": getattr(x, "input_raw", str(x)),
-                        "stats_player_id": getattr(x, "stats_player_id", ""),
-                        "method": getattr(x, "method", ""),
-                    }
-                    for x in v
-                ]
-
-    body_out = {
-        "ok": True,
-        "teams_display": {
-            "team1_first_innings": t1_eff,
-            "team2_chase": t2_eff,
-            "batting_order_swapped": bool(out.get("batting_order_swapped")),
-        },
-        "predictions": payload_six,
-        "simulation": payload_sim,
-        "prediction_log_export": export_obj,
-        "name_resolutions": nr_out,
-    }
-    return make_json_safe(body_out)
 
 
 @app.get("/health")

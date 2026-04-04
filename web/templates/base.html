@@ -20,8 +20,7 @@
       </a>
       <nav class="nav" aria-label="Main">
         <a href="/" class="nav-link{% if active == 'home' %} is-active{% endif %}">Home</a>
-        <a href="/predict" class="nav-link{% if active == 'predict' %} is-active{% endif %}">Predict a match</a>
-        <a href="/history" class="nav-link{% if active == 'history' %} is-active{% endif %}">Compare to results</a>
+        <a href="/history" class="nav-link{% if active == 'history' %} is-active{% endif %}">Pred vs actual</a>
       </nav>
     </div>
   </header>
@@ -32,7 +31,7 @@
   </main>
   <footer class="site-footer">
     <div class="container footer-inner">
-      <span>Runs on your computer · add real scores after the game to see how you did · UI build {{ ui_build_id }}</span>
+      <span>Read-only UI · predictions come from the CLI · UI build {{ ui_build_id }}</span>
       <a href="/health" class="footer-link">Status</a>
     </div>
   </footer>

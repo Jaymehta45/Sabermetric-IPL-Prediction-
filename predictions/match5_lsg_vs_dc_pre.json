@@ -1,0 +1,63 @@
+{
+  "match_key": "match5-lsg-dc-2026-04-01",
+  "match_date": "2026-04-01",
+  "venue": "Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",
+  "team1_name": "Lucknow Super Giants",
+  "team2_name": "Delhi Capitals",
+  "team1_bats_first": true,
+  "pred_winner": "Delhi Capitals",
+  "pred_p_team1_win": 0.47,
+  "pred_best_bat": "Abdul Samad",
+  "pred_best_bowl": "Kuldeep Yadav",
+  "pred_top5_bats": [
+    "Abdul Samad",
+    "KL Rahul",
+    "Ashutosh Sharma",
+    "Aiden Markram",
+    "Nicholas Pooran"
+  ],
+  "pred_top3_bowls": [
+    "Kuldeep Yadav",
+    "T Natarajan",
+    "Mohsin Khan"
+  ],
+  "pred_potm": "Abdul Samad",
+  "pred_extra": {
+    "sims": 100,
+    "ensemble_p_team1": 0.7419354838709677,
+    "sim_win_probability_team1": 0.47,
+    "leader_model_p_team1": 0.6336206896551724,
+    "batting_order_swapped": false,
+    "impact_trim_lowest": true,
+    "impact_dropped_team1": "Mitchell Marsh",
+    "impact_dropped_team2": "Pathum Nissanka",
+    "pitch_multipliers": {
+      "first_innings_runs": 1.021,
+      "second_innings_runs": 1.0332519999999998,
+      "first_innings_wickets": 0.985,
+      "second_innings_wickets": 0.97909
+    },
+    "venue_spin_harshness": 0.0,
+    "process_variant": "1A",
+    "full_playing_twelve": false,
+    "pred_first_innings_team_runs": 110.00000000000003,
+    "pred_second_innings_team_runs": 112.32843426720972,
+    "pred_first_innings_team_wickets": 2.670284395625,
+    "pred_second_innings_team_wickets": 2.0004525062500003,
+    "pred_first_innings_team_wickets_raw_sum": 2.670284395625,
+    "pred_second_innings_team_wickets_raw_sum": 2.0004525062500003,
+    "ml_team_total_runs_team1": 106.02451470081601,
+    "ml_team_total_runs_team2": 108.71349319160257,
+    "team_run_calibration": {
+      "method": "ml_team_total",
+      "scale_team1": 4.810719223055779,
+      "scale_team2": 2.3897518789560115,
+      "sum_player_runs_before_team1": 22.865603852499994,
+      "sum_player_runs_before_team2": 47.00422468808
+    },
+    "player_process1": {
+      "heuristic": "role_aware_v1",
+      "summary": "Best bat / top 5 runs exclude pure bowlers when enough batters exist; best bowl / top 3 wickets prefer bowlers and allrounders; POTM uses a role-weighted composite (not the official match award)."
+    }
+  }
+}

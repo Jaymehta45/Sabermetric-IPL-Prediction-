@@ -1,0 +1,4 @@
+{
+  "match_key": "match5-lsg-dc-2026-04-01",
+  "process3_notes": "Match5 BBB ingested; unified rows +418 matches. Winner call correct (DC). POTM vs pred composite (Samad) — expected gap. Tie on top wickets (Ngidi/Natarajan); log used Ngidi. Re-check train_win_prob_ensemble if calibrating."
+}

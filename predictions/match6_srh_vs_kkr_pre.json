@@ -1,0 +1,63 @@
+{
+  "match_key": "match6-srh-kkr-2026-04-02",
+  "match_date": "2026-04-02",
+  "venue": "Eden Gardens, Kolkata",
+  "team1_name": "Sunrisers Hyderabad",
+  "team2_name": "Kolkata Knight Riders",
+  "team1_bats_first": true,
+  "pred_winner": "Sunrisers Hyderabad",
+  "pred_p_team1_win": 0.599,
+  "pred_best_bat": "Ramandeep Singh",
+  "pred_best_bowl": "CV Varun",
+  "pred_top5_bats": [
+    "Ramandeep Singh",
+    "H Klaasen",
+    "TM Head",
+    "Abhishek Sharma",
+    "Ishan Kishan"
+  ],
+  "pred_top3_bowls": [
+    "CV Varun",
+    "AS Roy",
+    "JD Unadkat"
+  ],
+  "pred_potm": "Ramandeep Singh",
+  "pred_extra": {
+    "sims": 1000,
+    "ensemble_p_team1": 0.16666666666666666,
+    "sim_win_probability_team1": 0.599,
+    "leader_model_p_team1": 0.42142857142857143,
+    "batting_order_swapped": false,
+    "impact_trim_lowest": true,
+    "impact_dropped_team1": "Salil Arora",
+    "impact_dropped_team2": "Ajinkya Rahane",
+    "pitch_multipliers": {
+      "first_innings_runs": 1.85,
+      "second_innings_runs": 1.88,
+      "first_innings_wickets": 0.9411,
+      "second_innings_wickets": 0.9298068
+    },
+    "venue_spin_harshness": 0.55,
+    "process_variant": "1A",
+    "full_playing_twelve": false,
+    "pred_first_innings_team_runs": 215.5079153217876,
+    "pred_second_innings_team_runs": 207.30830656881577,
+    "pred_first_innings_team_wickets": 1.99121245721814,
+    "pred_second_innings_team_wickets": 3.0897313618693123,
+    "pred_first_innings_team_wickets_raw_sum": 1.99121245721814,
+    "pred_second_innings_team_wickets_raw_sum": 3.0897313618693123,
+    "ml_team_total_runs_team1": 116.49076503880414,
+    "ml_team_total_runs_team2": 110.27037583447648,
+    "team_run_calibration": {
+      "method": "ml_team_total",
+      "scale_team1": 0.8784209139026125,
+      "scale_team2": 4.558703948161361,
+      "sum_player_runs_before_team1": 245.33559243750005,
+      "sum_player_runs_before_team2": 45.475273
+    },
+    "player_process1": {
+      "heuristic": "role_aware_v1",
+      "summary": "Best bat / top 5 runs exclude pure bowlers when enough batters exist; best bowl / top 3 wickets prefer bowlers and allrounders; POTM uses a role-weighted composite (not the official match award)."
+    }
+  }
+}

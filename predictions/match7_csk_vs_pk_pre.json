@@ -1,0 +1,63 @@
+{
+  "match_key": "match7-csk-pk-2026-04-03",
+  "match_date": "2026-04-03",
+  "venue": "MA Chidambaram Stadium, Chennai",
+  "team1_name": "Chennai Super Kings",
+  "team2_name": "Punjab Kings",
+  "team1_bats_first": true,
+  "pred_winner": "Punjab Kings",
+  "pred_p_team1_win": 0.4974,
+  "pred_best_bat": "Shashank Singh",
+  "pred_best_bowl": "Arshdeep Singh",
+  "pred_top5_bats": [
+    "Shashank Singh",
+    "Sanju Samson",
+    "Shivam Dube",
+    "Ruturaj Gaikwad",
+    "Ayush Mhatre"
+  ],
+  "pred_top3_bowls": [
+    "Arshdeep Singh",
+    "Noor Ahmad",
+    "Vijaykumar Vyshak"
+  ],
+  "pred_potm": "Shashank Singh",
+  "pred_extra": {
+    "sims": 5000,
+    "ensemble_p_team1": 0.48484848484848486,
+    "sim_win_probability_team1": 0.4974,
+    "leader_model_p_team1": 0.5045454545454546,
+    "batting_order_swapped": false,
+    "impact_trim_lowest": true,
+    "impact_dropped_team1": "Matt Henry",
+    "impact_dropped_team2": "Prabhsimran Singh",
+    "pitch_multipliers": {
+      "first_innings_runs": 1.263,
+      "second_innings_runs": 1.293312,
+      "first_innings_wickets": 0.9565,
+      "second_innings_wickets": 0.945022
+    },
+    "venue_spin_harshness": 0.15,
+    "process_variant": "1A",
+    "full_playing_twelve": false,
+    "pred_first_innings_team_runs": 235.0,
+    "pred_second_innings_team_runs": 234.99999999999997,
+    "pred_first_innings_team_wickets": 1.7431720468102363,
+    "pred_second_innings_team_wickets": 0.99510152071625,
+    "pred_first_innings_team_wickets_raw_sum": 1.7431720468102363,
+    "pred_second_innings_team_wickets_raw_sum": 0.99510152071625,
+    "ml_team_total_runs_team1": 190.33743667079187,
+    "ml_team_total_runs_team2": 189.37679839386877,
+    "team_run_calibration": {
+      "method": "ml_team_total",
+      "scale_team1": 8.931340744828203,
+      "scale_team2": 5.229709331821733,
+      "sum_player_runs_before_team1": 26.31183903,
+      "sum_player_runs_before_team2": 44.93557578240001
+    },
+    "player_process1": {
+      "heuristic": "role_aware_v1",
+      "summary": "Best bat / top 5 runs exclude pure bowlers when enough batters exist; best bowl / top 3 wickets prefer bowlers and allrounders; POTM uses a role-weighted composite (not the official match award)."
+    }
+  }
+}

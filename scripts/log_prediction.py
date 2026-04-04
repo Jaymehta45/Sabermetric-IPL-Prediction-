@@ -14,7 +14,15 @@ JSON fields — pre: match_key, match_date, venue, team1_name, team2_name, team1
 
 Post: match_key, actual_winner, actual_top_scorer, actual_top_scorer_runs (optional),
   actual_top_wicket_bowler, actual_top_wickets (optional), official_potm,
-  bbb_match_file, post_notes (optional).
+  bbb_match_file, post_notes (optional),
+  actual_first_innings_team_runs, actual_second_innings_team_runs (optional — if omitted and
+  bbb_match_file points at a CSV, totals are filled from ball-by-ball).
+
+Process 3 (after post-match review — updates same match_key):
+    python3 scripts/log_prediction.py process3 examples/prediction_log_process3.example.json
+
+  Fields: match_key, process3_notes (optional). Sets process3_completed_at (UTC).
+  The web app reads these columns to show P1 → P2 → P3 completion per match.
 """
 
 from __future__ import annotations
@@ -31,6 +39,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from iplpred.core.bbb_innings_totals import innings_runs_and_wickets_from_bbb
 from iplpred.paths import PROCESSED_DIR
 
 LOG_PATH = PROCESSED_DIR / "prediction_log.csv"
@@ -60,7 +69,18 @@ POST_KEYS = [
     "official_potm",
     "bbb_match_file",
     "post_notes",
+    "actual_first_innings_team_runs",
+    "actual_second_innings_team_runs",
 ]
+
+POST_FLOAT_KEYS = frozenset(
+    {
+        "actual_top_scorer_runs",
+        "actual_top_wickets",
+        "actual_first_innings_team_runs",
+        "actual_second_innings_team_runs",
+    }
+)
 
 
 def _load_json(path: Path) -> dict:
@@ -94,10 +114,14 @@ def _ensure_columns(df: pd.DataFrame) -> pd.DataFrame:
         "official_potm",
         "bbb_match_file",
         "post_notes",
+        "actual_first_innings_team_runs",
+        "actual_second_innings_team_runs",
         "winner_correct",
         "potm_correct",
         "logged_at_pre",
         "logged_at_post",
+        "process3_completed_at",
+        "process3_notes",
     ]
     for c in base:
         if c not in df.columns:
@@ -144,10 +168,14 @@ def cmd_pre(args: argparse.Namespace) -> None:
         "official_potm": "",
         "bbb_match_file": "",
         "post_notes": "",
+        "actual_first_innings_team_runs": pd.NA,
+        "actual_second_innings_team_runs": pd.NA,
         "winner_correct": "",
         "potm_correct": "",
         "logged_at_pre": datetime.now(timezone.utc).isoformat(),
         "logged_at_post": "",
+        "process3_completed_at": "",
+        "process3_notes": "",
     }
 
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
@@ -197,7 +225,7 @@ def cmd_post(args: argparse.Namespace) -> None:
     i = idx[0]
     for k in POST_KEYS:
         if k in data:
-            if k in ("actual_top_scorer_runs", "actual_top_wickets"):
+            if k in POST_FLOAT_KEYS:
                 v = data[k]
                 df.iat[i, df.columns.get_loc(k)] = (
                     "" if v is None or v == "" else float(v)
@@ -206,6 +234,21 @@ def cmd_post(args: argparse.Namespace) -> None:
                 df.iat[i, df.columns.get_loc(k)] = (
                     "" if data[k] is None else str(data[k])
                 )
+
+    # Fill innings totals from BBB when not supplied (Process 2)
+    loc = df.columns.get_loc
+    fr = df.iat[i, loc("actual_first_innings_team_runs")]
+    sr = df.iat[i, loc("actual_second_innings_team_runs")]
+    need_fr = fr is None or (isinstance(fr, float) and pd.isna(fr)) or str(fr).strip() == ""
+    need_sr = sr is None or (isinstance(sr, float) and pd.isna(sr)) or str(sr).strip() == ""
+    bbb_rel = str(df.iat[i, loc("bbb_match_file")]).strip()
+    if (need_fr or need_sr) and bbb_rel:
+        bbb_path = REPO_ROOT / bbb_rel.lstrip("/")
+        r1, r2, _, _ = innings_runs_and_wickets_from_bbb(bbb_path)
+        if need_fr and r1 is not None:
+            df.iat[i, loc("actual_first_innings_team_runs")] = float(r1)
+        if need_sr and r2 is not None:
+            df.iat[i, loc("actual_second_innings_team_runs")] = float(r2)
 
     df.iat[i, df.columns.get_loc("logged_at_post")] = datetime.now(
         timezone.utc
@@ -227,6 +270,33 @@ def cmd_post(args: argparse.Namespace) -> None:
     print(f"Updated post-match fields -> {LOG_PATH} (match_key={mk})")
 
 
+def cmd_process3(args: argparse.Namespace) -> None:
+    data = _load_json(Path(args.json))
+    if "match_key" not in data:
+        raise SystemExit("process3 JSON must include match_key")
+    mk = str(data["match_key"]).strip()
+    if not LOG_PATH.is_file():
+        raise SystemExit(f"No log file at {LOG_PATH}; run pre first")
+
+    df = _df_for_update()
+    idx = df.index[df["match_key"].astype(str) == mk]
+    if len(idx) != 1:
+        raise SystemExit(f"Expected exactly one row for match_key={mk!r}, found {len(idx)}")
+
+    i = idx[0]
+    if "process3_notes" in data:
+        v = data["process3_notes"]
+        df.iat[i, df.columns.get_loc("process3_notes")] = (
+            "" if v is None else str(v).strip()
+        )
+    df.iat[i, df.columns.get_loc("process3_completed_at")] = datetime.now(
+        timezone.utc
+    ).isoformat()
+
+    df.to_csv(LOG_PATH, index=False)
+    print(f"Marked Process 3 complete -> {LOG_PATH} (match_key={mk})")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Log pre/post match predictions to prediction_log.csv")
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -242,11 +312,19 @@ def main() -> None:
     p_post = sub.add_parser("post", help="Fill actuals for existing match_key")
     p_post.add_argument("json", type=str, help="Path to JSON with match_key + actual fields")
 
+    p_p3 = sub.add_parser(
+        "process3",
+        help="Mark Process 3 (post-match model review) complete for match_key",
+    )
+    p_p3.add_argument("json", type=str, help="Path to JSON with match_key, optional process3_notes")
+
     args = parser.parse_args()
     if args.cmd == "pre":
         cmd_pre(args)
-    else:
+    elif args.cmd == "post":
         cmd_post(args)
+    else:
+        cmd_process3(args)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,11 @@
+{
+  "match_key": "match4-pk-gt-2026-03-31",
+  "actual_winner": "Punjab Kings",
+  "actual_top_scorer": "Cooper Connolly",
+  "actual_top_scorer_runs": 74,
+  "actual_top_wicket_bowler": "Prasidh Krishna",
+  "actual_top_wickets": 3,
+  "official_potm": "Cooper Connolly",
+  "bbb_match_file": "matches/match4_pbks_vs_gt.csv",
+  "post_notes": "GT 159 vs PBKS 176 (chase). Model favoured GT; upset. Top wickets tied at 3 (Prasidh Krishna, Vijaykumar Vyshak) — logged Prasidh. POTM assumed top scorer; update if official differed."
+}

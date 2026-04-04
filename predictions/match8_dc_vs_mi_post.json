@@ -1,0 +1,11 @@
+{
+  "match_key": "match8-dc-mi-2026-04-04",
+  "actual_winner": "Mumbai Indians",
+  "actual_top_scorer": "Sameer Rizvi",
+  "actual_top_scorer_runs": 76,
+  "actual_top_wicket_bowler": "Mukesh Kumar",
+  "actual_top_wickets": 2,
+  "official_potm": "Sameer Rizvi",
+  "bbb_match_file": "matches/match8_dc_vs_mi.csv",
+  "post_notes": "BBB: MI 165 / DC 133. MI won defending. Top wickets: Mukesh Kumar 2; several bowlers on 1. POTM aligned with top score (76). Model had MI ~52% — winner_correct."
+}

@@ -1,0 +1,36 @@
+{
+  "match_id": "match5-lsg-dc-2026-04-01",
+  "match_date": "2026-04-01",
+  "team1_name": "Lucknow Super Giants",
+  "team2_name": "Delhi Capitals",
+  "venue": "Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",
+  "batting_first": "team1",
+  "pitch_text": "This is game number 5 in the IPL and we're in Lucknow. The square boundaries are longer and there's a bias today. 56m and 64m square boundaries while the straight boundary is at 77m. I did the game in Bangalore and Mumbai (says Kevin Pietersen), what we saw there were great wickets with a lot of grass. In Mumbai, there was more grass than expected. Here, it's a beautiful wicket, which means you want to chase. It becomes difficult to set a total without knowing how much is enough. It's a red soil surface and the pitches were relaid during the 2023 World Cup. Before the WC, the scoring rate was around 7 rpo, now, it is up to 9. It's a good surface for batting, offering good carry and bounce, last season, the team batting second won six of the eight games played here. So win the toss and chase.",
+  "xi1": [
+    "Aiden Markram",
+    "Mitchell Marsh",
+    "Nicholas Pooran",
+    "Rishabh Pant",
+    "Ayush Badoni",
+    "Abdul Samad",
+    "Mukul Choudhary",
+    "Mohsin Khan",
+    "Mohammed Shami",
+    "Anrich Nortje",
+    "Prince Yadav"
+  ],
+  "xi2": [
+    "KL Rahul",
+    "Pathum Nissanka",
+    "Nitish Rana",
+    "Axar Patel",
+    "Tristan Stubbs",
+    "David Miller",
+    "Vipraj Nigam",
+    "Lungi Ngidi",
+    "Kuldeep Yadav",
+    "T Natarajan",
+    "Mukesh Kumar"
+  ],
+  "notes": "User-provided match5: DC chose to bowl (LSG bat first). Impact pools: LSG Digvesh Rathi, Avesh Khan, Himmat Singh, Shahbaz Ahmed, Akshat Raghuwanshi; DC Ashutosh Sharma, Auqib Nabi, Sameer Rizvi, Dushmantha Chameera, Karun Nair. Process 1A uses Digvesh Rathi + Ashutosh Sharma as 12th (registry spelling Akshat Raghuwanshi)."
+}

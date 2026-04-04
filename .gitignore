@@ -28,3 +28,4 @@ htmlcov/
 
 # Local / secrets
 *.pem
+.vercel

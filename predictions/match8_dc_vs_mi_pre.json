@@ -1,0 +1,63 @@
+{
+  "match_key": "match8-dc-mi-2026-04-04",
+  "match_date": "2026-04-04",
+  "venue": "Arun Jaitley Stadium, Delhi",
+  "team1_name": "Mumbai Indians",
+  "team2_name": "Delhi Capitals",
+  "team1_bats_first": true,
+  "pred_winner": "Mumbai Indians",
+  "pred_p_team1_win": 0.524,
+  "pred_best_bat": "KL Rahul",
+  "pred_best_bowl": "T Natarajan",
+  "pred_top5_bats": [
+    "KL Rahul",
+    "Ashutosh Sharma",
+    "Tilak Varma",
+    "N Rana",
+    "AR Patel"
+  ],
+  "pred_top3_bowls": [
+    "T Natarajan",
+    "M Markande",
+    "Mukesh Kumar"
+  ],
+  "pred_potm": "KL Rahul",
+  "pred_extra": {
+    "sims": 5000,
+    "ensemble_p_team1": 0.48484848484848486,
+    "sim_win_probability_team1": 0.524,
+    "leader_model_p_team1": 0.503411513859275,
+    "batting_order_swapped": false,
+    "impact_trim_lowest": true,
+    "impact_dropped_team1": "Mitchell Santner",
+    "impact_dropped_team2": "pathum-nissanka",
+    "pitch_multipliers": {
+      "first_innings_runs": 1.0112,
+      "second_innings_runs": 1.0354688,
+      "first_innings_wickets": 0.992,
+      "second_innings_wickets": 0.980096
+    },
+    "venue_spin_harshness": 0.0,
+    "process_variant": "1A",
+    "full_playing_twelve": false,
+    "pred_first_innings_team_runs": 144.88534326939305,
+    "pred_second_innings_team_runs": 143.44023748926818,
+    "pred_first_innings_team_wickets": 3.0452758835200004,
+    "pred_second_innings_team_wickets": 3.04036344,
+    "pred_first_innings_team_wickets_raw_sum": 3.0452758835200004,
+    "pred_second_innings_team_wickets_raw_sum": 3.04036344,
+    "ml_team_total_runs_team1": 143.280600543308,
+    "ml_team_total_runs_team2": 138.5268561344081,
+    "team_run_calibration": {
+      "method": "ml_team_total",
+      "scale_team1": 1.2151096362446825,
+      "scale_team2": 1.3982962074496477,
+      "sum_player_runs_before_team1": 119.236436736,
+      "sum_player_runs_before_team2": 102.582154428416
+    },
+    "player_process1": {
+      "heuristic": "role_aware_v1",
+      "summary": "Best bat / top 5 runs exclude pure bowlers when enough batters exist; best bowl / top 3 wickets prefer bowlers and allrounders; POTM uses a role-weighted composite (not the official match award)."
+    }
+  }
+}

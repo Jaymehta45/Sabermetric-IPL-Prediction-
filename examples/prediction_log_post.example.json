@@ -7,5 +7,5 @@
   "actual_top_wickets": 3,
   "official_potm": "Jacob Duffy",
   "bbb_match_file": "matches/match1_rcb_vs_srh.csv",
-  "post_notes": "Winner correct; POTM differed — model used composite score vs official award."
+  "post_notes": "Winner correct; POTM differed — model used composite score vs official award. Optional: actual_first_innings_team_runs, actual_second_innings_team_runs; if omitted, post fills them from bbb_match_file when possible."
 }

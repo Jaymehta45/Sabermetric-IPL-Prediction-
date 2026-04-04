@@ -1,0 +1,44 @@
+{
+  "match_key": "match3-rr-csk-2026-03-30",
+  "match_date": "2026-03-30",
+  "venue": "Barsapara Cricket Stadium, Guwahati",
+  "team1_name": "Chennai Super Kings",
+  "team2_name": "Rajasthan Royals",
+  "team1_bats_first": true,
+  "pred_winner": "Rajasthan Royals",
+  "pred_p_team1_win": 0.3625,
+  "pred_best_bat": "SV Samson",
+  "pred_best_bowl": "Noor Ahmad",
+  "pred_top5_bats": [
+    "SV Samson",
+    "A Mhatre",
+    "RA Jadeja",
+    "Dhruv Jurel",
+    "SO Hetmyer"
+  ],
+  "pred_top3_bowls": [
+    "Noor Ahmad",
+    "KK Ahmed",
+    "R Parag"
+  ],
+  "pred_potm": "RA Jadeja",
+  "pred_extra": {
+    "sims": 400,
+    "ensemble_p_team1": 0.7333333333333333,
+    "sim_win_probability_team1": 0.3625,
+    "leader_model_p_team1": 0.6676829268292683,
+    "batting_order_swapped": false,
+    "impact_trim_lowest": true,
+    "impact_dropped_team1": "Kartik Sharma",
+    "impact_dropped_team2": "Brijesh Sharma",
+    "pitch_multipliers": {
+      "first_innings_runs": 1.0,
+      "second_innings_runs": 1.0,
+      "first_innings_wickets": 1.0,
+      "second_innings_wickets": 1.0
+    },
+    "venue_spin_harshness": 0.48,
+    "process_variant": "1A",
+    "full_playing_twelve": false
+  }
+}

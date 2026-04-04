@@ -1,0 +1,63 @@
+{
+  "match_key": "match9-gt-rr-2026-04-04",
+  "match_date": "2026-04-04",
+  "venue": "Narendra Modi Stadium, Ahmedabad",
+  "team1_name": "Rajasthan Royals",
+  "team2_name": "Gujarat Titans",
+  "team1_bats_first": true,
+  "pred_winner": "Rajasthan Royals",
+  "pred_p_team1_win": 0.618,
+  "pred_best_bat": "Dhruv Jurel",
+  "pred_best_bowl": "K Rabada",
+  "pred_top5_bats": [
+    "Dhruv Jurel",
+    "Washington Sundar",
+    "B Sai Sudharsan",
+    "M Shahrukh Khan",
+    "YBK Jaiswal"
+  ],
+  "pred_top3_bowls": [
+    "K Rabada",
+    "Ravi Bishnoi",
+    "JC Archer"
+  ],
+  "pred_potm": "Washington Sundar",
+  "pred_extra": {
+    "sims": 5000,
+    "ensemble_p_team1": 0.7419354838709677,
+    "sim_win_probability_team1": 0.618,
+    "leader_model_p_team1": 0.5241398446170922,
+    "batting_order_swapped": false,
+    "impact_trim_lowest": true,
+    "impact_dropped_team1": "D Ferreira",
+    "impact_dropped_team2": "Glenn Phillips",
+    "pitch_multipliers": {
+      "first_innings_runs": 1.6986929000000002,
+      "second_innings_runs": 1.7190772148,
+      "first_innings_wickets": 0.9454,
+      "second_innings_wickets": 0.9397276
+    },
+    "venue_spin_harshness": 0.4,
+    "process_variant": "1A",
+    "full_playing_twelve": false,
+    "pred_first_innings_team_runs": 200.37157610653333,
+    "pred_second_innings_team_runs": 192.50203570592655,
+    "pred_first_innings_team_wickets": 2.9512004318859995,
+    "pred_second_innings_team_wickets": 3.8180735320000005,
+    "pred_first_innings_team_wickets_raw_sum": 2.9512004318859995,
+    "pred_second_innings_team_wickets_raw_sum": 3.8180735320000005,
+    "ml_team_total_runs_team1": 117.9563275425083,
+    "ml_team_total_runs_team2": 111.97986573763208,
+    "team_run_calibration": {
+      "method": "ml_team_total",
+      "scale_team1": 1.0635976303874894,
+      "scale_team2": 1.2811312058618414,
+      "sum_player_runs_before_team1": 188.390393492635,
+      "sum_player_runs_before_team2": 150.25942294210742
+    },
+    "player_process1": {
+      "heuristic": "role_aware_v1",
+      "summary": "Best bat / top 5 runs exclude pure bowlers when enough batters exist; best bowl / top 3 wickets prefer bowlers and allrounders; POTM uses a role-weighted composite (not the official match award)."
+    }
+  }
+}

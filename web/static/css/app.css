@@ -849,6 +849,70 @@ body {
   border: 1px solid var(--border);
 }
 
+/* Daily workflow P1 → P2 → P3 (prediction_log.csv) */
+.process-steps {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.process-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  background: rgba(15, 23, 42, 0.5);
+}
+
+.process-step--done {
+  color: var(--accent);
+  border-color: rgba(52, 211, 153, 0.45);
+  background: var(--accent-dim);
+}
+
+.process-step-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-right: 0.15rem;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  background: rgba(15, 23, 42, 0.5);
+}
+
+.process-step-mark--on {
+  color: var(--accent);
+  border-color: rgba(52, 211, 153, 0.45);
+  background: var(--accent-dim);
+}
+
+.compare-card-head-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.compare-card-process3 {
+  margin: 0.35rem 0 0;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
 .log-table-panel .panel-head {
   align-items: center;
 }
@@ -1120,8 +1184,398 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
-@media (max-width: 640px) {
-  .compare-vertical {
-    min-width: min(100%, 720px);
+/* -------------------------------------------------------------------------
+   Mobile & narrow screens — readable names, shorter tables, no wide scroll
+   ------------------------------------------------------------------------- */
+.mono,
+td.mono,
+.compare-name-list.mono {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+}
+
+@media (max-width: 768px) {
+  html {
+    font-size: 15px;
   }
+
+  .container {
+    width: min(1120px, 100% - 1rem);
+  }
+
+  .main {
+    padding: 1.5rem 0 3rem;
+  }
+
+  .panel {
+    padding: 1.1rem 1rem;
+  }
+
+  .site-footer .footer-inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .toolbar-panel {
+    padding: 1rem;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .toolbar-field,
+  .toolbar-field--grow {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .view-toggle {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .view-toggle-btn {
+    flex: 1;
+    padding: 0.6rem 0.75rem;
+  }
+
+  .compare-card-head {
+    padding: 0.85rem 1rem 0.75rem;
+  }
+
+  .compare-card-title {
+    font-size: clamp(0.95rem, 4vw, 1.1rem);
+    line-height: 1.3;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  .compare-name-list {
+    font-size: 0.8125rem;
+    line-height: 1.35;
+    padding-left: 1.15rem;
+  }
+
+  .compare-name-list li.mono {
+    font-size: 0.78rem;
+    line-height: 1.4;
+  }
+
+  .bbb-caption {
+    max-width: 100%;
+  }
+
+  .page-title {
+    font-size: 1.45rem;
+  }
+
+  .page-desc {
+    font-size: 0.95rem;
+  }
+
+  .stats-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.65rem;
+  }
+
+  .stat-card {
+    padding: 0.9rem 1rem;
+  }
+
+  .stat-value {
+    font-size: 1.45rem;
+  }
+}
+
+/* Home dashboard: latest comparisons — card rows instead of a wide 6-col table */
+@media (max-width: 700px) {
+  .table-wrap--home {
+    overflow-x: visible;
+    border: none;
+  }
+
+  .data-table--compare {
+    display: block;
+  }
+
+  .data-table--compare thead {
+    display: none;
+  }
+
+  .data-table--compare tbody {
+    display: block;
+  }
+
+  .data-table--compare tbody tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "date steps"
+      "matchup matchup"
+      "pred actual"
+      "grade grade";
+    gap: 0.4rem 0.75rem;
+    align-items: center;
+    padding: 0.75rem 0.85rem;
+    margin-bottom: 0.65rem;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.18);
+  }
+
+  .data-table--compare tbody tr:last-child {
+    margin-bottom: 0;
+  }
+
+  .data-table--compare tbody td {
+    display: block;
+    padding: 0;
+    border: none;
+    font-size: 0.875rem;
+    line-height: 1.35;
+  }
+
+  .data-table--compare tbody td:nth-child(1) {
+    grid-area: date;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+
+  .data-table--compare tbody td:nth-child(2) {
+    grid-area: matchup;
+    font-weight: 600;
+    font-size: 0.88rem;
+    line-height: 1.3;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  .data-table--compare tbody td:nth-child(3) {
+    grid-area: steps;
+    justify-self: end;
+  }
+
+  .data-table--compare tbody td:nth-child(4) {
+    grid-area: pred;
+    padding-top: 0.15rem;
+  }
+
+  .data-table--compare tbody td:nth-child(4)::before {
+    content: "Model pick";
+    display: block;
+    font-size: 0.62rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 0.2rem;
+  }
+
+  .data-table--compare tbody td:nth-child(5) {
+    grid-area: actual;
+    padding-top: 0.15rem;
+  }
+
+  .data-table--compare tbody td:nth-child(5)::before {
+    content: "Result";
+    display: block;
+    font-size: 0.62rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 0.2rem;
+  }
+
+  .data-table--compare tbody td:nth-child(6) {
+    grid-area: grade;
+    padding-top: 0.35rem;
+    border-top: 1px solid var(--border);
+    margin-top: 0.15rem;
+    padding-top: 0.5rem;
+  }
+
+  .data-table--compare tbody td:nth-child(6)::before {
+    content: "Winner grade";
+    display: inline-block;
+    font-size: 0.62rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-right: 0.5rem;
+    vertical-align: middle;
+  }
+
+  .cell-matchup {
+    -webkit-line-clamp: 3;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+/* History: per-match comparison — stack rows (no 720px horizontal scroll) */
+@media (max-width: 640px) {
+  .compare-vertical-wrap {
+    overflow-x: visible;
+    margin-inline: -0.25rem;
+  }
+
+  .compare-vertical {
+    min-width: 0;
+    display: block;
+    font-size: 0.875rem;
+  }
+
+  .compare-vertical thead {
+    display: none;
+  }
+
+  .compare-vertical tbody {
+    display: block;
+  }
+
+  .compare-vertical tbody tr {
+    display: block;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 0.6rem;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.12);
+  }
+
+  .compare-vertical tbody tr:last-child {
+    margin-bottom: 0;
+  }
+
+  .compare-vertical tbody th[scope="row"] {
+    display: block;
+    width: 100%;
+    max-width: none;
+    padding: 0.55rem 0.75rem;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    line-height: 1.3;
+  }
+
+  .compare-vertical tbody td {
+    display: block;
+    width: 100%;
+    padding: 0.55rem 0.75rem 0.65rem;
+    border: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .compare-vertical tbody td:last-child {
+    border-bottom: none;
+  }
+
+  .compare-vertical tbody td:nth-child(2)::before {
+    content: "Before (model)";
+    display: block;
+    font-size: 0.62rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 0.35rem;
+  }
+
+  .compare-vertical tbody td:nth-child(3)::before {
+    content: "After (your log)";
+    display: block;
+    font-size: 0.62rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 0.35rem;
+  }
+
+  .compare-vertical tbody td:nth-child(4)::before {
+    content: "Match?";
+    display: block;
+    font-size: 0.62rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 0.35rem;
+  }
+
+  .compare-vertical tbody td.compare-grade-cell {
+    text-align: left !important;
+  }
+
+  .compare-vertical-col-grade {
+    width: auto;
+    white-space: normal;
+  }
+
+  .odds-cell {
+    font-size: 0.85rem;
+  }
+
+  .explain-box {
+    padding: 1rem !important;
+  }
+
+  .explain-list {
+    font-size: 0.82rem;
+    padding-left: 1rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .stats-row {
+    grid-template-columns: 1fr;
+  }
+
+  .data-table--compare tbody tr {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "date"
+      "steps"
+      "matchup"
+      "pred"
+      "actual"
+      "grade";
+  }
+
+  .data-table--compare tbody td:nth-child(3) {
+    justify-self: start;
+  }
+}
+
+/* Home table: stacked pred → actual innings */
+.cell-innings-stack {
+  vertical-align: top;
+  max-width: 22rem;
+}
+.cell-innings-line {
+  font-size: 0.85rem;
+  line-height: 1.35;
+}
+.cell-innings-line--actual {
+  color: var(--accent-hot);
+  margin-top: 0.2rem;
+}
+.cell-innings-mae {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+}
+.innings-err-line {
+  font-size: 0.82rem;
+  line-height: 1.35;
 }

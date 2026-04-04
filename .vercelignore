@@ -1,0 +1,5 @@
+# Shrink serverless bundle — web UI only needs iplpred + data/processed + web/.
+# Uncomment if deploy size or cold start is an issue (BBB-backed history checks may degrade).
+# matches/
+# models/
+# tests/

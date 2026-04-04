@@ -1,0 +1,11 @@
+{
+  "match_key": "match2-mi-kkr-2026-03-29",
+  "actual_winner": "Mumbai Indians",
+  "actual_top_scorer": "Ryan Rickelton",
+  "actual_top_scorer_runs": 82,
+  "actual_top_wicket_bowler": "Shardul Thakur",
+  "actual_top_wickets": 3,
+  "official_potm": "Rohit Sharma",
+  "bbb_match_file": "matches/match2_mi_vs_kkr.csv",
+  "post_notes": "Scores from matches/match2_mi_vs_kkr.csv (Rickelton 82, Rohit 80; Shardul 3/39). POTM per match narrative (fastest 50); confirm official award if needed. Two legal duplicate (innings,over,ball) keys from wide/noball sequences. KKR total in file 216 vs ~220 press — optional reconcile."
+}

@@ -17,11 +17,13 @@ AJ Hosein,AJ Hosein,stats_player_id,0
 AJ Turner,AJ Turner,stats_player_id,0
 AJ Tye,AJ Tye,stats_player_id,0
 AK Markram,AK Markram,stats_player_id,0
+AM Ghazanfar,AM Ghazanfar,stats_player_id,0
 AM Rahane,AM Rahane,stats_player_id,0
 AR Patel,AR Patel,stats_player_id,0
 AS Joseph,AS Joseph,stats_player_id,0
 AS Rajpoot,AS Rajpoot,stats_player_id,0
 AS Roy,AS Roy,stats_player_id,0
+AS Roy,Anukul Roy,manual,100
 AT Carey,AT Carey,stats_player_id,0
 AT Rayudu,AT Rayudu,stats_player_id,0
 AU Rashid,AU Rashid,stats_player_id,0
@@ -29,6 +31,8 @@ Abdul Basith,Abdul Basith,stats_player_id,0
 Abdul Samad,Abdul Samad,stats_player_id,0
 Abhishek Sharma,Abhishek Sharma,stats_player_id,0
 Abishek Porel,Abishek Porel,stats_player_id,0
+Adil Rashid,Adil Rashid,stats_player_id,0
+Aiden Markram,Aiden Markram,stats_player_id,0
 Akash Deep,Akash Deep,stats_player_id,0
 Akash Madhwal,Akash Madhwal,stats_player_id,0
 Akash Singh,Akash Singh,stats_player_id,0
@@ -48,6 +52,8 @@ Azmatullah Omarzai,Azmatullah Omarzai,stats_player_id,0
 B Indrajith,B Indrajith,stats_player_id,0
 B Kumar,B Kumar,stats_player_id,0
 B Kumar,Bhuvneshwar Kumar,manual,100
+B Muzarabani,B Muzarabani,stats_player_id,0
+B Muzarabani,Blessing Muzarabani,manual,100
 B Sai Sudharsan,B Sai Sudharsan,stats_player_id,0
 BA Stokes,BA Stokes,stats_player_id,0
 BKG Mendis,BKG Mendis,stats_player_id,0
@@ -63,6 +69,8 @@ CJ Green,CJ Green,stats_player_id,0
 CJ Jordan,CJ Jordan,stats_player_id,0
 CR Woakes,CR Woakes,stats_player_id,0
 CV Varun,CV Varun,stats_player_id,0
+CV Varun,Varun Chakaravarthy,manual,100
+CV Varun,Varun Chakravarthy,manual,100
 D Brevis,D Brevis,stats_player_id,0
 D Ferreira,D Ferreira,stats_player_id,0
 D Jansen,D Jansen,stats_player_id,0
@@ -84,6 +92,9 @@ DS Kulkarni,DS Kulkarni,stats_player_id,0
 DS Rathi,DS Rathi,stats_player_id,0
 DT Christian,DT Christian,stats_player_id,0
 DW Steyn,DW Steyn,stats_player_id,0
+Daryl Mitchell,Daryl Mitchell,stats_player_id,0
+David Miller,David Miller,stats_player_id,0
+Dewald Brevis,Dewald Brevis,stats_player_id,0
 Dhruv Jurel,Dhruv Jurel,stats_player_id,0
 E Lewis,E Lewis,stats_player_id,0
 E Malinga,E Malinga,stats_player_id,0
@@ -92,10 +103,12 @@ EJG Morgan,EJG Morgan,stats_player_id,0
 F du Plessis,F du Plessis,stats_player_id,0
 FA Allen,FA Allen,stats_player_id,0
 Fazalhaq Farooqi,Fazalhaq Farooqi,stats_player_id,0
+Finn Allen,Finn Allen,stats_player_id,0
 G Coetzee,G Coetzee,stats_player_id,0
 GD Phillips,GD Phillips,stats_player_id,0
 GHS Garton,GHS Garton,stats_player_id,0
 GJ Maxwell,GJ Maxwell,stats_player_id,0
+Glenn Phillips,Glenn Phillips,stats_player_id,0
 Gulbadin Naib,Gulbadin Naib,stats_player_id,0
 Gurkeerat Singh,Gurkeerat Singh,stats_player_id,0
 Gurnoor Brar,Gurnoor Brar,stats_player_id,0
@@ -109,8 +122,10 @@ HR Shokeen,HR Shokeen,stats_player_id,0
 HV Patel,HV Patel,stats_player_id,0
 HV Patel,Harshal Patel,manual,100
 Harbhajan Singh,Harbhajan Singh,stats_player_id,0
+Hardik Pandya,Hardik Pandya,stats_player_id,0
 Harpreet Brar,Harpreet Brar,stats_player_id,0
 Harpreet Singh,Harpreet Singh,stats_player_id,0
+Harry Brook,Harry Brook,stats_player_id,0
 Harsh Dubey,Harsh Dubey,stats_player_id,0
 Harshit Rana,Harshit Rana,stats_player_id,0
 I Sharma,I Sharma,stats_player_id,0
@@ -143,7 +158,11 @@ JP Inglis,JP Inglis,stats_player_id,0
 JR Hazlewood,JR Hazlewood,stats_player_id,0
 JR Hazlewood,Josh Hazlewood,manual,100
 JR Philippe,JR Philippe,stats_player_id,0
+Jacob Bethell,Jacob Bethell,stats_player_id,0
+Jacob Duffy,Jacob Duffy,stats_player_id,0
 Jalaj S Saxena,Jalaj S Saxena,stats_player_id,0
+James Neesham,James Neesham,stats_player_id,0
+Jos Buttler,Jos Buttler,stats_player_id,0
 K Gowtham,K Gowtham,stats_player_id,0
 K Kartikeya,K Kartikeya,stats_player_id,0
 K Khejroliya,K Khejroliya,stats_player_id,0
@@ -181,7 +200,9 @@ LH Ferguson,LH Ferguson,stats_player_id,0
 LI Meriwala,LI Meriwala,stats_player_id,0
 LS Livingstone,LS Livingstone,stats_player_id,0
 Lalit Yadav,Lalit Yadav,stats_player_id,0
+Liam Dawson,Liam Dawson,stats_player_id,0
 Liton Das,Liton Das,stats_player_id,0
+Lockie Ferguson,Lockie Ferguson,stats_player_id,0
 M Ashwin,M Ashwin,stats_player_id,0
 M Jansen,M Jansen,stats_player_id,0
 M Markande,M Markande,stats_player_id,0
@@ -216,7 +237,11 @@ MS Dhoni,MS Dhoni,stats_player_id,0
 MS Wade,MS Wade,stats_player_id,0
 MW Short,MW Short,stats_player_id,0
 Mandeep Singh,Mandeep Singh,stats_player_id,0
+Marco Jansen,Marco Jansen,stats_player_id,0
+Mark Chapman,Mark Chapman,stats_player_id,0
+Matt Henry,Matt Henry,stats_player_id,0
 Mayank Dagar,Mayank Dagar,stats_player_id,0
+Mitchell Santner,Mitchell Santner,stats_player_id,0
 Mohammad Nabi,Mohammad Nabi,stats_player_id,0
 Mohammed Shami,Mohammed Shami,stats_player_id,0
 Mohammed Siraj,Mohammed Siraj,stats_player_id,0
@@ -267,6 +292,7 @@ PWH de Silva,PWH de Silva,stats_player_id,0
 Prince Yadav,Prince Yadav,stats_player_id,0
 Priyansh Arya,Priyansh Arya,stats_player_id,0
 Q de Kock,Q de Kock,stats_player_id,0
+Quinton de Kock,Quinton de Kock,stats_player_id,0
 R Ashwin,R Ashwin,stats_player_id,0
 R Dhawan,R Dhawan,stats_player_id,0
 R Goyal,R Goyal,stats_player_id,0
@@ -284,6 +310,7 @@ RA Jadeja,RA Jadeja,stats_player_id,0
 RA Tripathi,RA Tripathi,stats_player_id,0
 RD Chahar,RD Chahar,stats_player_id,0
 RD Gaikwad,RD Gaikwad,stats_player_id,0
+RD Gaikwad,Ruturaj Gaikwad,manual,100
 RD Rickelton,RD Rickelton,stats_player_id,0
 RG Sharma,RG Sharma,stats_player_id,0
 RJ Gleeson,RJ Gleeson,stats_player_id,0
@@ -298,6 +325,7 @@ RR Rossouw,RR Rossouw,stats_player_id,0
 RS Hangargekar,RS Hangargekar,stats_player_id,0
 RV Patel,RV Patel,stats_player_id,0
 RV Uthappa,RV Uthappa,stats_player_id,0
+Rachin Ravindra,Rachin Ravindra,stats_player_id,0
 Rahmanullah Gurbaz,Rahmanullah Gurbaz,stats_player_id,0
 Ramandeep Singh,Ramandeep Singh,stats_player_id,0
 Rashid Khan,Rashid Khan,stats_player_id,0
@@ -321,6 +349,7 @@ SK Rasheed,SK Rasheed,stats_player_id,0
 SM Curran,SM Curran,stats_player_id,0
 SN Khan,SN Khan,stats_player_id,0
 SN Thakur,SN Thakur,stats_player_id,0
+SN Thakur,Shardul Thakur,manual,100
 SO Hetmyer,SO Hetmyer,stats_player_id,0
 SP Goswami,SP Goswami,stats_player_id,0
 SP Jackson,SP Jackson,stats_player_id,0
@@ -336,20 +365,24 @@ SV Samson,SV Samson,stats_player_id,0
 SW Billings,SW Billings,stats_player_id,0
 SZ Mulani,SZ Mulani,stats_player_id,0
 Sachin Baby,Sachin Baby,stats_player_id,0
+Sam Curran,Sam Curran,stats_player_id,0
 Sameer Rizvi,Sameer Rizvi,stats_player_id,0
 Sandeep Sharma,Sandeep Sharma,stats_player_id,0
+Sanju Samson,Sanju Samson,stats_player_id,0
 Sanvir Singh,Sanvir Singh,stats_player_id,0
 Saurav Chauhan,Saurav Chauhan,stats_player_id,0
 Sediqullah Atal,Sediqullah Atal,stats_player_id,0
 Shahbaz Ahmed,Shahbaz Ahmed,stats_player_id,0
 Shakib Al Hasan,Shakib Al Hasan,stats_player_id,0
 Shashank Singh,Shashank Singh,stats_player_id,0
+Shivam Dube,Shivam Dube,stats_player_id,0
 Shivam Mavi,Shivam Mavi,stats_player_id,0
 Shivam Singh,Shivam Singh,stats_player_id,0
 Shubman Gill,Shubman Gill,stats_player_id,0
 Sikandar Raza,Sikandar Raza,stats_player_id,0
 Simarjeet Singh,Simarjeet Singh,stats_player_id,0
 Sumit Kumar,Sumit Kumar,stats_player_id,0
+Suryakumar Yadav,Suryakumar Yadav,stats_player_id,0
 Suryansh Shedge,Suryansh Shedge,stats_player_id,0
 Suyash Sharma,Suyash Sharma,stats_player_id,0
 Swapnil Singh,Swapnil Singh,stats_player_id,0
@@ -370,6 +403,7 @@ TS Mills,TS Mills,stats_player_id,0
 TU Deshpande,TU Deshpande,stats_player_id,0
 Tanush Kotian,Tanush Kotian,stats_player_id,0
 Tilak Varma,Tilak Varma,stats_player_id,0
+Tim Seifert,Tim Seifert,stats_player_id,0
 UT Yadav,UT Yadav,stats_player_id,0
 Umran Malik,Umran Malik,stats_player_id,0
 Urvil Patel,Urvil Patel,stats_player_id,0
@@ -380,6 +414,8 @@ V Nigam,V Nigam,stats_player_id,0
 V Puthur,V Puthur,stats_player_id,0
 V Shankar,V Shankar,stats_player_id,0
 V Suryavanshi,V Suryavanshi,stats_player_id,0
+V Suryavanshi,Vaibhav Suryavanshi,manual,100
+V Suryavanshi,Vaibhav Sooryavanshi,manual,100
 V Viyaskanth,V Viyaskanth,stats_player_id,0
 VG Arora,VG Arora,stats_player_id,0
 VR Aaron,VR Aaron,stats_player_id,0
@@ -393,35 +429,150 @@ WD Parnell,WD Parnell,stats_player_id,0
 WG Jacks,WG Jacks,stats_player_id,0
 WP Saha,WP Saha,stats_player_id,0
 Washington Sundar,Washington Sundar,stats_player_id,0
+Will Jacks,Will Jacks,stats_player_id,0
 XC Bartlett,XC Bartlett,stats_player_id,0
 YBK Jaiswal,YBK Jaiswal,stats_player_id,0
+YBK Jaiswal,Yashasvi Jaiswal,manual,100
 YS Chahal,YS Chahal,stats_player_id,0
 YV Dhull,YV Dhull,stats_player_id,0
 Yash Dayal,Yash Dayal,stats_player_id,0
 Yash Thakur,Yash Thakur,stats_player_id,0
 Yudhvir Singh,Yudhvir Singh,stats_player_id,0
 Zeeshan Ansari,Zeeshan Ansari,stats_player_id,0
+abdul-samad,abdul-samad,stats_player_id,0
 abhinandan-singh,abhinandan-singh,stats_player_id,0
 abhishek-sharma,abhishek-sharma,stats_player_id,0
+aiden-markram,aiden-markram,stats_player_id,0
+ajinkya-rahane,ajinkya-rahane,stats_player_id,0
+am-ghazanfar,am-ghazanfar,stats_player_id,0
+angkrish-raghuvanshi,angkrish-raghuvanshi,stats_player_id,0
 aniket-verma,aniket-verma,stats_player_id,0
+anrich-nortje,anrich-nortje,stats_player_id,0
+anshul-kamboj,anshul-kamboj,stats_player_id,0
+anukul-roy,anukul-roy,stats_player_id,0
+arshdeep-singh,arshdeep-singh,stats_player_id,0
+ashok-sharma,ashok-sharma,stats_player_id,0
+axar-patel,axar-patel,stats_player_id,0
+ayush-badoni,ayush-badoni,stats_player_id,0
+ayush-mhatre,ayush-mhatre,stats_player_id,0
 bhuvneshwar-kumar,bhuvneshwar-kumar,stats_player_id,0
+blessing-muzarabani,blessing-muzarabani,stats_player_id,0
+brijesh-sharma,brijesh-sharma,stats_player_id,0
+cameron-green,cameron-green,stats_player_id,0
+cooper-connolly,cooper-connolly,stats_player_id,0
+corbin-bosch,corbin-bosch,stats_player_id,0
+david-miller,david-miller,stats_player_id,0
 david-payne,david-payne,stats_player_id,0
+deepak-chahar,deepak-chahar,stats_player_id,0
 devdutt-padikkal,devdutt-padikkal,stats_player_id,0
+dhruv-jurel,dhruv-jurel,stats_player_id,0
 eshan-malinga,eshan-malinga,stats_player_id,0
+finn-allen,finn-allen,stats_player_id,0
+glenn-phillips,glenn-phillips,stats_player_id,0
+hardik-pandya,hardik-pandya,stats_player_id,0
 harsh-dubey,harsh-dubey,stats_player_id,0
 harshal-patel,harshal-patel,stats_player_id,0
 heinrich-klaasen,heinrich-klaasen,stats_player_id,0
 ishan-kishan,ishan-kishan,stats_player_id,0
 jacob-duffy,jacob-duffy,stats_player_id,0
+jamie-overton,jamie-overton,stats_player_id,0
+jasprit-bumrah,jasprit-bumrah,stats_player_id,0
 jaydev-unadkat,jaydev-unadkat,stats_player_id,0
 jitesh-sharma,jitesh-sharma,stats_player_id,0
+jofra-archer,jofra-archer,stats_player_id,0
+jos-buttler,jos-buttler,stats_player_id,0
+kagiso-rabada,kagiso-rabada,stats_player_id,0
+kartik-sharma,kartik-sharma,stats_player_id,0
+kartik-tyagi,kartik-tyagi,stats_player_id,0
+khaleel-ahmed,khaleel-ahmed,stats_player_id,0
 krunal-pandya,krunal-pandya,stats_player_id,0
+kuldeep-yadav,kuldeep-yadav,stats_player_id,0
+lungi-ngidi,lungi-ngidi,stats_player_id,0
+marco-jansen,marco-jansen,stats_player_id,0
+marcus-stoinis,marcus-stoinis,stats_player_id,0
+matt-henry,matt-henry,stats_player_id,0
+matthew-short,matthew-short,stats_player_id,0
+mayank-markande,mayank-markande,stats_player_id,0
+mitchell-marsh,mitchell-marsh,stats_player_id,0
+mitchell-santner,mitchell-santner,stats_player_id,0
+mohammed-shami,mohammed-shami,stats_player_id,0
+mohammed-siraj,mohammed-siraj,stats_player_id,0
+mohsin-khan,mohsin-khan,stats_player_id,0
+mukesh-kumar,mukesh-kumar,stats_player_id,0
+mukul-choudhary,mukul-choudhary,stats_player_id,0
+naman-dhir,naman-dhir,stats_player_id,0
+nandre-burger,nandre-burger,stats_player_id,0
+natarajan,natarajan,stats_player_id,0
+nehal-wadhera,nehal-wadhera,stats_player_id,0
+nicholas-pooran,nicholas-pooran,stats_player_id,0
+nitish-rana,nitish-rana,stats_player_id,0
 nitish-reddy,nitish-reddy,stats_player_id,0
+noor-ahmad,noor-ahmad,stats_player_id,0
+pathum-nissanka,pathum-nissanka,stats_player_id,0
 phil-salt,phil-salt,stats_player_id,0
+prabhsimran-singh,prabhsimran-singh,stats_player_id,0
+prashant-veer,prashant-veer,stats_player_id,0
+prasidh-krishna,prasidh-krishna,stats_player_id,0
+prince-yadav,prince-yadav,stats_player_id,0
+priyansh-arya,priyansh-arya,stats_player_id,0
+rahul,rahul,stats_player_id,0
+rahul-chahar,rahul-chahar,stats_player_id,0
+rahul-tewatia,rahul-tewatia,stats_player_id,0
 rajat-patidar,rajat-patidar,stats_player_id,0
+ramandeep-singh,ramandeep-singh,stats_player_id,0
+rashid-khan,rashid-khan,stats_player_id,0
+ravi-bishnoi,ravi-bishnoi,stats_player_id,0
+ravindra-jadeja,ravindra-jadeja,stats_player_id,0
+rinku-singh,rinku-singh,stats_player_id,0
+rishabh-pant,rishabh-pant,stats_player_id,0
+riyan-parag,riyan-parag,stats_player_id,0
+rohit-sharma,rohit-sharma,stats_player_id,0
 romario-shepherd,romario-shepherd,stats_player_id,0
+ruturaj-gaikwad,ruturaj-gaikwad,stats_player_id,0
+ryan-rickelton,ryan-rickelton,stats_player_id,0
+sai-sudharsan,sai-sudharsan,stats_player_id,0
 salil-arora,salil-arora,stats_player_id,0
+sameer-rizvi,sameer-rizvi,stats_player_id,0
+sandeep-sharma,sandeep-sharma,stats_player_id,0
+sanju-samson,sanju-samson,stats_player_id,0
+sarfaraz-khan,sarfaraz-khan,stats_player_id,0
+shahbaz-ahmed,shahbaz-ahmed,stats_player_id,0
+shahrukh-khan,shahrukh-khan,stats_player_id,0
+shardul-thakur,shardul-thakur,stats_player_id,0
+shashank-singh,shashank-singh,stats_player_id,0
+sherfane-rutherford,sherfane-rutherford,stats_player_id,0
+shivam-dube,shivam-dube,stats_player_id,0
+shivang-kumar,shivang-kumar,stats_player_id,0
+shreyas-iyer,shreyas-iyer,stats_player_id,0
+shubman-gill,shubman-gill,stats_player_id,0
+sunil-narine,sunil-narine,stats_player_id,0
+suryakumar-yadav,suryakumar-yadav,stats_player_id,0
 suyash-sharma,suyash-sharma,stats_player_id,0
+tilak-varma,tilak-varma,stats_player_id,0
 tim-david,tim-david,stats_player_id,0
 travis-head,travis-head,stats_player_id,0
+trent-boult,trent-boult,stats_player_id,0
+tristan-stubbs,tristan-stubbs,stats_player_id,0
+vaibhav-arora,vaibhav-arora,stats_player_id,0
+vaibhav-sooryavanshi,vaibhav-sooryavanshi,stats_player_id,0
+varun-chakaravarthy,varun-chakaravarthy,stats_player_id,0
+vijaykumar-vyshak,vijaykumar-vyshak,stats_player_id,0
+vipraj-nigam,vipraj-nigam,stats_player_id,0
 virat-kohli,virat-kohli,stats_player_id,0
+washington-sundar,washington-sundar,stats_player_id,0
+xavier-bartlett,xavier-bartlett,stats_player_id,0
+yashasvi-jaiswal,yashasvi-jaiswal,stats_player_id,0
+yuzvendra-chahal,yuzvendra-chahal,stats_player_id,0
+B Sai Sudharsan,Sai Sudharsan,manual,100
+D Ferreira,Donovan Ferreira,manual,100
+JC Archer,Jofra Archer,manual,100
+K Rabada,Kagiso Rabada,manual,100
+M Prasidh Krishna,Prasidh Krishna,manual,100
+M Shahrukh Khan,Shahrukh Khan,manual,100
+N Burger,Nandre Burger,manual,100
+R Parag,Riyan Parag,manual,100
+R Tewatia,Rahul Tewatia,manual,100
+RA Jadeja,Ravindra Jadeja,manual,100
+SO Hetmyer,Shimron Hetmyer,manual,100
+TU Deshpande,Tushar Deshpande,manual,100
+ashok-sharma,Ashok Sharma,manual,100

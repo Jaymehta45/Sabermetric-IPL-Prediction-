@@ -17,6 +17,11 @@
     <span class="stat-value">{{ stats.n_logged }}</span>
   </article>
   <article class="stat-card">
+    <span class="stat-label">P1 · P2 · P3 complete</span>
+    <span class="stat-value">{{ stats.n_process1 }} · {{ stats.n_process2 }} · {{ stats.n_process3 }}</span>
+    <span class="stat-sub">pre · post · review</span>
+  </article>
+  <article class="stat-card">
     <span class="stat-label">With final result</span>
     <span class="stat-value">{{ stats.n_with_actual }}</span>
   </article>
@@ -29,6 +34,11 @@
     <span class="stat-label">Official POTM matched</span>
     <span class="stat-value">{{ stats.potm_pct_label }}</span>
     <span class="stat-sub">{{ stats.potm_hits }}/{{ stats.potm_total }} graded</span>
+  </article>
+  <article class="stat-card">
+    <span class="stat-label">Innings runs — avg MAE</span>
+    <span class="stat-value">{{ stats.innings_mae_avg_label }}</span>
+    <span class="stat-sub">{% if stats.innings_mae_n > 0 %}{{ stats.innings_mae_n }} match(es){% else %}—{% endif %}</span>
   </article>
 </section>
 {% endif %}
@@ -63,6 +73,7 @@
     <ul class="explain-list">
       <li>Read <strong>down</strong> each card: left column is the question, middle is the model before the game, right is what you added after.</li>
       <li><strong>Rough win split</strong> — Only the model fills this (e.g. SH 39% · RCB 61%). Left team in the title = first number. Not a betting price.</li>
+      <li><strong>Team innings</strong> — Before: mean team runs / expected wickets from Process 1 <code>pred_extra</code>. After: real totals from your log (and wickets from <code>bbb_match_file</code> when present). <strong>Δ / MAE</strong> — actual minus predicted team runs per innings; MAE = mean absolute error across the two innings.</li>
       <li><strong>Match?</strong> — Own column for <span class="badge badge-hit">Match</span> / <span class="badge badge-miss">Miss</span> so names are not glued to the tag.</li>
       <li><strong>Top 5 / Top 3</strong> — After column uses your <code>bbb_match_file</code> ball-by-ball CSV: top 5 batters by runs, top 3 bowlers by wickets. <strong>Match</strong> = model list and actual list are the same in the same order (IDs compared after normalizing). No file or short lists → —.</li>
       <li><strong>Top runs / wickets (pick)</strong> — Single “best” picks: <strong>Match</strong> if model best bat/bowl equals the logged top scorer / top wicket-taker (same person).</li>
@@ -73,8 +84,18 @@
     {% for r in comparison_rows %}
     <article class="compare-card panel" data-match-key="{{ r.match_key }}">
       <header class="compare-card-head">
-        <span class="compare-card-date">{{ r.match_date or "—" }}</span>
+        <div class="compare-card-head-top">
+          <span class="compare-card-date">{{ r.match_date or "—" }}</span>
+          <div class="process-steps" role="group" aria-label="Workflow steps for this match">
+            <span class="process-step{% if r.process_p1_done %} process-step--done{% endif %}" title="Process 1: pre-match prediction logged">1</span>
+            <span class="process-step{% if r.process_p2_done %} process-step--done{% endif %}" title="Process 2: post-match actuals logged">2</span>
+            <span class="process-step{% if r.process_p3_done %} process-step--done{% endif %}" title="Process 3: model review logged">3</span>
+          </div>
+        </div>
         <h3 class="compare-card-title">{{ r.teams }}</h3>
+        {% if r.process3_notes %}
+        <p class="compare-card-process3">{{ r.process3_notes }}</p>
+        {% endif %}
       </header>
       <div class="compare-vertical-wrap">
       <table class="compare-vertical">
@@ -103,6 +124,16 @@
             <td class="odds-cell" {% if r.win_chance_note %}title="{{ r.win_chance_note | e }}"{% endif %}>{{ r.win_chance_readable }}</td>
             <td class="compare-na">—</td>
             <td class="compare-na compare-grade-cell">—</td>
+          </tr>
+          <tr>
+            <th scope="row">Team innings <span class="row-hint">(runs / wkts)</span></th>
+            <td class="mono">{% if r.pred_innings_line %}{{ r.pred_innings_line }}{% else %}<span class="compare-na">—</span>{% endif %}</td>
+            <td class="mono">{% if r.actual_innings_line %}{{ r.actual_innings_line }}{% elif r.process_p2_done %}<span class="compare-na" title="Add actual_first_innings_team_runs and actual_second_innings_team_runs to the log, or re-run post with bbb_match_file">—</span>{% else %}<span class="badge badge-pending">After post</span>{% endif %}</td>
+            <td class="compare-grade-cell">
+              {% if r.innings_err_summary %}<span class="mono innings-err-line" title="Δ = actual − predicted team runs; MAE = mean |Δ| across innings">{{ r.innings_err_summary }}</span>
+              {% elif not r.process_p2_done %}<span class="badge badge-pending">Waiting</span>
+              {% else %}<span class="compare-na">—</span>{% endif %}
+            </td>
           </tr>
           <tr>
             <th scope="row">Top 5 batters <span class="row-hint">(model order)</span></th>

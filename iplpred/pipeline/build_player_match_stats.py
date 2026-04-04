@@ -9,6 +9,8 @@ import pandas as pd
 
 from iplpred.paths import PROCESSED_DIR
 
+from iplpred.pipeline.icc_match_stats_supplement import build_icc_supplement_df
+
 INPUT_PATH = PROCESSED_DIR / "unified_ball_by_ball.csv"
 OUTPUT_PATH = PROCESSED_DIR / "player_match_stats.csv"
 
@@ -250,6 +252,15 @@ def main() -> None:
         "total_balls_faced",
         "total_balls_bowled",
     ]
+
+    icc_sup = build_icc_supplement_df()
+    if icc_sup is not None and not icc_sup.empty:
+        icc_sup = icc_sup[[c for c in out_cols if c in icc_sup.columns]]
+        for c in out_cols:
+            if c not in icc_sup.columns:
+                icc_sup[c] = 0.0 if c in numeric_out else ""
+        icc_sup = icc_sup[out_cols]
+        merged = pd.concat([merged, icc_sup], ignore_index=True)
     for c in numeric_out:
         merged[c] = pd.to_numeric(merged[c], errors="coerce").fillna(0)
 

@@ -1,0 +1,44 @@
+{
+  "match_key": "match4-pk-gt-2026-03-31",
+  "match_date": "2026-03-31",
+  "venue": "Maharaja Yadavindra Singh International Cricket Stadium, Mullanpur, New Chandigarh",
+  "team1_name": "Gujarat Titans",
+  "team2_name": "Punjab Kings",
+  "team1_bats_first": true,
+  "pred_winner": "Gujarat Titans",
+  "pred_p_team1_win": 1.0,
+  "pred_best_bat": "Shubman Gill",
+  "pred_best_bowl": "K Rabada",
+  "pred_top5_bats": [
+    "Shubman Gill",
+    "MP Stoinis",
+    "JC Buttler",
+    "B Sai Sudharsan",
+    "Priyansh Arya"
+  ],
+  "pred_top3_bowls": [
+    "K Rabada",
+    "Rashid Khan",
+    "Arshdeep Singh"
+  ],
+  "pred_potm": "MP Stoinis",
+  "pred_extra": {
+    "sims": 400,
+    "ensemble_p_team1": 0.98,
+    "sim_win_probability_team1": 1.0,
+    "leader_model_p_team1": 0.5548008289201013,
+    "batting_order_swapped": false,
+    "impact_trim_lowest": true,
+    "impact_dropped_team1": "Ashok Sharma",
+    "impact_dropped_team2": "Prabhsimran Singh",
+    "pitch_multipliers": {
+      "first_innings_runs": 1.063,
+      "second_innings_runs": 1.075756,
+      "first_innings_wickets": 0.955,
+      "second_innings_wickets": 0.94927
+    },
+    "venue_spin_harshness": 0.0,
+    "process_variant": "1A",
+    "full_playing_twelve": false
+  }
+}

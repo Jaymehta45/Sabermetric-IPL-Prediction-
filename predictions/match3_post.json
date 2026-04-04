@@ -1,0 +1,11 @@
+{
+  "match_key": "match3-rr-csk-2026-03-30",
+  "actual_winner": "Rajasthan Royals",
+  "actual_top_scorer": "Vaibhav Suryavanshi",
+  "actual_top_scorer_runs": 50,
+  "actual_top_wicket_bowler": "Nandre Burger",
+  "actual_top_wickets": 2,
+  "official_potm": "Vaibhav Suryavanshi",
+  "bbb_match_file": "matches/match3_rr_vs_csk.csv",
+  "post_notes": "BBB: CSK 126 vs RR 127 (chase). Top wickets tied at 2 (Burger among them); POTM set to match top scorer — correct if official award differs."
+}

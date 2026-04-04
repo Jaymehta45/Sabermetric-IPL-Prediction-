@@ -31,9 +31,15 @@ def main() -> None:
     if "player_id" not in feat.columns:
         raise SystemExit("player_features.csv has no player_id column.")
 
-    ids = sorted(feat["player_id"].astype(str).str.strip().unique())
+    ids = set(feat["player_id"].astype(str).str.strip().unique())
+    seed = None
+    if SEED_PATH.is_file():
+        seed = pd.read_csv(SEED_PATH, low_memory=False)
+        if "canonical_id" in seed.columns:
+            ids.update(seed["canonical_id"].astype(str).str.strip().unique())
+    ids_sorted = sorted(ids)
     reg = pd.DataFrame(
-        {"canonical_id": ids, "primary_name": ids, "notes": ""},
+        {"canonical_id": ids_sorted, "primary_name": ids_sorted, "notes": ""},
     )
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
     reg.to_csv(REGISTRY_OUT, index=False)
@@ -41,12 +47,11 @@ def main() -> None:
 
     base_rows = [
         {"canonical_id": c, "alias_string": c, "source": "stats_player_id", "priority": 0}
-        for c in ids
+        for c in ids_sorted
     ]
     aliases = pd.DataFrame(base_rows)
 
-    if SEED_PATH.is_file():
-        seed = pd.read_csv(SEED_PATH, low_memory=False)
+    if seed is not None:
         required = {"canonical_id", "alias_string", "source", "priority"}
         if not required.issubset(seed.columns):
             raise SystemExit(f"{SEED_PATH} needs columns {sorted(required)}")

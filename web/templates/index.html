@@ -4,23 +4,23 @@
 {% block content %}
 
 <section class="hero hero--simple">
-  <h1 class="hero-title">Guess IPL match results from the teams you pick</h1>
+  <h1 class="hero-title">Prediction log &amp; results</h1>
   <p class="hero-lead hero-lead--wide">
-    You enter the two squads (11 players each) and a few match details. The tool estimates who might win and standout players.
-    After the real match, you can log what actually happened and see side‑by‑side if you were close.
+    This dashboard reads <code>data/processed/prediction_log.csv</code>. For each match:
+    <strong>Process 1</strong> → <strong>2</strong> → <strong>3</strong> in order; after each step, run the matching
+    <code>log_prediction.py</code> command so this page updates on refresh.
   </p>
   <div class="hero-actions">
-    <a href="/predict" class="btn btn-primary">Start a prediction</a>
-    <a href="/history" class="btn btn-ghost">See predictions vs real results</a>
+    <a href="/history" class="btn btn-primary">Pred vs actual</a>
   </div>
 </section>
 
 <section class="steps-panel panel">
-  <h2 class="panel-title">How to use this (3 steps)</h2>
+  <h2 class="panel-title">Workflow (summary)</h2>
   <ol class="steps-list">
-    <li><strong>Predict a match</strong> — Choose teams, paste both XIs, say who bats first if you know it, then run the model.</li>
-    <li><strong>Save the output</strong> — Copy the JSON or use your usual workflow to append a row to the prediction log.</li>
-    <li><strong>Add the real result</strong> — When the game is over, fill in winner, top scorer, POTM, etc. Then open <em>Compare to results</em> to see the table.</li>
+    <li><strong>Process 1</strong> — You provide toss, venue, both XIs, optional pitch text; we run the CLI and log a pre row.</li>
+    <li><strong>Process 2</strong> — After that match: ball-by-ball under <code>matches/</code>, retrain scripts, then post row + review.</li>
+    <li><strong>Process 3</strong> — After each post-match review, note data/identity/calibration improvements (see <code>DAILY_WORKFLOW.txt</code>).</li>
   </ol>
 </section>
 
@@ -31,12 +31,27 @@
     <span class="stat-sub">rows in your log file</span>
   </article>
   <article class="stat-card">
+    <span class="stat-label">Process 1 done (pre)</span>
+    <span class="stat-value">{{ stats.n_process1 }}</span>
+    <span class="stat-sub">log_prediction.py pre</span>
+  </article>
+  <article class="stat-card">
+    <span class="stat-label">Process 2 done (post)</span>
+    <span class="stat-value">{{ stats.n_process2 }}</span>
+    <span class="stat-sub">actuals + retrain workflow</span>
+  </article>
+  <article class="stat-card">
+    <span class="stat-label">Process 3 done (review)</span>
+    <span class="stat-value">{{ stats.n_process3 }}</span>
+    <span class="stat-sub">log_prediction.py process3</span>
+  </article>
+  <article class="stat-card">
     <span class="stat-label">Games with a real result filled in</span>
     <span class="stat-value">{{ stats.n_with_actual }}</span>
     <span class="stat-sub">so we can compare</span>
   </article>
   <article class="stat-card">
-    <span class="stat-label">Winner: you vs reality</span>
+    <span class="stat-label">Winner: pred vs reality</span>
     <span class="stat-value">{{ stats.winner_pct_label }}</span>
     <span class="stat-sub">
       {% if stats.winner_total > 0 %}
@@ -57,6 +72,17 @@
       {% endif %}
     </span>
   </article>
+  <article class="stat-card">
+    <span class="stat-label">Innings runs — avg MAE</span>
+    <span class="stat-value">{{ stats.innings_mae_avg_label }}</span>
+    <span class="stat-sub">
+      {% if stats.innings_mae_n > 0 %}
+        mean error vs pred, {{ stats.innings_mae_n }} match(es) with both innings filled
+      {% else %}
+        needs post with innings totals or BBB path
+      {% endif %}
+    </span>
+  </article>
 </section>
 
 <section class="panel">
@@ -65,13 +91,15 @@
     <a href="/history" class="text-link">Open full table →</a>
   </div>
   {% if recent %}
-  <div class="table-wrap">
+  <div class="table-wrap table-wrap--home">
     <table class="data-table data-table--compare">
       <thead>
         <tr>
           <th>When</th>
           <th>Matchup</th>
+          <th>P1·P2·P3</th>
           <th>Model pick</th>
+          <th>Innings (pred · actual)</th>
           <th>Who won (real)</th>
           <th>Winner</th>
         </tr>
@@ -80,8 +108,20 @@
         {% for r in recent %}
         <tr>
           <td>{{ r.match_date or "—" }}</td>
-          <td>{{ r.teams }}</td>
+          <td class="cell-matchup" title="{{ r.teams }}">{{ r.teams }}</td>
+          <td class="table-meta">
+            <span class="process-step-mark{% if r.process_p1_done %} process-step-mark--on{% endif %}" title="Process 1">1</span>
+            <span class="process-step-mark{% if r.process_p2_done %} process-step-mark--on{% endif %}" title="Process 2">2</span>
+            <span class="process-step-mark{% if r.process_p3_done %} process-step-mark--on{% endif %}" title="Process 3">3</span>
+          </td>
           <td>{{ r.pred_winner }}</td>
+          <td class="cell-innings-stack" title="1st = team1 in log; after post: actual totals and Δ / MAE">
+            <div class="mono cell-innings-line">{{ r.pred_innings_line or "—" }}</div>
+            {% if r.has_innings_actual %}
+            <div class="mono cell-innings-line cell-innings-line--actual">→ {{ r.actual_innings_line }}</div>
+            <div class="mono cell-innings-mae">{{ r.innings_err_summary }}</div>
+            {% endif %}
+          </td>
           <td>{{ r.actual_winner }}</td>
           <td>
             {% if r.winner_grade == 'right' %}<span class="badge badge-hit">Match</span>
@@ -95,7 +135,7 @@
     </table>
   </div>
   {% else %}
-  <p class="empty-hint">Nothing in the log yet. Go to <strong>Predict a match</strong> and save a run, then add results when the game finishes.</p>
+  <p class="empty-hint">Nothing in the log yet. After you run the CLI and log a pre row, add post rows when the game finishes — then refresh this page.</p>
   {% endif %}
 </section>
 {% endblock %}

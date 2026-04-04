@@ -6,15 +6,23 @@ Pre-match prediction for six outcomes when both playing XIs are known (11 vs 11)
 3. Best bowler (highest predicted wickets)
 4. Top 5 batsmen
 5. Top 3 bowlers
-6. Player of the match (runs + 25×wickets + bonuses, same as match_simulator)
+6. Player of the match (role-weighted composite score from predicted runs/wickets; not official POTM)
 
-Uses the same models and rules as match_simulator, but does NOT drop a player
-from an 11-player XI (all 11 count toward team totals).
+Uses the same models and rules as match_simulator. For a plain 11 vs 11, all 11
+count. With ``--team1-impact`` / ``--team2-impact`` (12 per side), the default
+is to trim the lowest predicted-impact row from each 12 for team totals; use
+``--impact-add-only`` to count all 12.
 
 Optional match context (toss, pitch) via ``MatchContext``: after reordering,
 **team1 is always the side batting first** (first innings). Supply
 ``batting_first="team2"`` if your ``--xi2`` bats first, or use ``--toss-winner``
 and ``--elected-to``.
+
+**Process 1A vs 1B (impact substitutes only):**
+  * **1A** (default): XI + impact sub = 12 names per side; **lowest predicted-impact**
+    row is **dropped from team totals** (``--process-variant 1a``; same as omitting).
+  * **1B** (experimental): **all 12** count toward team totals (``--process-variant 1b``
+    or ``--impact-add-only``). Same RF models and features; only scoring changes.
 
 Example:
   python predict_match_outcomes.py \\
@@ -27,6 +35,14 @@ Example:
 Export JSON for prediction_log (log_prediction.py pre):
   --export-json predictions/match_pre.json --match-date 2026-03-28 \\
     [--match-key IPL2026-M01] [--venue "M Chinnaswamy Stadium, Bengaluru"]
+
+**Innings team scores:** After the six outcomes, the CLI prints **calibrated**
+mean team runs for innings 1 and 2: per-player RF outputs are scaled so the
+team sum matches the Ridge **team-total** model when available, otherwise a
+T20 anchor (~165) while preserving relative strength. Wickets fallen use the
+fielding XI ``predicted_wickets`` sum (capped at 10). Logged in ``pred_extra`` as
+``pred_first_innings_team_runs`` / ``pred_second_innings_team_runs`` and wicket
+keys; ``team_run_calibration`` records scales and pre-scale sums.
 """
 
 from __future__ import annotations
@@ -113,15 +129,17 @@ def predict_match_outcomes(
     shrink_team_prior_weight: float = 0.45,
     team1_impact: str | None = None,
     team2_impact: str | None = None,
+    impact_trim_lowest: bool = True,
 ) -> dict:
     """
     Run simulation and return
     ``{"six": ..., "simulation": ..., "batting_order_swapped": bool}``.
 
-    By default all **11** listed players count. If ``team1_impact`` or
-    ``team2_impact`` is set, that side must be listed as **11** in the XI; the
-    impact player is appended (12th), then the lowest ``runs + 25×wickets``
-    contribution is dropped for that side's team total (IPL impact rule).
+    If ``team1_impact`` / ``team2_impact`` is set, that side's XI must be **11**
+    names; the impact sub is **appended** (12th player). By default
+    (``impact_trim_lowest=True``) one row per 12-player side is **dropped** from
+    team-total scoring (lowest ``runs + 25×wickets`` heuristic). Set
+    ``impact_trim_lowest=False`` so **all 12** count (XI + sub, no trim).
 
     If ``match_context.batting_first`` is set, teams are reordered so **team1
     always bats first** in the model (first innings multipliers apply to team1).
@@ -161,7 +179,8 @@ def predict_match_outcomes(
     validate_xi("team1_xi", team1_xi, n=len(team1_xi))
     validate_xi("team2_xi", team2_xi, n=len(team2_xi))
 
-    use_drop = len(team1_xi) == PLAYING_XI_SIZE + 1 or len(team2_xi) == PLAYING_XI_SIZE + 1
+    has_12 = len(team1_xi) == PLAYING_XI_SIZE + 1 or len(team2_xi) == PLAYING_XI_SIZE + 1
+    use_drop = has_12 and impact_trim_lowest
 
     bf = match_context.batting_first if match_context else None
     t1_xi, t2_xi, n1, n2, swapped = normalize_teams_for_batting_first(
@@ -227,7 +246,31 @@ def print_six(six: dict, meta: dict | None = None) -> None:
                 "scaled down at batting-friendly / small grounds; pace slightly up."
             )
             print()
-    print(f"1. Winning team: {six['winning_team']}")
+    # Single headline: winner matches Monte Carlo majority when sims > 0
+    p1 = six.get("p_team1_win")
+    basis = six.get("win_probability_basis") or ""
+    n1 = meta.get("team1_name") if meta else None
+    n2 = meta.get("team2_name") if meta else None
+    if p1 is not None and n1 and n2 and six.get("winning_team") == "tie":
+        print(
+            f"1. Essentially tied (Monte Carlo) — P({n1})={float(p1):.1%}, "
+            f"P({n2})={1.0 - float(p1):.1%}"
+        )
+    elif p1 is not None and n1 and n2:
+        ppw = six.get("p_predicted_winner")
+        pp_s = f"{float(ppw):.1%}" if ppw is not None else "—"
+        print(
+            f"1. Predicted winner: {six['winning_team']} — "
+            f"P({six['winning_team']} wins) = {pp_s} "
+            f"(Monte Carlo; P({n1})={float(p1):.1%}, P({n2})={1.0 - float(p1):.1%})"
+        )
+    elif p1 is not None:
+        print(
+            f"1. Predicted winner: {six['winning_team']} — "
+            f"P(win) = {float(six.get('p_predicted_winner') or 0):.1%} (Monte Carlo, basis={basis})"
+        )
+    else:
+        print(f"1. Predicted winner: {six['winning_team']} (mean team totals; use --sims > 0 for win %)")
     print()
     bb = six["best_batsman"]
     if bb is not None:
@@ -258,7 +301,7 @@ def print_six(six: dict, meta: dict | None = None) -> None:
     print(
         f"6. Player of the match: {pom['player_id']} ({pom['side']}) "
         f"— score={float(pom['pom_score']):.2f} "
-        f"(runs + 25×wickets + bonuses; {r:.2f} runs, {w:.2f} wkts)"
+        f"(role-weighted composite; {r:.2f} runs, {w:.2f} wkts)"
     )
     print()
     print("=" * 60)
@@ -291,6 +334,7 @@ def build_prediction_log_payload(
     venue: str,
     n_sims: int,
     batting_order_swapped: bool,
+    used_impact_subs: bool = False,
 ) -> dict:
     """
     Schema compatible with ``scripts/log_prediction.py pre`` (see REQUIRED_PRE there).
@@ -311,9 +355,10 @@ def build_prediction_log_payload(
     while len(ids3) < 3:
         ids3.append("")
 
-    p1 = sim.get("ensemble_p_team1")
+    # Primary logged probability = Monte Carlo (same as headline winner); ensemble optional in pred_extra
+    p1 = sim.get("win_probability_team1")
     if p1 is None:
-        p1 = sim.get("win_probability_team1")
+        p1 = sim.get("ensemble_p_team1")
     if p1 is None:
         p1 = 0.5
     p1 = float(p1)
@@ -325,6 +370,7 @@ def build_prediction_log_payload(
         "sim_win_probability_team1": sim.get("win_probability_team1"),
         "leader_model_p_team1": sim.get("leader_model_p_team1"),
         "batting_order_swapped": batting_order_swapped,
+        "impact_trim_lowest": bool(sim.get("drop_lowest_impact")),
         "impact_dropped_team1": sim.get("impact_dropped_team1"),
         "impact_dropped_team2": sim.get("impact_dropped_team2"),
     }
@@ -338,6 +384,59 @@ def build_prediction_log_payload(
     vh = sim.get("venue_spin_harshness")
     if vh is not None:
         pred_extra["venue_spin_harshness"] = float(vh)
+
+    drop_imp = bool(sim.get("drop_lowest_impact"))
+    if used_impact_subs:
+        pred_extra["process_variant"] = "1A" if drop_imp else "1B"
+        pred_extra["full_playing_twelve"] = not drop_imp
+    else:
+        pred_extra["process_variant"] = "1A"
+        pred_extra["full_playing_twelve"] = False
+
+    # Mean predicted team totals (RF player pipeline + pitch/venue; not ball-by-ball MC)
+    t1r = sim.get("team1_total_runs")
+    t2r = sim.get("team2_total_runs")
+    if t1r is not None:
+        pred_extra["pred_first_innings_team_runs"] = float(t1r)
+    if t2r is not None:
+        pred_extra["pred_second_innings_team_runs"] = float(t2r)
+    w1 = sim.get("pred_wickets_first_innings")
+    w2 = sim.get("pred_wickets_second_innings")
+    if w1 is not None:
+        pred_extra["pred_first_innings_team_wickets"] = float(w1)
+    if w2 is not None:
+        pred_extra["pred_second_innings_team_wickets"] = float(w2)
+    w1r = sim.get("pred_wickets_first_innings_raw_sum")
+    w2r = sim.get("pred_wickets_second_innings_raw_sum")
+    if w1r is not None:
+        pred_extra["pred_first_innings_team_wickets_raw_sum"] = float(w1r)
+    if w2r is not None:
+        pred_extra["pred_second_innings_team_wickets_raw_sum"] = float(w2r)
+    ml1 = sim.get("ml_team1_total_runs")
+    ml2 = sim.get("ml_team2_total_runs")
+    if ml1 is not None:
+        pred_extra["ml_team_total_runs_team1"] = float(ml1)
+    if ml2 is not None:
+        pred_extra["ml_team_total_runs_team2"] = float(ml2)
+
+    cm = sim.get("team_run_calibration_method")
+    if cm is not None:
+        pred_extra["team_run_calibration"] = {
+            "method": str(cm),
+            "scale_team1": sim.get("team1_calibration_scale"),
+            "scale_team2": sim.get("team2_calibration_scale"),
+            "sum_player_runs_before_team1": sim.get("team1_raw_runs"),
+            "sum_player_runs_before_team2": sim.get("team2_raw_runs"),
+        }
+
+    pred_extra["player_process1"] = {
+        "heuristic": "role_aware_v1",
+        "summary": (
+            "Best bat / top 5 runs exclude pure bowlers when enough batters exist; "
+            "best bowl / top 3 wickets prefer bowlers and allrounders; "
+            "POTM uses a role-weighted composite (not the official match award)."
+        ),
+    }
 
     return {
         "match_key": match_key,
@@ -447,6 +546,27 @@ def main() -> None:
         help="IPL impact substitute appended to team2 XI (--xi2 must be exactly 11 names)",
     )
     parser.add_argument(
+        "--impact-add-only",
+        action="store_true",
+        help=(
+            "Same as --process-variant 1b: when using impact subs, count all 12 "
+            "players toward team totals (no lowest-row drop)."
+        ),
+    )
+    parser.add_argument(
+        "--process-variant",
+        type=str,
+        choices=("1a", "1b"),
+        default="1a",
+        help=(
+            "Process 1A (default): impact subs present → trim lowest predicted-impact "
+            "from each 12 for team totals (main pipeline). "
+            "Process 1B (experimental): full playing 12 — all XI+impact count. "
+            "Same models; only team-total scoring differs. "
+            "Overridden by --impact-add-only (equivalent to 1b)."
+        ),
+    )
+    parser.add_argument(
         "--export-json",
         type=str,
         default="",
@@ -469,6 +589,11 @@ def main() -> None:
         type=str,
         default="",
         help="Venue string for export-json (or use venue in --match-json)",
+    )
+    parser.add_argument(
+        "--show-ensemble-details",
+        action="store_true",
+        help="Print ML/ensemble win probability (secondary to Monte Carlo headline)",
     )
     args = parser.parse_args()
 
@@ -536,8 +661,10 @@ def main() -> None:
 
     t1_imp = args.team1_impact.strip() or None
     t2_imp = args.team2_impact.strip() or None
-    if args.match_json and (t1_imp or t2_imp):
-        raise SystemExit("--team1-impact/--team2-impact are not supported with --match-json yet")
+
+    impact_trim_lowest = not args.impact_add_only
+    if args.process_variant == "1b":
+        impact_trim_lowest = False
 
     out = predict_match_outcomes(
         team1,
@@ -551,11 +678,23 @@ def main() -> None:
         use_recent_form_shrinkage=not args.no_shrinkage,
         team1_impact=t1_imp,
         team2_impact=t2_imp,
+        impact_trim_lowest=impact_trim_lowest,
     )
     sim = out["simulation"]
     t1_name_eff, t2_name_eff = t1n, t2n
     if out.get("batting_order_swapped"):
         t1_name_eff, t2_name_eff = t2n, t1n
+    if t1_imp or t2_imp:
+        pv = "1B" if not impact_trim_lowest else "1A"
+        print(
+            f"Process {pv} — impact subs: "
+            + (
+                "full playing 12 (all count toward team totals)"
+                if pv == "1B"
+                else "trim lowest predicted-impact from each 12 for team totals"
+            )
+        )
+        print()
     print_six(
         out["six"],
         meta={
@@ -565,6 +704,28 @@ def main() -> None:
             "venue_spin_harshness": sim.get("venue_spin_harshness"),
         },
     )
+    t1r = sim.get("team1_total_runs")
+    t2r = sim.get("team2_total_runs")
+    w1i = sim.get("pred_wickets_first_innings")
+    w2i = sim.get("pred_wickets_second_innings")
+    if t1_name_eff and t2_name_eff and t1r is not None and t2r is not None:
+        print()
+        print(
+            f"Predicted innings totals (calibrated team sums — ML team-total or T20 anchor): "
+            f"{t1_name_eff} (1st) ≈ {float(t1r):.1f}  |  "
+            f"{t2_name_eff} (2nd) ≈ {float(t2r):.1f}"
+        )
+        if w1i is not None and w2i is not None:
+            print(
+                f"Predicted wickets fallen (fielding XI wicket sums, capped at 10): "
+                f"1st innings ≈ {float(w1i):.1f}  |  2nd innings ≈ {float(w2i):.1f}"
+            )
+        ml1, ml2 = sim.get("ml_team1_total_runs"), sim.get("ml_team2_total_runs")
+        if ml1 is not None and ml2 is not None:
+            print(
+                f"  (optional) dedicated team-total model: "
+                f"{t1_name_eff} ≈ {float(ml1):.1f}, {t2_name_eff} ≈ {float(ml2):.1f}"
+            )
     nr = out.get("name_resolutions")
     if nr and args.use_registry:
         print()
@@ -587,17 +748,27 @@ def main() -> None:
                 print(line)
     id1 = sim.get("impact_dropped_team1")
     id2 = sim.get("impact_dropped_team2")
-    if id1 or id2:
+    if (t1_imp or t2_imp) and not impact_trim_lowest:
+        print()
+        print(
+            "Impact: all 12 players count toward team totals "
+            "(Process 1B / --process-variant 1b / --impact-add-only)."
+        )
+    elif id1 or id2:
         print()
         print(
             "Impact pool: excluded from team total (lowest runs + 25×wickets among 12) — "
             f"team1={id1!s}, team2={id2!s}"
         )
-    if sim.get("ensemble_p_team1") is not None:
-        print(
-            f"Ensemble P(team1): {sim['ensemble_p_team1']:.2%} | "
-            f"simulation-only: {sim.get('win_probability_team1')}"
-        )
+    if args.show_ensemble_details:
+        wp = sim.get("win_probability_team1")
+        if wp is not None:
+            print(f"Monte Carlo P(team1 wins): {wp:.2%} (primary headline)")
+        lm = sim.get("leader_model_p_team1")
+        if lm is not None:
+            print(f"Leader (roster) model P(team1 wins): {lm:.2%}")
+        if sim.get("ensemble_p_team1") is not None:
+            print(f"Ensemble (ML + sim + calibration) P(team1 wins): {sim['ensemble_p_team1']:.2%}")
 
     export_json = (args.export_json or "").strip()
     if export_json:
@@ -640,6 +811,7 @@ def main() -> None:
             venue=venue,
             n_sims=int(args.sims),
             batting_order_swapped=bool(out.get("batting_order_swapped")),
+            used_impact_subs=bool(t1_imp or t2_imp),
         )
         export_path.parent.mkdir(parents=True, exist_ok=True)
         export_path.write_text(json.dumps(log_payload, indent=2), encoding="utf-8")

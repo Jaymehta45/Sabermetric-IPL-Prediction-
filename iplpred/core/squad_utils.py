@@ -9,40 +9,10 @@ from typing import Final
 
 import pandas as pd
 
+from iplpred.core.squad_bridge import load_squad_stats_bridge
 from iplpred.paths import REPO_ROOT
 
 IPL_2026_SQUADS_PATH = REPO_ROOT / "data" / "processed" / "ipl_2026_squads.csv"
-
-# Historical player_id (in player_features / match_stats) -> squad CSV player_id
-PLAYER_ID_ALIASES: dict[tuple[str, str], str] = {
-    ("mumbai indians", "rg sharma"): "Rohit Sharma",
-    ("mumbai indians", "sa yadav"): "Suryakumar Yadav",
-    ("mumbai indians", "q de kock"): "Quinton de Kock",
-    ("mumbai indians", "hh pandya"): "Hardik Pandya",
-    ("mumbai indians", "jj bumrah"): "Jasprit Bumrah",
-    ("mumbai indians", "rd chahar"): "Deepak Chahar",
-    ("chennai super kings", "rd gaikwad"): "Ruturaj Gaikwad",
-    ("chennai super kings", "s dube"): "Shivam Dube",
-    # Stats CSV `player_id` -> IPL 2026 squad CSV name (Royal Challengers Bengaluru)
-    ("royal challengers bengaluru", "v kohli"): "Virat Kohli",
-    ("royal challengers bengaluru", "pd salt"): "Phil Salt",
-    ("royal challengers bengaluru", "rm patidar"): "Rajat Patidar",
-    ("royal challengers bengaluru", "jm sharma"): "Jitesh Sharma",
-    ("royal challengers bengaluru", "th david"): "Tim David",
-    ("royal challengers bengaluru", "r shepherd"): "Romario Shepherd",
-    ("royal challengers bengaluru", "kh pandya"): "Krunal Pandya",
-    ("royal challengers bengaluru", "b kumar"): "Bhuvneshwar Kumar",
-    ("royal challengers bengaluru", "jr hazlewood"): "Josh Hazlewood",
-    ("royal challengers bengaluru", "rasikh salam"): "Rasikh Salam",
-    ("royal challengers bengaluru", "suyash sharma"): "Suyash Sharma",
-    # Sunrisers Hyderabad
-    ("sunrisers hyderabad", "tm head"): "Travis Head",
-    ("sunrisers hyderabad", "h klaasen"): "Heinrich Klaasen",
-    ("sunrisers hyderabad", "nithish kumar reddy"): "Nitish Kumar Reddy",
-    ("sunrisers hyderabad", "hv patel"): "Harshal Patel",
-    ("sunrisers hyderabad", "jd unadkat"): "Jaydev Unadkat",
-    ("sunrisers hyderabad", "e malinga"): "Eshan Malinga",
-}
 
 MAX_OVERSEAS_PLAYING_XI = 4
 
@@ -68,6 +38,12 @@ _resolve_cache: dict[tuple[str, str], str | None] = {}
 def clear_resolve_cache() -> None:
     """Clear cached name resolutions (e.g. after squad CSV reload in tests)."""
     _resolve_cache.clear()
+    try:
+        from iplpred.core.squad_bridge import clear_squad_bridge_cache
+
+        clear_squad_bridge_cache()
+    except Exception:
+        pass
 
 
 def parse_name_signature(name: str) -> tuple[str, str] | None:
@@ -185,10 +161,11 @@ def resolve_to_squad_player_id(team_name: str, player_id: str) -> str | None:
         _resolve_cache[cache_key] = out
         return out
 
-    # 2) Alias map
-    alias = PLAYER_ID_ALIASES.get((tk, lk))
-    if alias:
-        m2 = sub[sub["player_id"].str.strip().str.lower() == alias.lower()]
+    # 2) Bridge map (scripts/build_player_identity.py -> squad_stats_bridge.csv)
+    bridge = load_squad_stats_bridge()
+    bridged = bridge.get((tk, lk))
+    if bridged:
+        m2 = sub[sub["player_id"].str.strip().str.lower() == bridged.lower()]
         if len(m2):
             out = str(m2.iloc[0]["player_id"])
             _resolve_cache[cache_key] = out

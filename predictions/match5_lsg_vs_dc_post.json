@@ -1,0 +1,13 @@
+{
+  "match_key": "match5-lsg-dc-2026-04-01",
+  "actual_winner": "Delhi Capitals",
+  "actual_top_scorer": "Sameer Rizvi",
+  "actual_top_scorer_runs": 70,
+  "actual_top_wicket_bowler": "Lungi Ngidi",
+  "actual_top_wickets": 3,
+  "official_potm": "Sameer Rizvi",
+  "bbb_match_file": "matches/match5_lsg_vs_dc.csv",
+  "actual_first_innings_team_runs": 136,
+  "actual_second_innings_team_runs": 141,
+  "post_notes": "From BBB: LSG 136, DC 141/6 (chase). Sameer Rizvi 70 (impact). Top wickets tie Lungi Ngidi & T Natarajan at 3 — logged Lungi Ngidi. POTM assumed top match impact; change official_potm if broadcast differs."
+}

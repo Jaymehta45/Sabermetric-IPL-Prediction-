@@ -1,0 +1,43 @@
+{
+  "match_key": "match2-mi-kkr-2026-03-29",
+  "match_date": "2026-03-29",
+  "venue": "Wankhede Stadium, Mumbai",
+  "team1_name": "Kolkata Knight Riders",
+  "team2_name": "Mumbai Indians",
+  "team1_bats_first": true,
+  "pred_winner": "Mumbai Indians",
+  "pred_p_team1_win": 0.0,
+  "pred_best_bat": "Tilak Varma",
+  "pred_best_bowl": "CV Varun",
+  "pred_top5_bats": [
+    "Tilak Varma",
+    "Ramandeep Singh",
+    "Naman Dhir",
+    "Suryakumar Yadav",
+    "Finn Allen"
+  ],
+  "pred_top3_bowls": [
+    "CV Varun",
+    "SN Thakur",
+    "AS Roy"
+  ],
+  "pred_potm": "Tilak Varma",
+  "pred_extra": {
+    "sims": 400,
+    "ensemble_p_team1": 0.3081707518732864,
+    "sim_win_probability_team1": 0.0,
+    "leader_model_p_team1": 0.6601449275362319,
+    "batting_order_swapped": false,
+    "impact_trim_lowest": true,
+    "impact_dropped_team1": "Ajinkya Rahane",
+    "impact_dropped_team2": "Hardik Pandya",
+    "pitch_multipliers": {
+      "first_innings_runs": 1.021,
+      "second_innings_runs": 1.021,
+      "first_innings_wickets": 0.985,
+      "second_innings_wickets": 0.985
+    },
+    "venue_spin_harshness": 0.78,
+    "note": "KKR bat first (MI bowled first). Default impact rule: lowest predicted-impact row dropped from each 12 for team totals (Rahane/KKR, Hardik/MI this run)."
+  }
+}
