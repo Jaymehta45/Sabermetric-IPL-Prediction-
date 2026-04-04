@@ -33,6 +33,13 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+
+def _vercel_sync_hint() -> None:
+    print(
+        "→ Vercel: push data/processed/prediction_log.csv "
+        "(e.g. bash scripts/push_prediction_log.sh) so the deployed site loads this update from GitHub."
+    )
+
 import pandas as pd
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -195,6 +202,7 @@ def cmd_pre(args: argparse.Namespace) -> None:
     df = _ensure_columns(df)
     df.to_csv(LOG_PATH, index=False)
     print(f"Wrote pre-match row -> {LOG_PATH} (match_key={row['match_key']})")
+    _vercel_sync_hint()
 
 
 def _normalize(s: str) -> str:
@@ -268,6 +276,7 @@ def cmd_post(args: argparse.Namespace) -> None:
 
     df.to_csv(LOG_PATH, index=False)
     print(f"Updated post-match fields -> {LOG_PATH} (match_key={mk})")
+    _vercel_sync_hint()
 
 
 def cmd_process3(args: argparse.Namespace) -> None:
@@ -295,6 +304,7 @@ def cmd_process3(args: argparse.Namespace) -> None:
 
     df.to_csv(LOG_PATH, index=False)
     print(f"Marked Process 3 complete -> {LOG_PATH} (match_key={mk})")
+    _vercel_sync_hint()
 
 
 def main() -> None:

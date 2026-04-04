@@ -33,8 +33,6 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 import pandas as pd
 
-from iplpred.paths import PROCESSED_DIR
-
 from iplpred.core.bbb_innings_totals import innings_runs_and_wickets_from_bbb
 
 from web.bbb_utils import (
@@ -43,12 +41,12 @@ from web.bbb_utils import (
     top3_bowlers_from_bbb,
     top5_batters_from_bbb,
 )
+from web.prediction_log_io import prediction_log_meta, read_prediction_log_dataframe
 
-LOG_PATH = PROCESSED_DIR / "prediction_log.csv"
 WEB_DIR = Path(__file__).resolve().parent
 templates = Jinja2Templates(directory=str(WEB_DIR / "templates"))
 # Bump when CSS/JS change so browsers fetch fresh static files (cache-bust query string).
-UI_BUILD_ID = "202603311"
+UI_BUILD_ID = "202604281"
 templates.env.globals["asset_version"] = UI_BUILD_ID
 templates.env.globals["ui_build_id"] = UI_BUILD_ID
 
@@ -74,8 +72,8 @@ app.mount("/static", StaticFiles(directory=str(WEB_DIR / "static")), name="stati
 def page_home(request: Request):
     stats = _dashboard_stats()
     recent = []
-    if LOG_PATH.is_file():
-        df = pd.read_csv(LOG_PATH, low_memory=False)
+    df = read_prediction_log_dataframe()
+    if df is not None and len(df) > 0:
         recent = _comparison_rows(df)[:8]
     return templates.TemplateResponse(
         request,
@@ -86,7 +84,8 @@ def page_home(request: Request):
 
 @app.get("/history", response_class=HTMLResponse)
 def page_history(request: Request):
-    if not LOG_PATH.is_file():
+    df = read_prediction_log_dataframe()
+    if df is None or len(df) == 0:
         return templates.TemplateResponse(
             request,
             "history.html",
@@ -99,7 +98,6 @@ def page_history(request: Request):
                 "log_exists": False,
             },
         )
-    df = pd.read_csv(LOG_PATH, low_memory=False)
     chart_summary = _log_chart_summary(df)
     stats = _dashboard_stats()
     comparison_rows = _comparison_rows(df)
@@ -144,9 +142,9 @@ def _dashboard_stats() -> dict:
         "innings_mae_avg_label": "—",
         "innings_mae_n": 0,
     }
-    if not LOG_PATH.is_file():
+    df = read_prediction_log_dataframe()
+    if df is None or len(df) == 0:
         return out
-    df = pd.read_csv(LOG_PATH, low_memory=False)
     out["n_logged"] = len(df)
     for _, row in df.iterrows():
         p1, p2, p3 = _process_step_flags(row)
@@ -702,11 +700,17 @@ def _log_chart_summary(df: pd.DataFrame) -> dict:
 
 @app.get("/api/prediction-log")
 def api_prediction_log():
-    if not LOG_PATH.is_file():
+    df = read_prediction_log_dataframe()
+    if df is None:
         return {"rows": []}
-    df = pd.read_csv(LOG_PATH, low_memory=False)
     df = df.fillna("")
     return {"rows": df.to_dict(orient="records")}
+
+
+@app.get("/api/build-info")
+def api_build_info():
+    """Which CSV source the app used (GitHub raw vs bundle) — use to verify Vercel sees latest pushes."""
+    return prediction_log_meta()
 
 
 @app.get("/health")
