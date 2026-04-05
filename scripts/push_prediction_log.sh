@@ -8,5 +8,12 @@ if git diff --cached --quiet; then
   exit 0
 fi
 git commit -m "chore: sync prediction_log.csv ($(date -u +%Y-%m-%dT%H:%MZ))"
-git push
-echo "Pushed. Live site refreshes from GitHub (short server cache may delay up to ~30s)."
+BR="$(git branch --show-current)"
+git push origin "$BR"
+echo "Pushed branch: $BR. Live site refreshes from GitHub (short server cache may delay up to ~30s)."
+if [ "$BR" != "main" ]; then
+  echo ""
+  echo "IMPORTANT: Vercel loads prediction_log.csv from GitHub branch **main** (see web/prediction_log_io.py + vercel.json)."
+  echo "If the dashboard still looks stale, merge and push main, e.g.:"
+  echo "  git checkout main && git merge $BR && git push origin main && git checkout $BR"
+fi
