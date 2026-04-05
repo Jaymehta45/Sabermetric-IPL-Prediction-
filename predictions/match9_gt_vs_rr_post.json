@@ -4,10 +4,10 @@
   "actual_top_scorer": "Dhruv Jurel",
   "actual_top_scorer_runs": 77,
   "actual_top_wicket_bowler": "Ravi Bishnoi",
-  "actual_top_wickets": 3,
+  "actual_top_wickets": 5,
   "official_potm": "Dhruv Jurel",
   "bbb_match_file": "matches/match9_gt_vs_rr.csv",
   "actual_first_innings_team_runs": 212,
-  "actual_second_innings_team_runs": 192,
-  "post_notes": "BBB: RR 212 (1st), GT 192 (2nd) — Rajasthan Royals won defending. Top runs Dhruv Jurel 77; top wkts Ravi Bishnoi 3. Pred RR — winner_correct. POTM pred composite (Washington Sundar) vs official top score."
+  "actual_second_innings_team_runs": 204,
+  "post_notes": "BBB (repaired CSV): RR 212 (1st), GT 204 (2nd) — Rajasthan Royals won defending. Top runs Dhruv Jurel 77; top wickets Ravi Bishnoi 5. Pred winner RR — winner_correct. POTM vs pred composite (Washington Sundar)."
 }

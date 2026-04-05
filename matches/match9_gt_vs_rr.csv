@@ -7,7 +7,6 @@ ipl2026-m9-rr-gt,1,0,5,vaibhav-sooryavanshi,yashasvi-jaiswal,mohammed-siraj,RR,G
 ipl2026-m9-rr-gt,1,0,6,yashasvi-jaiswal,vaibhav-sooryavanshi,mohammed-siraj,RR,GT,0,0,,False,,,,Ahmedabad,2026-04-05,IPL
 ipl2026-m9-rr-gt,1,1,1,vaibhav-sooryavanshi,yashasvi-jaiswal,kagiso-rabada,RR,GT,1,0,,False,,,,Ahmedabad,2026-04-05,IPL
 ipl2026-m9-rr-gt,1,1,2,yashasvi-jaiswal,vaibhav-sooryavanshi,kagiso-rabada,RR,GT,1,0,,False,,,,Ahmedabad,2026-04-05,IPL
-ipl2026-m9-rr-gt,1,1,3,vaibhav-sooryavanshi,yashasvi-jaiswal,kagiso-rabada,RR,GT,0,0,,False,,,,Ahmedabad,2026-04-05,IPL
 ipl2026-m9-rr-gt,1,1,4,vaibhav-sooryavanshi,yashasvi-jaiswal,kagiso-rabada,RR,GT,0,0,,False,,,,Ahmedabad,2026-04-05,IPL
 ipl2026-m9-rr-gt,1,1,4,vaibhav-sooryavanshi,yashasvi-jaiswal,kagiso-rabada,RR,GT,0,1,wide,False,,,,Ahmedabad,2026-04-05,IPL
 ipl2026-m9-rr-gt,1,1,5,vaibhav-sooryavanshi,yashasvi-jaiswal,kagiso-rabada,RR,GT,4,0,,False,,,,Ahmedabad,2026-04-05,IPL
@@ -52,8 +51,8 @@ ipl2026-m9-rr-gt,1,7,5,dhruv-jurel,yashasvi-jaiswal,prasidh-krishna,RR,GT,1,0,,F
 ipl2026-m9-rr-gt,1,7,6,yashasvi-jaiswal,dhruv-jurel,prasidh-krishna,RR,GT,4,0,,False,,,,Ahmedabad,2026-04-05,IPL
 ipl2026-m9-rr-gt,1,8,1,dhruv-jurel,yashasvi-jaiswal,rashid-khan,RR,GT,1,0,,False,,,,Ahmedabad,2026-04-05,IPL
 ipl2026-m9-rr-gt,1,8,2,yashasvi-jaiswal,dhruv-jurel,rashid-khan,RR,GT,1,0,,False,,,,Ahmedabad,2026-04-05,IPL
-ipl2026-m9-rr-gt,1,8,3,dhruv-jurel,yashasvi-jaiswal,rashid-khan,RR,GT,1,0,,False,,,,Ahmedabad,2026-04-05,IPL
 ipl2026-m9-rr-gt,1,8,3,dhruv-jurel,yashasvi-jaiswal,rashid-khan,RR,GT,0,5,wide,False,,,,Ahmedabad,2026-04-05,IPL
+ipl2026-m9-rr-gt,1,8,3,dhruv-jurel,yashasvi-jaiswal,rashid-khan,RR,GT,1,0,,False,,,,Ahmedabad,2026-04-05,IPL
 ipl2026-m9-rr-gt,1,8,4,yashasvi-jaiswal,dhruv-jurel,rashid-khan,RR,GT,1,0,,False,,,,Ahmedabad,2026-04-05,IPL
 ipl2026-m9-rr-gt,1,8,5,dhruv-jurel,yashasvi-jaiswal,rashid-khan,RR,GT,1,0,,False,,,,Ahmedabad,2026-04-05,IPL
 ipl2026-m9-rr-gt,1,8,6,yashasvi-jaiswal,dhruv-jurel,rashid-khan,RR,GT,2,0,,False,,,,Ahmedabad,2026-04-05,IPL
@@ -71,7 +70,7 @@ ipl2026-m9-rr-gt,1,10,5,dhruv-jurel,yashasvi-jaiswal,rashid-khan,RR,GT,0,0,,Fals
 ipl2026-m9-rr-gt,1,10,6,dhruv-jurel,yashasvi-jaiswal,rashid-khan,RR,GT,4,0,,False,,,,Ahmedabad,2026-04-05,IPL
 ipl2026-m9-rr-gt,1,11,1,yashasvi-jaiswal,dhruv-jurel,mohammed-siraj,RR,GT,0,0,,False,,,,Ahmedabad,2026-04-05,IPL
 ipl2026-m9-rr-gt,1,11,2,yashasvi-jaiswal,dhruv-jurel,mohammed-siraj,RR,GT,4,0,,False,,,,Ahmedabad,2026-04-05,IPL
-ipl2026-m9-rr-gt,1,11,3,yashasvi-jaiswal,dhruv-jurel,mohammed-siraj,RR,GT,1,0,,False,,,,Ahmedabad,2026-04-05,IPL
+ipl2026-m9-rr-gt,1,11,3,yashasvi-jaiswal,dhruv-jurel,mohammed-siraj,RR,GT,0,1,legbye,False,,,,Ahmedabad,2026-04-05,IPL
 ipl2026-m9-rr-gt,1,11,4,dhruv-jurel,yashasvi-jaiswal,mohammed-siraj,RR,GT,0,0,,False,,,,Ahmedabad,2026-04-05,IPL
 ipl2026-m9-rr-gt,1,11,5,dhruv-jurel,yashasvi-jaiswal,mohammed-siraj,RR,GT,4,0,,False,,,,Ahmedabad,2026-04-05,IPL
 ipl2026-m9-rr-gt,1,11,6,dhruv-jurel,yashasvi-jaiswal,mohammed-siraj,RR,GT,6,0,,False,,,,Ahmedabad,2026-04-05,IPL
@@ -128,13 +127,16 @@ ipl2026-m9-rr-gt,1,19,3,dhruv-jurel,ravindra-jadeja,mohammed-siraj,RR,GT,0,0,,Tr
 ipl2026-m9-rr-gt,1,19,4,jofra-archer,ravindra-jadeja,mohammed-siraj,RR,GT,0,0,,False,,,,Ahmedabad,2026-04-05,IPL
 ipl2026-m9-rr-gt,1,19,5,jofra-archer,ravindra-jadeja,mohammed-siraj,RR,GT,1,0,,False,,,,Ahmedabad,2026-04-05,IPL
 ipl2026-m9-rr-gt,1,19,6,ravindra-jadeja,jofra-archer,mohammed-siraj,RR,GT,4,0,,False,,,,Ahmedabad,2026-04-05,IPL
-ipl2026-m9-rr-gt,2,0,2,sai-sudharsan,,jofra-archer,GT,RR,6,0,,False,,,,Ahmedabad,2026-04-05,IPL
-ipl2026-m9-rr-gt,2,0,3,sai-sudharsan,,jofra-archer,GT,RR,0,0,,False,,,,Ahmedabad,2026-04-05,IPL
-ipl2026-m9-rr-gt,2,0,4,sai-sudharsan,,jofra-archer,GT,RR,0,0,,False,,,,Ahmedabad,2026-04-05,IPL
-ipl2026-m9-rr-gt,2,0,5,sai-sudharsan,,jofra-archer,GT,RR,0,0,,False,,,,Ahmedabad,2026-04-05,IPL
-ipl2026-m9-rr-gt,2,0,6,sai-sudharsan,,jofra-archer,GT,RR,4,0,,False,,,,Ahmedabad,2026-04-05,IPL
+ipl2026-m9-rr-gt,2,0,1,kumar-kushagra,,jofra-archer,GT,RR,0,5,wide,False,,,,Ahmedabad,2026-04-05,IPL
+ipl2026-m9-rr-gt,2,0,2,sai-sudharsan,kumar-kushagra,jofra-archer,GT,RR,6,0,,False,,,,Ahmedabad,2026-04-05,IPL
+ipl2026-m9-rr-gt,2,0,3,sai-sudharsan,kumar-kushagra,jofra-archer,GT,RR,0,0,,False,,,,Ahmedabad,2026-04-05,IPL
+ipl2026-m9-rr-gt,2,0,4,sai-sudharsan,kumar-kushagra,jofra-archer,GT,RR,0,0,,False,,,,Ahmedabad,2026-04-05,IPL
+ipl2026-m9-rr-gt,2,0,5,sai-sudharsan,kumar-kushagra,jofra-archer,GT,RR,0,0,,False,,,,Ahmedabad,2026-04-05,IPL
+ipl2026-m9-rr-gt,2,0,6,sai-sudharsan,kumar-kushagra,jofra-archer,GT,RR,4,0,,False,,,,Ahmedabad,2026-04-05,IPL
 ipl2026-m9-rr-gt,2,1,1,kumar-kushagra,sai-sudharsan,nandre-burger,GT,RR,1,0,,False,,,,Ahmedabad,2026-04-05,IPL
 ipl2026-m9-rr-gt,2,1,2,sai-sudharsan,kumar-kushagra,nandre-burger,GT,RR,4,0,,False,,,,Ahmedabad,2026-04-05,IPL
+ipl2026-m9-rr-gt,2,1,2,sai-sudharsan,kumar-kushagra,nandre-burger,GT,RR,0,2,wide,False,,,,Ahmedabad,2026-04-05,IPL
+ipl2026-m9-rr-gt,2,1,2,sai-sudharsan,kumar-kushagra,nandre-burger,GT,RR,0,2,wide,False,,,,Ahmedabad,2026-04-05,IPL
 ipl2026-m9-rr-gt,2,1,2,sai-sudharsan,kumar-kushagra,nandre-burger,GT,RR,0,1,wide,False,,,,Ahmedabad,2026-04-05,IPL
 ipl2026-m9-rr-gt,2,1,3,sai-sudharsan,kumar-kushagra,nandre-burger,GT,RR,0,0,,False,,,,Ahmedabad,2026-04-05,IPL
 ipl2026-m9-rr-gt,2,1,4,sai-sudharsan,kumar-kushagra,nandre-burger,GT,RR,1,0,,False,,,,Ahmedabad,2026-04-05,IPL
@@ -202,6 +204,8 @@ ipl2026-m9-rr-gt,2,11,4,glenn-phillips,jos-buttler,tushar-deshpande,GT,RR,0,0,,F
 ipl2026-m9-rr-gt,2,11,5,jos-buttler,glenn-phillips,tushar-deshpande,GT,RR,4,0,,False,,,,Ahmedabad,2026-04-05,IPL
 ipl2026-m9-rr-gt,2,11,6,jos-buttler,glenn-phillips,tushar-deshpande,GT,RR,4,0,,False,,,,Ahmedabad,2026-04-05,IPL
 ipl2026-m9-rr-gt,2,12,1,glenn-phillips,jos-buttler,ravi-bishnoi,GT,RR,0,0,,True,caught,glenn-phillips,,Ahmedabad,2026-04-05,IPL
+ipl2026-m9-rr-gt,2,12,2,washington-sundar,jos-buttler,ravi-bishnoi,GT,RR,4,0,,False,,,,Ahmedabad,2026-04-05,IPL
+ipl2026-m9-rr-gt,2,12,3,washington-sundar,jos-buttler,ravi-bishnoi,GT,RR,0,0,,True,caught,washington-sundar,,Ahmedabad,2026-04-05,IPL
 ipl2026-m9-rr-gt,2,12,4,rahul-tewatia,jos-buttler,ravi-bishnoi,GT,RR,0,0,,False,,,,Ahmedabad,2026-04-05,IPL
 ipl2026-m9-rr-gt,2,12,5,rahul-tewatia,jos-buttler,ravi-bishnoi,GT,RR,1,0,,False,,,,Ahmedabad,2026-04-05,IPL
 ipl2026-m9-rr-gt,2,12,6,jos-buttler,rahul-tewatia,ravi-bishnoi,GT,RR,1,0,,False,,,,Ahmedabad,2026-04-05,IPL
@@ -215,7 +219,7 @@ ipl2026-m9-rr-gt,2,14,1,rahul-tewatia,shahrukh-khan,ravi-bishnoi,GT,RR,4,0,,Fals
 ipl2026-m9-rr-gt,2,14,2,rahul-tewatia,shahrukh-khan,ravi-bishnoi,GT,RR,6,0,,False,,,,Ahmedabad,2026-04-05,IPL
 ipl2026-m9-rr-gt,2,14,3,rahul-tewatia,shahrukh-khan,ravi-bishnoi,GT,RR,0,0,,True,caught,rahul-tewatia,,Ahmedabad,2026-04-05,IPL
 ipl2026-m9-rr-gt,2,14,4,rashid-khan,shahrukh-khan,ravi-bishnoi,GT,RR,4,0,,False,,,,Ahmedabad,2026-04-05,IPL
-ipl2026-m9-rr-gt,2,14,5,rashid-khan,shahrukh-khan,ravi-bishnoi,GT,RR,2,0,,False,,,,Ahmedabad,2026-04-05,IPL
+ipl2026-m9-rr-gt,2,14,5,rashid-khan,shahrukh-khan,ravi-bishnoi,GT,RR,2,0,,True,run out,shahrukh-khan,,Ahmedabad,2026-04-05,IPL
 ipl2026-m9-rr-gt,2,14,6,kagiso-rabada,rashid-khan,ravi-bishnoi,GT,RR,0,0,,False,,,,Ahmedabad,2026-04-05,IPL
 ipl2026-m9-rr-gt,2,15,1,rashid-khan,kagiso-rabada,jofra-archer,GT,RR,1,0,,False,,,,Ahmedabad,2026-04-05,IPL
 ipl2026-m9-rr-gt,2,15,2,kagiso-rabada,rashid-khan,jofra-archer,GT,RR,1,0,,False,,,,Ahmedabad,2026-04-05,IPL
@@ -246,5 +250,5 @@ ipl2026-m9-rr-gt,2,19,1,kagiso-rabada,rashid-khan,tushar-deshpande,GT,RR,0,1,wid
 ipl2026-m9-rr-gt,2,19,2,rashid-khan,kagiso-rabada,tushar-deshpande,GT,RR,1,0,,False,,,,Ahmedabad,2026-04-05,IPL
 ipl2026-m9-rr-gt,2,19,3,kagiso-rabada,rashid-khan,tushar-deshpande,GT,RR,1,0,,False,,,,Ahmedabad,2026-04-05,IPL
 ipl2026-m9-rr-gt,2,19,4,rashid-khan,kagiso-rabada,tushar-deshpande,GT,RR,0,0,,False,,,,Ahmedabad,2026-04-05,IPL
-ipl2026-m9-rr-gt,2,19,5,rashid-khan,kagiso-rabada,tushar-deshpande,GT,RR,0,1,wide,True,caught,rashid-khan,,Ahmedabad,2026-04-05,IPL
+ipl2026-m9-rr-gt,2,19,5,rashid-khan,kagiso-rabada,tushar-deshpande,GT,RR,0,0,,True,caught,rashid-khan,,Ahmedabad,2026-04-05,IPL
 ipl2026-m9-rr-gt,2,19,6,ashok-sharma,kagiso-rabada,tushar-deshpande,GT,RR,0,0,,False,,,,Ahmedabad,2026-04-05,IPL
