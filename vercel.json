@@ -1,8 +1,13 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "env": {
+    "PREDICTION_LOG_GITHUB_REPO": "Jaymehta45/Sabermetric-IPL-Prediction-",
+    "PREDICTION_LOG_GITHUB_BRANCH": "main"
+  },
   "build": {
     "env": {
-      "PREDICTION_LOG_GITHUB_REPO": "Jaymehta45/Sabermetric-IPL-Prediction-"
+      "PREDICTION_LOG_GITHUB_REPO": "Jaymehta45/Sabermetric-IPL-Prediction-",
+      "PREDICTION_LOG_GITHUB_BRANCH": "main"
     }
   }
 }

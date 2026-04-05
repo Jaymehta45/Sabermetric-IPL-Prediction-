@@ -1,12 +1,14 @@
 """
 Load ``data/processed/prediction_log.csv`` from GitHub (raw) at request time or from the local bundle.
 
-On Vercel, ``VERCEL_GIT_REPO_SLUG`` and ``VERCEL_GIT_COMMIT_REF`` are set automatically, so the app
-can fetch the CSV from the same branch you deploy — **no redeploy** is needed after you
-``git push`` an updated ``prediction_log.csv``.
+On Vercel, prefer ``PREDICTION_LOG_GITHUB_REPO`` + ``PREDICTION_LOG_GITHUB_BRANCH`` (see ``vercel.json``
+``env``) so the CSV is read from branch ``main`` (or your override). That way a ``git push`` of an
+updated ``prediction_log.csv`` is picked up **without redeploying** (short in-process cache only).
 
-Override with ``PREDICTION_LOG_URL`` (full https URL to a CSV) or
-``PREDICTION_LOG_GITHUB_REPO`` + ``PREDICTION_LOG_GITHUB_BRANCH``.
+Using the deployment commit ref for the raw URL would pin the CSV to the deploy SHA and hide new
+rows until the next deploy.
+
+Override with ``PREDICTION_LOG_URL`` (full https URL to a CSV).
 """
 
 from __future__ import annotations
@@ -37,6 +39,16 @@ def _resolved_remote_url() -> str | None:
     explicit = os.environ.get("PREDICTION_LOG_URL", "").strip()
     if explicit:
         return explicit
+    # Prefer branch-based raw URL so pushes to GitHub update the live site without redeploying.
+    # If we used VERCEL_GIT_COMMIT_REF here, the CSV would be pinned to the deployment commit
+    # (immutable); prediction_log.csv updates on main would never appear until a new deploy.
+    repo = os.environ.get("PREDICTION_LOG_GITHUB_REPO", "").strip()
+    branch = os.environ.get("PREDICTION_LOG_GITHUB_BRANCH", "main").strip()
+    if repo:
+        return (
+            f"https://raw.githubusercontent.com/{repo}/{branch}"
+            "/data/processed/prediction_log.csv"
+        )
     slug = os.environ.get("VERCEL_GIT_REPO_SLUG", "").strip()
     ref = os.environ.get("VERCEL_GIT_COMMIT_REF", "").strip()
     if slug and ref:
@@ -46,13 +58,6 @@ def _resolved_remote_url() -> str | None:
             slug = f"{owner}/{slug}"
         return (
             f"https://raw.githubusercontent.com/{slug}/{ref}"
-            "/data/processed/prediction_log.csv"
-        )
-    repo = os.environ.get("PREDICTION_LOG_GITHUB_REPO", "").strip()
-    branch = os.environ.get("PREDICTION_LOG_GITHUB_BRANCH", "main").strip()
-    if repo:
-        return (
-            f"https://raw.githubusercontent.com/{repo}/{branch}"
             "/data/processed/prediction_log.csv"
         )
     # Vercel: system git env vars are sometimes unset in the serverless runtime.
