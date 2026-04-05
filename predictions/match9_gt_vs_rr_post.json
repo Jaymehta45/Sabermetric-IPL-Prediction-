@@ -1,0 +1,13 @@
+{
+  "match_key": "match9-gt-rr-2026-04-04",
+  "actual_winner": "Rajasthan Royals",
+  "actual_top_scorer": "Dhruv Jurel",
+  "actual_top_scorer_runs": 77,
+  "actual_top_wicket_bowler": "Ravi Bishnoi",
+  "actual_top_wickets": 3,
+  "official_potm": "Dhruv Jurel",
+  "bbb_match_file": "matches/match9_gt_vs_rr.csv",
+  "actual_first_innings_team_runs": 212,
+  "actual_second_innings_team_runs": 192,
+  "post_notes": "BBB: RR 212 (1st), GT 192 (2nd) — Rajasthan Royals won defending. Top runs Dhruv Jurel 77; top wkts Ravi Bishnoi 3. Pred RR — winner_correct. POTM pred composite (Washington Sundar) vs official top score."
+}
