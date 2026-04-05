@@ -1,0 +1,63 @@
+{
+  "match_key": "match10-srh-lsg-2026-04-05",
+  "match_date": "2026-04-05",
+  "venue": "Rajiv Gandhi International Stadium, Hyderabad",
+  "team1_name": "Sunrisers Hyderabad",
+  "team2_name": "Lucknow Super Giants",
+  "team1_bats_first": true,
+  "pred_winner": "Sunrisers Hyderabad",
+  "pred_p_team1_win": 0.6646,
+  "pred_best_bat": "Abdul Samad",
+  "pred_best_bowl": "Avesh Khan",
+  "pred_top5_bats": [
+    "Abdul Samad",
+    "Abhishek Sharma",
+    "LS Livingstone",
+    "Ishan Kishan",
+    "H Klaasen"
+  ],
+  "pred_top3_bowls": [
+    "Avesh Khan",
+    "Mohammed Shami",
+    "Shivam Mavi"
+  ],
+  "pred_potm": "Abdul Samad",
+  "pred_extra": {
+    "sims": 5000,
+    "ensemble_p_team1": 0.16666666666666666,
+    "sim_win_probability_team1": 0.6646,
+    "leader_model_p_team1": 0.4237967914438503,
+    "batting_order_swapped": false,
+    "impact_trim_lowest": true,
+    "impact_dropped_team1": "Shivang Kumar",
+    "impact_dropped_team2": "Aiden Markram",
+    "pitch_multipliers": {
+      "first_innings_runs": 1.19654,
+      "second_innings_runs": 1.19654,
+      "first_innings_wickets": 0.9727,
+      "second_innings_wickets": 0.9727
+    },
+    "venue_spin_harshness": 0.38,
+    "process_variant": "1A",
+    "full_playing_twelve": false,
+    "pred_first_innings_team_runs": 163.83351962974223,
+    "pred_second_innings_team_runs": 154.08194987183643,
+    "pred_first_innings_team_wickets": 2.8820914907899495,
+    "pred_second_innings_team_wickets": 3.989568687525,
+    "pred_first_innings_team_wickets_raw_sum": 2.8820914907899495,
+    "pred_second_innings_team_wickets_raw_sum": 3.989568687525,
+    "ml_team_total_runs_team1": 117.46558604534677,
+    "ml_team_total_runs_team2": 110.47389192156051,
+    "team_run_calibration": {
+      "method": "ml_team_total",
+      "scale_team1": 0.9842608958079128,
+      "scale_team2": 4.684962179849079,
+      "sum_player_runs_before_team1": 166.45334618852502,
+      "sum_player_runs_before_team2": 32.88862192625
+    },
+    "player_process1": {
+      "heuristic": "role_aware_v1",
+      "summary": "Best bat / top 5 runs exclude pure bowlers when enough batters exist; best bowl / top 3 wickets prefer bowlers and allrounders; POTM uses a role-weighted composite (not the official match award)."
+    }
+  }
+}
