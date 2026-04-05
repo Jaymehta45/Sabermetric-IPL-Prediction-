@@ -46,25 +46,29 @@ from web.prediction_log_io import prediction_log_meta, read_prediction_log_dataf
 WEB_DIR = Path(__file__).resolve().parent
 templates = Jinja2Templates(directory=str(WEB_DIR / "templates"))
 # Bump when CSS/JS change so browsers fetch fresh static files (cache-bust query string).
-UI_BUILD_ID = "202604282"
+UI_BUILD_ID = "202604283"
 templates.env.globals["asset_version"] = UI_BUILD_ID
 templates.env.globals["ui_build_id"] = UI_BUILD_ID
 
 app = FastAPI(title="IPLpred", version="1.0")
 
 
-class NoCacheStaticMiddleware(BaseHTTPMiddleware):
-    """Stop browsers from keeping stale JS/CSS (common reason UI 'never updates')."""
+class NoCacheMiddleware(BaseHTTPMiddleware):
+    """Avoid stale dashboard HTML/API at browsers and Vercel edge (static + dynamic)."""
 
     async def dispatch(self, request, call_next):
         response = await call_next(request)
         path = request.scope.get("path") or ""
         if path.startswith("/static/"):
             response.headers["Cache-Control"] = "no-store, max-age=0, must-revalidate"
+        elif path in ("/", "/history") or path.startswith("/api/"):
+            # HTML and JSON must not be edge-cached or users see old stats after git push.
+            response.headers["Cache-Control"] = "no-store, max-age=0, must-revalidate"
+            response.headers["Pragma"] = "no-cache"
         return response
 
 
-app.add_middleware(NoCacheStaticMiddleware)
+app.add_middleware(NoCacheMiddleware)
 app.mount("/static", StaticFiles(directory=str(WEB_DIR / "static")), name="static")
 
 
