@@ -40,8 +40,8 @@
     "venue_spin_harshness": 0.92,
     "process_variant": "1A",
     "full_playing_twelve": false,
-    "pred_first_innings_team_runs": 110.00000000000003,
-    "pred_second_innings_team_runs": 109.99999999999999,
+    "pred_first_innings_team_runs": 170.5,
+    "pred_second_innings_team_runs": 170.5,
     "pred_first_innings_team_wickets": 0.83530592839225,
     "pred_second_innings_team_wickets": 1.8855303676527502,
     "pred_first_innings_team_wickets_raw_sum": 0.83530592839225,
@@ -50,8 +50,8 @@
     "ml_team_total_runs_team2": 100.76399271869407,
     "team_run_calibration": {
       "method": "ml_team_total",
-      "scale_team1": 0.8367823536256115,
-      "scale_team2": 2.7388203712794006,
+      "scale_team1": 1.2970126481196977,
+      "scale_team2": 4.245171575483071,
       "sum_player_runs_before_team1": 131.45592700824997,
       "sum_player_runs_before_team2": 40.16327655275
     },
@@ -59,6 +59,6 @@
       "heuristic": "role_aware_v1",
       "summary": "Best bat / top 5 runs exclude pure bowlers when enough batters exist; best bowl / top 3 wickets prefer bowlers and allrounders; POTM uses a role-weighted composite (not the official match award)."
     },
-    "notes": "CSK chose to bowl → RCB bat first. Pitch: examples/pitch_match11_rcb_csk_2026.txt. Impact 1A: RCB Suyash Sharma, CSK MW Short (Matthew Short in squad). 5000 MC sims. --no-squad-check."
+    "notes": "Rescored after venue-aware team total lift (batting-friendly grounds). CSK chose to bowl → RCB bat first. Impact: Suyash Sharma, MW Short. 5000 MC sims."
   }
 }
