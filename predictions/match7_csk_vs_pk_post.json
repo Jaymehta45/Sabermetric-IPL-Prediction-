@@ -1,11 +1,13 @@
 {
   "match_key": "match7-csk-pk-2026-04-03",
-  "actual_winner": "Chennai Super Kings",
+  "actual_winner": "Punjab Kings",
   "actual_top_scorer": "Ayush Mhatre",
   "actual_top_scorer_runs": 71,
   "actual_top_wicket_bowler": "Anshul Kamboj",
   "actual_top_wickets": 2,
   "official_potm": "Ayush Mhatre",
   "bbb_match_file": "matches/match7_csk_vs_pbks.csv",
-  "post_notes": "BBB: CSK 209 / PBKS 209 (chase). CSK won by 1 run. Top wickets tied at 2 (Anshul Kamboj, Matt Henry, Vijaykumar Vyshak); logged Anshul Kamboj for top bowler. POTM inferred from top score (update if official award differs)."
+  "actual_first_innings_team_runs": 209,
+  "actual_second_innings_team_runs": 210,
+  "post_notes": "BBB recheck: CSK 209 (1st), PBKS 210 (2nd) — Punjab Kings won chase (210 vs 209). Top runs Ayush Mhatre 71. Wickets tied at 2 (Anshul Kamboj, Matt Henry, Vijaykumar Vyshak); logged Anshul. Pre-match pred winner Punjab Kings — winner_correct."
 }
