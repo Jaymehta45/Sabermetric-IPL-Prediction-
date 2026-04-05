@@ -2,9 +2,11 @@
 IPLPRED — DAILY WORKFLOW (PROCESS 1 → 2 → 3)
 ================================================================================
 For **each match**, run **Process 1**, then **Process 2**, then **Process 3** in that
-order. After **each** process, run the corresponding `log_prediction.py` step so
-`data/processed/prediction_log.csv` updates; **refresh the web app** (/) to seen
-the P1·P2·P3 indicators move forward for that match.
+order. After **each** process, run `log_prediction.py` with **`--push`** so
+`prediction_log.csv` is committed and **GitHub `main`** updates (Vercel loads the CSV
+from `main`). Example: `python3 scripts/log_prediction.py pre <json> --push`. Or set
+**`export IPLPRED_LOG_AUTO_PUSH=1`** once so every log command pushes. Refresh the web app
+(/) to see P1·P2·P3 move forward.
 
 Repeatable flow: what you send in, what we predict, how we retrain after the
 game, how we compare to reality, and how we improve the model.

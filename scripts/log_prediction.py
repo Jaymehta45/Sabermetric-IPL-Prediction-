@@ -23,22 +23,23 @@ Process 3 (after post-match review — updates same match_key):
 
   Fields: match_key, process3_notes (optional). Sets process3_completed_at (UTC).
   The web app reads these columns to show P1 → P2 → P3 completion per match.
+
+  After each process, push so Vercel sees the log (GitHub main):
+    python3 scripts/log_prediction.py pre  <json> --push
+    python3 scripts/log_prediction.py post <json> --push
+    python3 scripts/log_prediction.py process3 <json> --push
+  Or export IPLPRED_LOG_AUTO_PUSH=1 once to always push after logging.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
+import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-
-
-def _vercel_sync_hint() -> None:
-    print(
-        "→ Vercel: push data/processed/prediction_log.csv "
-        "(e.g. bash scripts/push_prediction_log.sh) so the deployed site loads this update from GitHub."
-    )
 
 import pandas as pd
 
@@ -50,6 +51,81 @@ from iplpred.core.bbb_innings_totals import innings_runs_and_wickets_from_bbb
 from iplpred.paths import PROCESSED_DIR
 
 LOG_PATH = PROCESSED_DIR / "prediction_log.csv"
+
+
+def _vercel_sync_hint() -> None:
+    print(
+        "→ Vercel: add --push to commit + push (syncs main), or: bash scripts/push_prediction_log.sh"
+    )
+
+
+def _git_push_prediction_log(action: str, match_key: str) -> None:
+    """Commit prediction_log.csv, push current branch, then sync origin/main for Vercel raw CSV."""
+    rel = LOG_PATH.relative_to(REPO_ROOT)
+    try:
+        subprocess.run(
+            ["git", "add", str(rel)],
+            cwd=REPO_ROOT,
+            check=True,
+            capture_output=True,
+        )
+        st = subprocess.run(
+            ["git", "diff", "--cached", "--quiet"],
+            cwd=REPO_ROOT,
+        )
+        if st.returncode == 0:
+            print("Git: nothing new to commit for prediction_log.csv")
+            return
+        mk = (match_key or "").strip()
+        msg = f"chore(prediction_log): {action}" + (f" {mk}" if mk else "")
+        subprocess.run(
+            ["git", "commit", "-m", msg],
+            cwd=REPO_ROOT,
+            check=True,
+            capture_output=True,
+        )
+        br = subprocess.run(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            cwd=REPO_ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+        subprocess.run(
+            ["git", "push", "origin", "HEAD"],
+            cwd=REPO_ROOT,
+            check=True,
+        )
+        print(f"Git: pushed branch {br!r}")
+        if br != "main":
+            r = subprocess.run(
+                ["git", "push", "origin", f"{br}:main"],
+                cwd=REPO_ROOT,
+                capture_output=True,
+                text=True,
+            )
+            if r.returncode == 0:
+                print("Git: updated origin/main (Vercel prediction_log.csv)")
+            else:
+                print(
+                    "Git: could not push to main (merge or push manually). stderr:",
+                    (r.stderr or "")[:500],
+                )
+        else:
+            print("Git: on main — origin/main updated for Vercel")
+    except subprocess.CalledProcessError as e:
+        print(f"Git push failed: {e}", file=sys.stderr)
+        if e.stderr:
+            print(e.stderr.decode() if isinstance(e.stderr, bytes) else e.stderr, file=sys.stderr)
+        raise SystemExit(1) from e
+
+
+def _maybe_push(args: argparse.Namespace, action: str, match_key: str) -> None:
+    want = getattr(args, "push", False) or os.environ.get(
+        "IPLPRED_LOG_AUTO_PUSH", ""
+    ).strip().lower() in ("1", "true", "yes")
+    if want:
+        _git_push_prediction_log(action, match_key)
 
 REQUIRED_PRE = [
     "match_key",
@@ -203,6 +279,7 @@ def cmd_pre(args: argparse.Namespace) -> None:
     df.to_csv(LOG_PATH, index=False)
     print(f"Wrote pre-match row -> {LOG_PATH} (match_key={row['match_key']})")
     _vercel_sync_hint()
+    _maybe_push(args, "pre", row["match_key"])
 
 
 def _normalize(s: str) -> str:
@@ -277,6 +354,7 @@ def cmd_post(args: argparse.Namespace) -> None:
     df.to_csv(LOG_PATH, index=False)
     print(f"Updated post-match fields -> {LOG_PATH} (match_key={mk})")
     _vercel_sync_hint()
+    _maybe_push(args, "post", mk)
 
 
 def cmd_process3(args: argparse.Namespace) -> None:
@@ -305,6 +383,7 @@ def cmd_process3(args: argparse.Namespace) -> None:
     df.to_csv(LOG_PATH, index=False)
     print(f"Marked Process 3 complete -> {LOG_PATH} (match_key={mk})")
     _vercel_sync_hint()
+    _maybe_push(args, "process3", mk)
 
 
 def main() -> None:
@@ -318,15 +397,30 @@ def main() -> None:
         action="store_true",
         help="Replace existing row with same match_key",
     )
+    p_pre.add_argument(
+        "--push",
+        action="store_true",
+        help="Git commit + push prediction_log.csv; sync origin/main for Vercel",
+    )
 
     p_post = sub.add_parser("post", help="Fill actuals for existing match_key")
     p_post.add_argument("json", type=str, help="Path to JSON with match_key + actual fields")
+    p_post.add_argument(
+        "--push",
+        action="store_true",
+        help="Git commit + push prediction_log.csv; sync origin/main for Vercel",
+    )
 
     p_p3 = sub.add_parser(
         "process3",
         help="Mark Process 3 (post-match model review) complete for match_key",
     )
     p_p3.add_argument("json", type=str, help="Path to JSON with match_key, optional process3_notes")
+    p_p3.add_argument(
+        "--push",
+        action="store_true",
+        help="Git commit + push prediction_log.csv; sync origin/main for Vercel",
+    )
 
     args = parser.parse_args()
     if args.cmd == "pre":

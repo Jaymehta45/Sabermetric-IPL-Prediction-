@@ -1,0 +1,20 @@
+---
+description: After any log_prediction.py (Process 1/2/3), sync GitHub main for live site
+globs: scripts/log_prediction.py,data/processed/prediction_log.csv,predictions/**/*.json
+alwaysApply: true
+---
+
+# IPLpred: push prediction log so Vercel updates
+
+The dashboard reads `data/processed/prediction_log.csv` from **GitHub branch `main`** (`web/prediction_log_io.py`).
+
+After running **pre**, **post**, or **process3** logging:
+
+1. Prefer: `python3 scripts/log_prediction.py <subcommand> <json> --push`  
+   (commits `prediction_log.csv`, pushes current branch, updates `origin/main` when not on `main`).
+
+2. Or ensure **`export IPLPRED_LOG_AUTO_PUSH=1`** in the shell so pushes happen without `--push`.
+
+3. If other files must go up too (BBB CSV, `predictions/*.json`, models after retrain), **`git add`** them in the same commit or follow with a normal **`git push`** to **`main`**.
+
+Do not end a session that updated the log without pushing **`main`** if the user cares about the live site.

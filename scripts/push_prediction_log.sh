@@ -10,10 +10,12 @@ fi
 git commit -m "chore: sync prediction_log.csv ($(date -u +%Y-%m-%dT%H:%MZ))"
 BR="$(git branch --show-current)"
 git push origin "$BR"
-echo "Pushed branch: $BR. Live site refreshes from GitHub (short server cache may delay up to ~30s)."
+echo "Pushed branch: $BR."
 if [ "$BR" != "main" ]; then
-  echo ""
-  echo "IMPORTANT: Vercel loads prediction_log.csv from GitHub branch **main** (see web/prediction_log_io.py + vercel.json)."
-  echo "If the dashboard still looks stale, merge and push main, e.g.:"
-  echo "  git checkout main && git merge $BR && git push origin main && git checkout $BR"
+  if git push origin "$BR:main"; then
+    echo "Updated origin/main (Vercel reads main for prediction_log.csv)."
+  else
+    echo "Could not push $BR:main — merge manually if needed."
+  fi
 fi
+echo "Live site refreshes from GitHub (short server cache may delay up to ~30s)."
