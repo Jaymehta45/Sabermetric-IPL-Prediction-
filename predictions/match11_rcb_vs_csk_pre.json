@@ -1,0 +1,64 @@
+{
+  "match_key": "match11-rcb-csk-2026-04-05",
+  "match_date": "2026-04-05",
+  "venue": "M Chinnaswamy Stadium, Bengaluru",
+  "team1_name": "Royal Challengers Bengaluru",
+  "team2_name": "Chennai Super Kings",
+  "team1_bats_first": true,
+  "pred_winner": "Chennai Super Kings",
+  "pred_p_team1_win": 0.4726,
+  "pred_best_bat": "MW Short",
+  "pred_best_bowl": "KH Pandya",
+  "pred_top5_bats": [
+    "MW Short",
+    "RD Gaikwad",
+    "RM Patidar",
+    "TH David",
+    "PD Salt"
+  ],
+  "pred_top3_bowls": [
+    "KH Pandya",
+    "B Kumar",
+    "Noor Ahmad"
+  ],
+  "pred_potm": "MW Short",
+  "pred_extra": {
+    "sims": 5000,
+    "ensemble_p_team1": 0.48484848484848486,
+    "sim_win_probability_team1": 0.4726,
+    "leader_model_p_team1": 0.5241398446170922,
+    "batting_order_swapped": false,
+    "impact_trim_lowest": true,
+    "impact_dropped_team1": "Jacob Duffy",
+    "impact_dropped_team2": "Matt Henry",
+    "pitch_multipliers": {
+      "first_innings_runs": 1.0231,
+      "second_innings_runs": 1.0231,
+      "first_innings_wickets": 0.9835,
+      "second_innings_wickets": 0.9835
+    },
+    "venue_spin_harshness": 0.92,
+    "process_variant": "1A",
+    "full_playing_twelve": false,
+    "pred_first_innings_team_runs": 110.00000000000003,
+    "pred_second_innings_team_runs": 109.99999999999999,
+    "pred_first_innings_team_wickets": 0.83530592839225,
+    "pred_second_innings_team_wickets": 1.8855303676527502,
+    "pred_first_innings_team_wickets_raw_sum": 0.83530592839225,
+    "pred_second_innings_team_wickets_raw_sum": 1.8855303676527502,
+    "ml_team_total_runs_team1": 97.19400621722846,
+    "ml_team_total_runs_team2": 100.76399271869407,
+    "team_run_calibration": {
+      "method": "ml_team_total",
+      "scale_team1": 0.8367823536256115,
+      "scale_team2": 2.7388203712794006,
+      "sum_player_runs_before_team1": 131.45592700824997,
+      "sum_player_runs_before_team2": 40.16327655275
+    },
+    "player_process1": {
+      "heuristic": "role_aware_v1",
+      "summary": "Best bat / top 5 runs exclude pure bowlers when enough batters exist; best bowl / top 3 wickets prefer bowlers and allrounders; POTM uses a role-weighted composite (not the official match award)."
+    },
+    "notes": "CSK chose to bowl → RCB bat first. Pitch: examples/pitch_match11_rcb_csk_2026.txt. Impact 1A: RCB Suyash Sharma, CSK MW Short (Matthew Short in squad). 5000 MC sims. --no-squad-check."
+  }
+}
