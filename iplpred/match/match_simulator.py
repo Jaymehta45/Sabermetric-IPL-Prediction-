@@ -197,6 +197,36 @@ def clip_team_total(total: float) -> float:
     return float(np.clip(total, MIN_TEAM_RUNS, MAX_TEAM_RUNS))
 
 
+def _lift_low_totals_for_batting_venue(
+    t1: float,
+    t2: float,
+    venue: str | None,
+) -> tuple[float, float]:
+    """
+    Ridge ML heads can sit ~95-115; after pitch mult + clip both innings may floor at
+    ``MIN_INNINGS_DISPLAY`` (110). ``_blend_high_scoring_pitch_totals`` only runs when
+    pitch run mults average ≥1.14, so *modest* belter reports never fire.
+
+    At batting-friendly venues (reuse spin-harshness as small-ground proxy), scale both
+    targets toward a T20 par so Chinnaswamy-style grounds do not show ~110 vs ~110.
+    """
+    from iplpred.core.venue_bowling_adjust import venue_spin_harshness
+
+    h = venue_spin_harshness(venue)
+    if h < 0.35:
+        return t1, t2
+    mid = (float(t1) + float(t2)) / 2.0
+    if mid >= 152.0:
+        return t1, t2
+    # ~158–194+ depending on harshness (Chinnaswamy tier ~0.9+)
+    par = 158.0 + h * 28.0 + min(14.0, max(0.0, h - 0.35) * 20.0)
+    scale = float(par / max(mid, 72.0))
+    scale = float(np.clip(scale, 1.0, 1.55))
+    t1n = float(np.clip(t1 * scale, MIN_INNINGS_DISPLAY, MAX_INNINGS_DISPLAY))
+    t2n = float(np.clip(t2 * scale, MIN_INNINGS_DISPLAY, MAX_INNINGS_DISPLAY))
+    return t1n, t2n
+
+
 def _blend_high_scoring_pitch_totals(
     t1: float,
     t2: float,
@@ -228,6 +258,7 @@ def _calibrated_innings_targets(
     raw2: float,
     pm: PitchMultipliers,
     ml_team_totals: tuple[float, float] | None,
+    venue: str | None = None,
 ) -> tuple[float, float, str]:
     """
     Target expected innings totals before per-player scaling.
@@ -235,18 +266,23 @@ def _calibrated_innings_targets(
     Prefer Ridge team-total heads (× innings pitch) when the bundle exists; otherwise
     lift raw sums of player predictions toward ~T20_INNINGS_ANCHOR while preserving
     relative strength between teams.
+
+    ``venue`` is used to lift low Ridge targets at small / batting-friendly grounds
+    (see ``_lift_low_totals_for_batting_venue``).
     """
     if ml_team_totals is not None:
         m1, m2 = float(ml_team_totals[0]), float(ml_team_totals[1])
         t1 = float(np.clip(m1 * pm.first_innings_runs, MIN_INNINGS_DISPLAY, MAX_INNINGS_DISPLAY))
         t2 = float(np.clip(m2 * pm.second_innings_runs, MIN_INNINGS_DISPLAY, MAX_INNINGS_DISPLAY))
         t1, t2 = _blend_high_scoring_pitch_totals(t1, t2, pm)
+        t1, t2 = _lift_low_totals_for_batting_venue(t1, t2, venue)
         return t1, t2, "ml_team_total"
     mid = (float(raw1) + float(raw2)) / 2.0
     k = T20_INNINGS_ANCHOR / max(mid, 45.0)
     t1 = float(np.clip(k * float(raw1), MIN_INNINGS_DISPLAY, MAX_INNINGS_DISPLAY))
     t2 = float(np.clip(k * float(raw2), MIN_INNINGS_DISPLAY, MAX_INNINGS_DISPLAY))
     t1, t2 = _blend_high_scoring_pitch_totals(t1, t2, pm)
+    t1, t2 = _lift_low_totals_for_batting_venue(t1, t2, venue)
     return t1, t2, "raw_sum_anchor"
 
 
@@ -591,7 +627,7 @@ def run_simulation(
     eff_t2 = t2_act["player_id"].astype(str).str.strip().tolist()
     ml_team_totals = predict_team_totals_from_rosters(latest, eff_t1, eff_t2)
     tgt1, tgt2, calib_method = _calibrated_innings_targets(
-        raw1, raw2, pm, ml_team_totals
+        raw1, raw2, pm, ml_team_totals, venue
     )
     s1, s2 = _team_calibration_scales(
         raw1, raw2, tgt1, tgt2, cap_large_scales=(ml_team_totals is None)

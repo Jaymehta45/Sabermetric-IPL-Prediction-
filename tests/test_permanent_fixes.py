@@ -86,7 +86,7 @@ class TestPitchHighPar(unittest.TestCase):
 class TestTeamRunCalibration(unittest.TestCase):
     def test_anchor_lifts_low_raw_sums(self) -> None:
         pm = PitchMultipliers()
-        t1, t2, m = _calibrated_innings_targets(40.0, 50.0, pm, None)
+        t1, t2, m = _calibrated_innings_targets(40.0, 50.0, pm, None, None)
         self.assertEqual(m, "raw_sum_anchor")
         self.assertGreater(t1, 100.0)
         self.assertGreater(t2, 100.0)
@@ -99,9 +99,23 @@ class TestTeamRunCalibration(unittest.TestCase):
             "Belter. 199 average batting first. More than 200 when chasing. "
             "Fours and sixes everywhere."
         )
-        t1, t2, m = _calibrated_innings_targets(40.0, 50.0, pm, (118.0, 120.0))
+        t1, t2, m = _calibrated_innings_targets(40.0, 50.0, pm, (118.0, 120.0), None)
         self.assertEqual(m, "ml_team_total")
         self.assertGreater((t1 + t2) / 2.0, 170.0)
+
+    def test_batting_friendly_venue_lifts_low_ridge_heads(self) -> None:
+        """Modest pitch mults + low ML totals should not stay floored at 110 at Chinnaswamy."""
+        pm = PitchMultipliers()
+        t1, t2, m = _calibrated_innings_targets(
+            40.0,
+            50.0,
+            pm,
+            (97.2, 100.8),
+            "M Chinnaswamy Stadium, Bengaluru",
+        )
+        self.assertEqual(m, "ml_team_total")
+        self.assertGreater((t1 + t2) / 2.0, 150.0)
+        self.assertLess((t1 + t2) / 2.0, 200.0)
 
 
 class TestImpactBase(unittest.TestCase):
