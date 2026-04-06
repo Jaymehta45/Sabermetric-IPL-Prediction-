@@ -1,0 +1,64 @@
+{
+  "match_key": "match12-kkr-pk-2026-04-06",
+  "match_date": "2026-04-06",
+  "venue": "Eden Gardens, Kolkata",
+  "team1_name": "Kolkata Knight Riders",
+  "team2_name": "Punjab Kings",
+  "team1_bats_first": true,
+  "pred_winner": "Punjab Kings",
+  "pred_p_team1_win": 0.106,
+  "pred_best_bat": "RA Tripathi",
+  "pred_best_bowl": "AS Roy",
+  "pred_top5_bats": [
+    "RA Tripathi",
+    "R Powell",
+    "cooper-connolly",
+    "shreyas-iyer",
+    "prabhsimran-singh"
+  ],
+  "pred_top3_bowls": [
+    "AS Roy",
+    "Navdeep Saini",
+    "vijaykumar-vyshak"
+  ],
+  "pred_potm": "RA Tripathi",
+  "pred_extra": {
+    "sims": 5000,
+    "ensemble_p_team1": 0.02,
+    "sim_win_probability_team1": 0.106,
+    "leader_model_p_team1": 0.4967261904761905,
+    "batting_order_swapped": false,
+    "impact_trim_lowest": true,
+    "impact_dropped_team1": "cameron-green",
+    "impact_dropped_team2": "nehal-wadhera",
+    "pitch_multipliers": {
+      "first_innings_runs": 1.202224,
+      "second_innings_runs": 1.2166506879999999,
+      "first_innings_wickets": 0.9692,
+      "second_innings_wickets": 0.9633847999999999
+    },
+    "venue_spin_harshness": 0.55,
+    "process_variant": "1A",
+    "full_playing_twelve": false,
+    "pred_first_innings_team_runs": 209.5290477314643,
+    "pred_second_innings_team_runs": 234.99999999999997,
+    "pred_first_innings_team_wickets": 0.5855444529290721,
+    "pred_second_innings_team_wickets": 1.2124692000000001,
+    "pred_first_innings_team_wickets_raw_sum": 0.5855444529290721,
+    "pred_second_innings_team_wickets_raw_sum": 1.2124692000000001,
+    "ml_team_total_runs_team1": 174.28453244275966,
+    "ml_team_total_runs_team2": 193.28390878963756,
+    "team_run_calibration": {
+      "method": "ml_team_total",
+      "scale_team1": 2.8533542484822454,
+      "scale_team2": 6.68593625229225,
+      "sum_player_runs_before_team1": 73.43253920992,
+      "sum_player_runs_before_team2": 35.14840571796225
+    },
+    "player_process1": {
+      "heuristic": "role_aware_v1",
+      "summary": "Best bat / top 5 runs exclude pure bowlers when enough batters exist; best bowl / top 3 wickets prefer bowlers and allrounders; POTM uses a role-weighted composite (not the official match award)."
+    },
+    "notes": "KKR chose to bat → KKR 1st innings. Impact (1A): RA Tripathi (KKR), priyansh-arya (PBKS); full pools per broadcast also list Blessing Muzarabani/Manish Pandey/Tejasvi Singh/Saurabh Dubey and Suryansh Shedge/Vishnu Vinod/Pravin Dubey/Harpreet Brar. Pitch text: examples/pitch_kkr_pk_2026-04-06.txt. XI passed as explicit stats player_ids; --no-squad-check (registry/squad id alignment). 5000 MC sims."
+  }
+}
