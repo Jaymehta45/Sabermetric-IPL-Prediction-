@@ -58,6 +58,7 @@
     "player_process1": {
       "heuristic": "role_aware_v1",
       "summary": "Best bat / top 5 runs exclude pure bowlers when enough batters exist; best bowl / top 3 wickets prefer bowlers and allrounders; POTM uses a role-weighted composite (not the official match award)."
-    }
+    },
+    "notes": "5000 MC sims (re-run). LSG chose to bowl → SRH bat first. Pitch: examples/pitch_srh_lsg_2026.txt. Impact: Shivam Mavi / Anrich Nortje (1A trim: Shivang Kumar, Aiden Markram)."
   }
 }

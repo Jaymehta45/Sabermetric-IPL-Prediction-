@@ -1,0 +1,4 @@
+{
+  "match_key": "match10-srh-lsg-2026-04-05",
+  "process3_notes": "BBB path matches/match10_srh_vs_lsg.csv; innings totals cross-checked via innings_runs_and_wickets_from_bbb. Unified build + retrain run after post."
+}

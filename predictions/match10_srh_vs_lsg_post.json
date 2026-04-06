@@ -1,0 +1,13 @@
+{
+  "match_key": "match10-srh-lsg-2026-04-05",
+  "actual_winner": "Sunrisers Hyderabad",
+  "actual_top_scorer": "Rishabh Pant",
+  "actual_top_scorer_runs": 67,
+  "actual_top_wicket_bowler": "Prince Yadav",
+  "actual_top_wickets": 3,
+  "official_potm": "",
+  "bbb_match_file": "matches/match10_srh_vs_lsg.csv",
+  "actual_first_innings_team_runs": 161,
+  "actual_second_innings_team_runs": 160,
+  "post_notes": "BBB ingested: SRH 161/9 vs LSG 160/5 — SRH won by 1 run. Pred winner SRH (correct). Top runs Rishabh Pant 67; top wickets Prince Yadav 3. POTM left blank (not verified). potm_correct left unset."
+}
