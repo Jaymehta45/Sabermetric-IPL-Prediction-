@@ -1,0 +1,13 @@
+{
+  "match_key": "match11-rcb-csk-2026-04-05",
+  "actual_winner": "Royal Challengers Bengaluru",
+  "actual_top_scorer": "Tim David",
+  "actual_top_scorer_runs": 70,
+  "actual_top_wicket_bowler": "Bhuvneshwar Kumar",
+  "actual_top_wickets": 3,
+  "official_potm": "Tim David",
+  "bbb_match_file": "matches/match11_rcb_vs_csk.csv",
+  "actual_first_innings_team_runs": 253,
+  "actual_second_innings_team_runs": 176,
+  "post_notes": "BBB ingested: RCB 253/4 vs CSK 176/10 — RCB won. Top runs Tim David 70; top wickets 3 each for Bhuvneshwar Kumar and Jacob Duffy (row uses Bhuvneshwar Kumar). Pred winner CSK — winner incorrect. Pred POTM MW Short vs official Tim David — potm incorrect."
+}
