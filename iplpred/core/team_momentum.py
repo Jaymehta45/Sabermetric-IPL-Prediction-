@@ -10,6 +10,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from iplpred.core.franchise_normalize import canonical_franchise
 from iplpred.paths import PROCESSED_DIR
 
 MATCH_TRAINING_PATH = PROCESSED_DIR / "match_training_dataset.csv"
@@ -64,8 +65,8 @@ def attach_momentum_columns_chronological(df: pd.DataFrame) -> pd.DataFrame:
     t1m: list[float] = []
     t2m: list[float] = []
     for _, row in out.iterrows():
-        a = str(row["team1_name"]).strip()
-        b = str(row["team2_name"]).strip()
+        a = canonical_franchise(str(row["team1_name"]))
+        b = canonical_franchise(str(row["team2_name"]))
         t1m.append(_rate_from_hist(team_hist, a))
         t2m.append(_rate_from_hist(team_hist, b))
         w = str(row.get("winner", "")).strip()
@@ -110,11 +111,11 @@ def momentum_row_from_history(
 
     team_hist: dict[str, list[float]] = {}
     for _, row in hdf.iterrows():
-        t1 = str(row["team1_name"]).strip()
-        t2 = str(row["team2_name"]).strip()
+        t1 = canonical_franchise(str(row["team1_name"]))
+        t2 = canonical_franchise(str(row["team2_name"]))
         w = str(row["winner"]).strip()
         _append_result(team_hist, t1, t2, w)
 
-    m1 = _rate_from_hist(team_hist, str(team1_name).strip())
-    m2 = _rate_from_hist(team_hist, str(team2_name).strip())
+    m1 = _rate_from_hist(team_hist, canonical_franchise(str(team1_name)))
+    m2 = _rate_from_hist(team_hist, canonical_franchise(str(team2_name)))
     return m1, m2

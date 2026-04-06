@@ -1,0 +1,11 @@
+Rollback point before the "comprehensive rollout" (franchise normalization, label weights,
+log1p team totals, evaluation script, tests).
+
+  git tag -l 'checkpoint/*'
+  git checkout checkpoint/pre-comprehensive-rollout
+
+Optional new branch from that snapshot:
+
+  git switch -c recovery/pre-rollout
+
+The checkpoint commit on develop is the parent of the rollout commit(s) that follow it.

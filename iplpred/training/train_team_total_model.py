@@ -14,12 +14,17 @@ from sklearn.linear_model import Ridge
 from sklearn.metrics import mean_absolute_error, r2_score
 
 from iplpred.match.match_winner_model import WINNER_FEATURE_COLS, build_winner_feature_matrix
-from iplpred.training.train_match_winner_model import recency_sample_weights
+from iplpred.training.train_match_winner_model import (
+    label_weight_from_source,
+    recency_sample_weights,
+)
 from iplpred.paths import MODELS_DIR, PROCESSED_DIR
 
 MATCH_TRAINING_PATH = PROCESSED_DIR / "match_training_dataset.csv"
 PLAYER_MATCH_STATS_PATH = PROCESSED_DIR / "player_match_stats.csv"
 MODEL_PATH = MODELS_DIR / "team_total_regressor.pkl"
+TARGET_CLIP = 320.0
+TARGET_TRANSFORM = "log1p"
 
 
 def load_with_dates() -> pd.DataFrame:
@@ -61,20 +66,25 @@ def main() -> None:
 
     X_train = build_winner_feature_matrix(train)
     X_test = build_winner_feature_matrix(test)
-    y1_train = train["team1_total_runs"].astype(float).values
+    y1_train_raw = np.clip(train["team1_total_runs"].astype(float).values, 0.0, TARGET_CLIP)
+    y2_train_raw = np.clip(train["team2_total_runs"].astype(float).values, 0.0, TARGET_CLIP)
     y1_test = test["team1_total_runs"].astype(float).values
-    y2_train = train["team2_total_runs"].astype(float).values
     y2_test = test["team2_total_runs"].astype(float).values
 
-    sw_train = recency_sample_weights(train["date"])
+    y1_train = np.log1p(y1_train_raw)
+    y2_train = np.log1p(y2_train_raw)
+
+    sw_train = (
+        recency_sample_weights(train["date"]) * label_weight_from_source(train)
+    )
 
     r1 = Ridge(alpha=2.0)
     r2 = Ridge(alpha=2.0)
     r1.fit(X_train, y1_train, sample_weight=sw_train)
     r2.fit(X_train, y2_train, sample_weight=sw_train)
 
-    p1 = r1.predict(X_test)
-    p2 = r2.predict(X_test)
+    p1 = np.clip(np.expm1(r1.predict(X_test)), 0.0, TARGET_CLIP)
+    p2 = np.clip(np.expm1(r2.predict(X_test)), 0.0, TARGET_CLIP)
     mae1 = mean_absolute_error(y1_test, p1)
     mae2 = mean_absolute_error(y2_test, p2)
     r2_1 = r2_score(y1_test, p1)
@@ -90,6 +100,8 @@ def main() -> None:
             "model_team1": r1,
             "model_team2": r2,
             "feature_names": WINNER_FEATURE_COLS,
+            "target_transform": TARGET_TRANSFORM,
+            "target_clip": TARGET_CLIP,
             "test_mae_team1": mae1,
             "test_mae_team2": mae2,
         },

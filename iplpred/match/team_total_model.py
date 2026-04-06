@@ -7,6 +7,7 @@ from __future__ import annotations
 from typing import Any
 
 import joblib
+import numpy as np
 import pandas as pd
 
 from iplpred.match.match_winner_model import (
@@ -76,6 +77,10 @@ def predict_team_totals_from_rosters(
         ]
     )
     X = build_winner_feature_matrix(row)
-    r1 = bundle["model_team1"].predict(X)[0]
-    r2 = bundle["model_team2"].predict(X)[0]
-    return float(r1), float(r2)
+    r1 = float(bundle["model_team1"].predict(X)[0])
+    r2 = float(bundle["model_team2"].predict(X)[0])
+    if bundle.get("target_transform") == "log1p":
+        cap = float(bundle.get("target_clip", 320.0))
+        r1 = float(np.clip(np.expm1(r1), 0.0, cap))
+        r2 = float(np.clip(np.expm1(r2), 0.0, cap))
+    return r1, r2

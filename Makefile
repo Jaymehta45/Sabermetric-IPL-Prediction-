@@ -17,6 +17,9 @@ build-data:
 test:
 	python3 -m unittest discover -s tests -p "test_*.py" -v
 
+eval:
+	python3 scripts/evaluate_match_models.py
+
 # Public URL via Cloudflare (requires cloudflared; app must listen on PORT, default 8000).
 .PHONY: tunnel
 tunnel:

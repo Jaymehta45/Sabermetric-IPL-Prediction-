@@ -52,6 +52,16 @@ def recency_sample_weights(dates: pd.Series) -> np.ndarray:
     return np.exp(-age.astype(np.float64) / 500.0)
 
 
+def label_weight_from_source(df: pd.DataFrame) -> np.ndarray:
+    """
+    Down-weight proxy winner labels (runs-based) vs official match results.
+    """
+    if "winner_source" not in df.columns:
+        return np.ones(len(df), dtype=np.float64)
+    src = df["winner_source"].fillna("").astype(str).str.strip().str.lower()
+    return np.where(src == "official", 1.0, np.where(src == "proxy", 0.55, 0.6))
+
+
 def time_based_split(
     df: pd.DataFrame, test_frac: float = 0.2
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -79,7 +89,9 @@ def main() -> None:
     X_train = build_winner_feature_matrix(train)
     X_test = build_winner_feature_matrix(test)
 
-    sw_train = recency_sample_weights(train["date"])
+    sw_train = (
+        recency_sample_weights(train["date"]) * label_weight_from_source(train)
+    )
 
     base = RandomForestClassifier(
         n_estimators=300,
