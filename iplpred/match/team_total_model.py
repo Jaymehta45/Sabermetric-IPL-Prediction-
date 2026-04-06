@@ -31,8 +31,15 @@ def predict_team_totals_from_rosters(
     latest: pd.DataFrame,
     team1: list[str],
     team2: list[str],
+    *,
+    team1_name: str | None = None,
+    team2_name: str | None = None,
+    match_date: str | None = None,
 ) -> tuple[float, float] | None:
     """Expected team totals from trained Ridge models, or None if missing."""
+    from iplpred.core.team_momentum import momentum_row_from_history
+    from iplpred.match.match_winner_model import MOMENTUM_NEUTRAL
+
     bundle = load_team_total_bundle()
     if bundle is None:
         return None
@@ -43,6 +50,13 @@ def predict_team_totals_from_rosters(
     sub2 = latest[key.isin(t2)]
     m1 = team_pre_match_metrics_from_latest(sub1)
     m2 = team_pre_match_metrics_from_latest(sub2)
+    mo1, mo2 = MOMENTUM_NEUTRAL, MOMENTUM_NEUTRAL
+    if team1_name and team2_name:
+        mo1, mo2 = momentum_row_from_history(
+            str(team1_name).strip(),
+            str(team2_name).strip(),
+            match_date,
+        )
     row = pd.DataFrame(
         [
             {
@@ -52,6 +66,8 @@ def predict_team_totals_from_rosters(
                 "team2_form_runs": m2["team_avg_form_runs"],
                 "team1_form_runs_ipl": m1["team_avg_form_runs_ipl"],
                 "team2_form_runs_ipl": m2["team_avg_form_runs_ipl"],
+                "team1_momentum": mo1,
+                "team2_momentum": mo2,
                 "team1_strike_rate": m1["team_avg_strike_rate"],
                 "team2_strike_rate": m2["team_avg_strike_rate"],
                 "team1_economy": m1["team_avg_economy"],

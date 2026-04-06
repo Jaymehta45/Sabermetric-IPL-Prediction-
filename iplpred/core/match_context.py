@@ -60,6 +60,10 @@ def _is_high_scoring_par_track(t: str) -> bool:
         return True
     if "batting paradise" in t or "batters paradise" in t:
         return True
+    if "bat dominating" in t or "batting dominating" in t:
+        return True
+    if "250" in t and ("average" in t or "par " in t or "score" in t):
+        return True
     if "high scoring" in t and ("chase" in t or "run chase" in t):
         return True
     if "runs on the board" in t and ("average" in t or "216" in t or "200" in t):
@@ -85,6 +89,10 @@ def _high_par_target_lift(t: str) -> float:
         lift += 0.10
     if "more than 200" in t:
         lift += 0.12
+    if "250" in t and ("average" in t or "par" in t):
+        lift += 0.14
+    if "bat dominating" in t or "batting dominating" in t:
+        lift += 0.08
     if "fours" in t and "sixes" in t:
         lift += 0.06
     if "ballpark" in t:

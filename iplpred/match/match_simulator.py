@@ -42,7 +42,7 @@ MAX_TEAM_RUNS = 250.0
 # T20 IPL-ish innings anchor: sum of per-player RF means is often ~40–90 — scale to this band.
 T20_INNINGS_ANCHOR = 165.0
 MIN_INNINGS_DISPLAY = 110.0
-MAX_INNINGS_DISPLAY = 235.0
+MAX_INNINGS_DISPLAY = 255.0
 MAX_PLAYER_RUN_SCALE = 6.0
 
 MATCHUP_NEUTRAL_SR = 100.0
@@ -209,6 +209,10 @@ def _lift_low_totals_for_batting_venue(
 
     At batting-friendly venues (reuse spin-harshness as small-ground proxy), scale both
     targets toward a T20 par so Chinnaswamy-style grounds do not show ~110 vs ~110.
+
+    **Second branch:** ML/Ridge often sit ~160–195 on belters while realised par is 200+;
+    we still lift when the innings mean is in [152, 205) so pre-match totals are not
+    stuck ~170 at high-scoring grounds.
     """
     from iplpred.core.venue_bowling_adjust import venue_spin_harshness
 
@@ -216,15 +220,22 @@ def _lift_low_totals_for_batting_venue(
     if h < 0.35:
         return t1, t2
     mid = (float(t1) + float(t2)) / 2.0
-    if mid >= 152.0:
-        return t1, t2
-    # ~158–194+ depending on harshness (Chinnaswamy tier ~0.9+)
-    par = 158.0 + h * 28.0 + min(14.0, max(0.0, h - 0.35) * 20.0)
-    scale = float(par / max(mid, 72.0))
-    scale = float(np.clip(scale, 1.0, 1.55))
-    t1n = float(np.clip(t1 * scale, MIN_INNINGS_DISPLAY, MAX_INNINGS_DISPLAY))
-    t2n = float(np.clip(t2 * scale, MIN_INNINGS_DISPLAY, MAX_INNINGS_DISPLAY))
-    return t1n, t2n
+    if mid < 152.0:
+        # ~158–194+ depending on harshness (Chinnaswamy tier ~0.9+)
+        par = 158.0 + h * 28.0 + min(14.0, max(0.0, h - 0.35) * 20.0)
+        scale = float(par / max(mid, 72.0))
+        scale = float(np.clip(scale, 1.0, 1.55))
+        t1n = float(np.clip(t1 * scale, MIN_INNINGS_DISPLAY, MAX_INNINGS_DISPLAY))
+        t2n = float(np.clip(t2 * scale, MIN_INNINGS_DISPLAY, MAX_INNINGS_DISPLAY))
+        return t1n, t2n
+    if h >= 0.48 and 152.0 <= mid < 205.0:
+        par_mid = 160.0 + h * 48.0
+        if mid < par_mid - 6.0:
+            scale = float(np.clip(par_mid / max(mid, 80.0), 1.0, 1.30))
+            t1n = float(np.clip(t1 * scale, MIN_INNINGS_DISPLAY, MAX_INNINGS_DISPLAY))
+            t2n = float(np.clip(t2 * scale, MIN_INNINGS_DISPLAY, MAX_INNINGS_DISPLAY))
+            return t1n, t2n
+    return t1, t2
 
 
 def _blend_high_scoring_pitch_totals(
@@ -567,6 +578,7 @@ def run_simulation(
     use_recent_form_shrinkage: bool = True,
     shrink_team_prior_weight: float = 0.45,
     venue: str | None = None,
+    match_date: str | None = None,
 ) -> dict:
     if validate_squad and team1_name and team2_name:
         validate_team_playing_xi(team1_name, team1)
@@ -625,7 +637,14 @@ def run_simulation(
 
     eff_t1 = t1_act["player_id"].astype(str).str.strip().tolist()
     eff_t2 = t2_act["player_id"].astype(str).str.strip().tolist()
-    ml_team_totals = predict_team_totals_from_rosters(latest, eff_t1, eff_t2)
+    ml_team_totals = predict_team_totals_from_rosters(
+        latest,
+        eff_t1,
+        eff_t2,
+        team1_name=team1_name,
+        team2_name=team2_name,
+        match_date=match_date,
+    )
     tgt1, tgt2, calib_method = _calibrated_innings_targets(
         raw1, raw2, pm, ml_team_totals, venue
     )
@@ -716,7 +735,14 @@ def run_simulation(
                 wins1 += 1
         win_prob_team1 = wins1 / n_monte_carlo
 
-    leader_p_team1 = learned_team1_win_proba_from_rosters(latest, eff_t1, eff_t2)
+    leader_p_team1 = learned_team1_win_proba_from_rosters(
+        latest,
+        eff_t1,
+        eff_t2,
+        team1_name=team1_name,
+        team2_name=team2_name,
+        match_date=match_date,
+    )
     ensemble_p_team1 = apply_ensemble_and_calibrate(leader_p_team1, win_prob_team1)
 
     # Expected wickets taken by the fielding XI per innings (sum of player predicted_wickets).
@@ -963,6 +989,12 @@ def main():
         default="",
         help="Stadium/city for spin-vs-pace wicket nudges (e.g. Chinnaswamy, Bengaluru)",
     )
+    parser.add_argument(
+        "--match-date",
+        type=str,
+        default="",
+        help="ISO date YYYY-MM-DD for franchise momentum in ML heads (with --team1-name/--team2-name)",
+    )
     args = parser.parse_args()
 
     if args.team1.strip() and args.team2.strip():
@@ -978,6 +1010,7 @@ def main():
 
     validate_squad = not args.no_squad_check
     ven = (args.venue or "").strip() or None
+    md = (args.match_date or "").strip() or None
     out = run_simulation(
         team1,
         team2,
@@ -986,6 +1019,7 @@ def main():
         team2_name=t2n,
         validate_squad=validate_squad,
         venue=ven,
+        match_date=md,
     )
     print_report(out)
     print("Match simulation complete")

@@ -41,6 +41,17 @@ def load_match_training_with_dates() -> pd.DataFrame:
     return df.merge(md, on="match_id", how="left")
 
 
+def recency_sample_weights(dates: pd.Series) -> np.ndarray:
+    """Higher weight for more recent matches (exponential decay by age in days)."""
+    d = pd.to_datetime(dates, errors="coerce")
+    ref = d.max()
+    if pd.isna(ref):
+        return np.ones(len(dates), dtype=np.float64)
+    age = (ref - d).dt.days
+    age = pd.to_numeric(age, errors="coerce").fillna(0.0).clip(lower=0.0)
+    return np.exp(-age.astype(np.float64) / 500.0)
+
+
 def time_based_split(
     df: pd.DataFrame, test_frac: float = 0.2
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -68,6 +79,8 @@ def main() -> None:
     X_train = build_winner_feature_matrix(train)
     X_test = build_winner_feature_matrix(test)
 
+    sw_train = recency_sample_weights(train["date"])
+
     base = RandomForestClassifier(
         n_estimators=300,
         max_depth=12,
@@ -78,7 +91,7 @@ def main() -> None:
     )
     cv = min(5, max(2, len(y_train) // 150))
     clf = CalibratedClassifierCV(base, method="isotonic", cv=cv)
-    clf.fit(X_train, y_train)
+    clf.fit(X_train, y_train, sample_weight=sw_train)
 
     proba_test = clf.predict_proba(X_test)[:, 1]
     pred_test = (proba_test >= 0.5).astype(int)

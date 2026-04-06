@@ -21,6 +21,7 @@ WINNER_FEATURE_COLS: list[str] = [
     "strength_diff",
     "form_runs_diff",
     "form_runs_ipl_diff",
+    "momentum_diff",
     "strike_rate_diff",
     "economy_diff",
     "team1_strength",
@@ -29,11 +30,15 @@ WINNER_FEATURE_COLS: list[str] = [
     "team2_form_runs",
     "team1_form_runs_ipl",
     "team2_form_runs_ipl",
+    "team1_momentum",
+    "team2_momentum",
     "team1_strike_rate",
     "team2_strike_rate",
     "team1_economy",
     "team2_economy",
 ]
+
+MOMENTUM_NEUTRAL = 0.5
 
 
 def add_winner_feature_columns(df: pd.DataFrame) -> pd.DataFrame:
@@ -43,9 +48,15 @@ def add_winner_feature_columns(df: pd.DataFrame) -> pd.DataFrame:
         if c not in out.columns:
             alt = "team1_form_runs" if c.startswith("team1") else "team2_form_runs"
             out[c] = out[alt]
+    for c in ("team1_momentum", "team2_momentum"):
+        if c not in out.columns:
+            out[c] = MOMENTUM_NEUTRAL
+        else:
+            out[c] = pd.to_numeric(out[c], errors="coerce").fillna(MOMENTUM_NEUTRAL)
     out["strength_diff"] = out["team1_strength"] - out["team2_strength"]
     out["form_runs_diff"] = out["team1_form_runs"] - out["team2_form_runs"]
     out["form_runs_ipl_diff"] = out["team1_form_runs_ipl"] - out["team2_form_runs_ipl"]
+    out["momentum_diff"] = out["team1_momentum"] - out["team2_momentum"]
     out["strike_rate_diff"] = out["team1_strike_rate"] - out["team2_strike_rate"]
     out["economy_diff"] = out["team1_economy"] - out["team2_economy"]
     return out
@@ -125,11 +136,17 @@ def learned_team1_win_proba_from_rosters(
     latest: pd.DataFrame,
     team1: list[str],
     team2: list[str],
+    *,
+    team1_name: str | None = None,
+    team2_name: str | None = None,
+    match_date: str | None = None,
 ) -> float | None:
     """
     P(team1 wins) from the trained team-level model, using latest pre-match
     features averaged per roster. Returns None if the model file is missing.
     """
+    from iplpred.core.team_momentum import momentum_row_from_history
+
     t1 = {str(p).strip() for p in team1}
     t2 = {str(p).strip() for p in team2}
     key = latest["player_id"].astype(str).str.strip()
@@ -137,6 +154,13 @@ def learned_team1_win_proba_from_rosters(
     sub2 = latest[key.isin(t2)]
     m1 = team_pre_match_metrics_from_latest(sub1)
     m2 = team_pre_match_metrics_from_latest(sub2)
+    mo1, mo2 = MOMENTUM_NEUTRAL, MOMENTUM_NEUTRAL
+    if team1_name and team2_name:
+        mo1, mo2 = momentum_row_from_history(
+            str(team1_name).strip(),
+            str(team2_name).strip(),
+            match_date,
+        )
     try:
         return predict_team1_win_proba_single(
             team1_strength=m1["team_strength"],
@@ -149,6 +173,8 @@ def learned_team1_win_proba_from_rosters(
             team2_strike_rate=m2["team_avg_strike_rate"],
             team1_economy=m1["team_avg_economy"],
             team2_economy=m2["team_avg_economy"],
+            team1_momentum=mo1,
+            team2_momentum=mo2,
         )
     except FileNotFoundError:
         return None
@@ -166,10 +192,14 @@ def predict_team1_win_proba_single(
     team2_strike_rate: float,
     team1_economy: float,
     team2_economy: float,
+    team1_momentum: float | None = None,
+    team2_momentum: float | None = None,
 ) -> float:
     """Convenience for one match."""
     t1i = team1_form_runs if team1_form_runs_ipl is None else team1_form_runs_ipl
     t2i = team2_form_runs if team2_form_runs_ipl is None else team2_form_runs_ipl
+    m1 = MOMENTUM_NEUTRAL if team1_momentum is None else float(team1_momentum)
+    m2 = MOMENTUM_NEUTRAL if team2_momentum is None else float(team2_momentum)
     row = pd.DataFrame(
         [
             {
@@ -179,6 +209,8 @@ def predict_team1_win_proba_single(
                 "team2_form_runs": team2_form_runs,
                 "team1_form_runs_ipl": t1i,
                 "team2_form_runs_ipl": t2i,
+                "team1_momentum": m1,
+                "team2_momentum": m2,
                 "team1_strike_rate": team1_strike_rate,
                 "team2_strike_rate": team2_strike_rate,
                 "team1_economy": team1_economy,

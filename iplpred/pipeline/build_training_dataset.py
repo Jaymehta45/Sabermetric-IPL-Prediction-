@@ -10,6 +10,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from iplpred.core.team_momentum import attach_momentum_columns_chronological
 from iplpred.paths import DATA_DIR, PROCESSED_DIR
 
 PLAYER_FEATURES_PATH = PROCESSED_DIR / "player_features.csv"
@@ -320,6 +321,7 @@ def main() -> None:
         official if len(official) else None,
         team_totals,
     )
+    out = attach_momentum_columns_chronological(out)
 
     final_cols = [
         "match_id",
@@ -339,6 +341,8 @@ def main() -> None:
         "team2_total_runs",
         "venue",
         "match_date",
+        "team1_momentum",
+        "team2_momentum",
         "winner",
         "winner_source",
     ]

@@ -14,6 +14,7 @@ from sklearn.linear_model import Ridge
 from sklearn.metrics import mean_absolute_error, r2_score
 
 from iplpred.match.match_winner_model import WINNER_FEATURE_COLS, build_winner_feature_matrix
+from iplpred.training.train_match_winner_model import recency_sample_weights
 from iplpred.paths import MODELS_DIR, PROCESSED_DIR
 
 MATCH_TRAINING_PATH = PROCESSED_DIR / "match_training_dataset.csv"
@@ -65,10 +66,12 @@ def main() -> None:
     y2_train = train["team2_total_runs"].astype(float).values
     y2_test = test["team2_total_runs"].astype(float).values
 
+    sw_train = recency_sample_weights(train["date"])
+
     r1 = Ridge(alpha=2.0)
     r2 = Ridge(alpha=2.0)
-    r1.fit(X_train, y1_train)
-    r2.fit(X_train, y2_train)
+    r1.fit(X_train, y1_train, sample_weight=sw_train)
+    r2.fit(X_train, y2_train, sample_weight=sw_train)
 
     p1 = r1.predict(X_test)
     p2 = r2.predict(X_test)

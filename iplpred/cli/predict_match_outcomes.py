@@ -130,6 +130,7 @@ def predict_match_outcomes(
     team1_impact: str | None = None,
     team2_impact: str | None = None,
     impact_trim_lowest: bool = True,
+    match_date: str | None = None,
 ) -> dict:
     """
     Run simulation and return
@@ -208,6 +209,7 @@ def predict_match_outcomes(
         use_recent_form_shrinkage=use_recent_form_shrinkage,
         shrink_team_prior_weight=shrink_team_prior_weight,
         venue=venue,
+        match_date=match_date,
     )
     six = six_match_outcomes(sim, team1_name=n1, team2_name=n2)
     return {
@@ -576,7 +578,7 @@ def main() -> None:
         "--match-date",
         type=str,
         default="",
-        help="ISO date YYYY-MM-DD for export-json (or use match_date in --match-json)",
+        help="ISO date YYYY-MM-DD — export-json, and ML momentum (with team names)",
     )
     parser.add_argument(
         "--match-key",
@@ -666,6 +668,12 @@ def main() -> None:
     if args.process_variant == "1b":
         impact_trim_lowest = False
 
+    match_date_for_sim = (args.match_date or "").strip() or None
+    if not match_date_for_sim and payload is not None:
+        rd = payload.raw.get("match_date") or payload.raw.get("date")
+        if rd is not None:
+            match_date_for_sim = str(rd).strip() or None
+
     out = predict_match_outcomes(
         team1,
         team2,
@@ -679,6 +687,7 @@ def main() -> None:
         team1_impact=t1_imp,
         team2_impact=t2_imp,
         impact_trim_lowest=impact_trim_lowest,
+        match_date=match_date_for_sim,
     )
     sim = out["simulation"]
     t1_name_eff, t2_name_eff = t1n, t2n
