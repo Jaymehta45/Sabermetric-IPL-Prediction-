@@ -252,13 +252,18 @@ def _blend_high_scoring_pitch_totals(
     if hi < 1.14:
         return t1, t2
     m = (t1 + t2) / 2.0
-    if m >= 178.0:
+    # Stronger pitch reads (hi≈1.35+) already imply ~195–215 par; do not stop blending at 178.
+    m_done = 185.0 if hi >= 1.35 else 178.0
+    if m >= m_done:
         return t1, t2
     excess = hi - 1.14
-    aspirational = 188.0 + min(14.0, excess * 35.0)
-    blend = min(0.72, 0.28 + excess * 2.5)
+    base_a = 196.0 if hi >= 1.35 else 188.0
+    aspirational = base_a + min(18.0 if hi >= 1.35 else 14.0, excess * 35.0)
+    blend_cap = 0.82 if hi >= 1.35 else 0.72
+    blend = min(blend_cap, 0.28 + excess * 2.5)
     scale = 1.0 + blend * (aspirational / max(m, 72.0) - 1.0)
-    scale = float(np.clip(scale, 1.0, 1.55))
+    scale_cap = 1.65 if hi >= 1.35 else 1.55
+    scale = float(np.clip(scale, 1.0, scale_cap))
     t1n = float(np.clip(t1 * scale, MIN_INNINGS_DISPLAY, MAX_INNINGS_DISPLAY))
     t2n = float(np.clip(t2 * scale, MIN_INNINGS_DISPLAY, MAX_INNINGS_DISPLAY))
     return t1n, t2n

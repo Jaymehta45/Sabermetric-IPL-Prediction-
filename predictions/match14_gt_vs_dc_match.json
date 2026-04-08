@@ -1,0 +1,37 @@
+{
+  "match_id": "match14-gt-dc-2026-04-08",
+  "match_date": "2026-04-08",
+  "team1_name": "Gujarat Titans",
+  "team2_name": "Delhi Capitals",
+  "venue": "Arun Jaitley Stadium, Delhi",
+  "toss_winner": "Delhi Capitals",
+  "elected_to": "field",
+  "pitch_text": "Arun Jaitley Stadium Delhi: square boundaries equidistant; ~73m straight, some sub-60m boundaries. Pitch lighter than earlier strip this venue — middle of wicket from popping crease described as very high scoring (250, runs galore); outside crease drier with patches — still a decent batting wicket, maybe not as extreme as typical here. Small ground. Spin likely significant — Axar, Kuldeep class. Last season average first innings ~198 at this ground; batters need to clear that bar tonight.",
+  "xi1": [
+    "Shubman Gill",
+    "B Sai Sudharsan",
+    "JC Buttler",
+    "M Shahrukh Khan",
+    "Azmatullah Omarzai",
+    "Washington Sundar",
+    "Rashid Khan",
+    "K Rabada",
+    "Mohammed Shami",
+    "Noor Ahmad",
+    "R Sai Kishore"
+  ],
+  "xi2": [
+    "KL Rahul",
+    "pathum-nissanka",
+    "nitish-rana",
+    "AR Patel",
+    "T Stubbs",
+    "david-miller",
+    "V Nigam",
+    "lungi-ngidi",
+    "Kuldeep Yadav",
+    "Mukesh Kumar",
+    "ashok-sharma"
+  ],
+  "notes": "Match 14 — DC won toss, bowled first → GT bats first (team1). IDs aligned with prior match14 run; --no-squad-check for bridge spellings."
+}

@@ -82,6 +82,16 @@ class TestPitchHighPar(unittest.TestCase):
         plain = parse_pitch_report(ctx.pitch_text or "")
         self.assertGreater(pm.first_innings_runs, plain.first_innings_runs)
 
+    def test_jaitley_pitch_report_strong_mults(self) -> None:
+        """~198 average + 250/runs galore + small ground → high-par read (match14-style)."""
+        text = (
+            "Arun Jaitley Stadium Delhi. Very high scoring (250, runs galore). "
+            "Small ground. Last season average first innings ~198 at this ground."
+        )
+        ctx = MatchContext(pitch_text=text, venue="Arun Jaitley Stadium, Delhi")
+        pm = resolve_pitch_multipliers(ctx)
+        self.assertGreater(pm.first_innings_runs, 1.55)
+
 
 class TestTeamRunCalibration(unittest.TestCase):
     def test_anchor_lifts_low_raw_sums(self) -> None:

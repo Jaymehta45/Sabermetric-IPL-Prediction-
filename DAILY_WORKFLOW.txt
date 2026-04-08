@@ -3,11 +3,20 @@
 IPLPRED — DAILY WORKFLOW (PROCESS 1 → 2 → 3)
 ================================================================================
 For **each match**, run **Process 1**, then **Process 2**, then **Process 3** in that
-order. After **each** process, run `log_prediction.py` with **`--push`** so
-`prediction_log.csv` is committed and **GitHub `main`** updates (Vercel loads the CSV
-from `main`). Example: `python3 scripts/log_prediction.py pre <json> --push`. Or set
-**`export IPLPRED_LOG_AUTO_PUSH=1`** once so every log command pushes. Refresh the web app
-(/) to see P1·P2·P3 move forward.
+order.
+
+**Push after every process (required)** — Do not stop at “logged locally.” After **each**
+of P1, P2, and P3, commit and push so **GitHub `main`** updates and **Vercel** sees
+`data/processed/prediction_log.csv`.
+
+  • **Process 1 (pre):**  `python3 scripts/log_prediction.py pre  <json> --push`
+  • **Process 2 (post):** `python3 scripts/log_prediction.py post <json> --push`
+  • **Process 3:**       `python3 scripts/log_prediction.py process3 <json> --push`
+
+Or set **`export IPLPRED_LOG_AUTO_PUSH=1`** once in your shell so every
+`log_prediction.py` run pushes without typing `--push` each time.
+
+Refresh the web app (/) after each push to see P1·P2·P3 move forward.
 
 Repeatable flow: what you send in, what we predict, how we retrain after the
 game, how we compare to reality, and how we improve the model.
@@ -36,8 +45,8 @@ B — WHAT WE PRODUCE (outputs)
   • Top 5 batsmen and top 3 bowlers (ordered lists of player_id strings; same
     ordering as pred_top5_bats / pred_top3_bowls in the export JSON).
   • Player of the match (composite score: runs + 25×wickets + bonuses).
-  • On-disk: --export-json file + scripts/log_prediction.py pre row in
-    data/processed/prediction_log.csv.
+  • On-disk: --export-json file + `log_prediction.py pre` row in
+    data/processed/prediction_log.csv, then **--push** (see top of this file).
 
 B′ — STANDARD FORMAT FOR “RUN PROCESS 1” (assistant / human reply)
   When someone says “run Process 1” (or pre-match prediction), report outputs
@@ -71,9 +80,9 @@ B′ — STANDARD FORMAT FOR “RUN PROCESS 1” (assistant / human reply)
 
   Artifacts:
     • JSON:  predictions/<file>_pre.json  (--export-json)
-    • Log:   python3 scripts/log_prediction.py pre <that-json>
-             → row in data/processed/prediction_log.csv (pred_top5_bats,
-               pred_top3_bowls as JSON strings in CSV)
+    • Log + push:  python3 scripts/log_prediction.py pre <that-json> --push
+             → row in data/processed/prediction_log.csv; **git commit + push** so
+               Vercel/history update (pred_top5_bats / pred_top3_bowls as JSON in CSV)
     • Cloudflare share (read-only dashboard): there is **no** stable bookmark URL.
       Start uvicorn on port 8000, then in another terminal run `make tunnel`
       (scripts/cloudflared_tunnel.sh). **Copy the https://….trycloudflare.com URL
@@ -127,7 +136,8 @@ HOW TO RUN B (recommended)
     dropped from each 12 for team totals.
   **Process 1B (experimental):** `--process-variant 1b` or `--impact-add-only` —
     full playing 12; all count toward team totals.
-  Log pre-match row: scripts/log_prediction.py pre (JSON from --export-json).
+  Log + push pre-match row: `python3 scripts/log_prediction.py pre <json> --push`
+  (JSON from --export-json).
 
 PROBLEMS WE HAVE SEEN WITH “B” (running predictions)
   • Squad validation fails when every XI name does not resolve to the same
@@ -164,8 +174,9 @@ E — POST-MATCH DATA + REBUILD / TRAIN
     build_player_registry.py (see Makefile build-data).
 
 F — PREDICTION VS ACTUAL + ERROR REVIEW
-  • Append post row: scripts/log_prediction.py post (JSON with actual winner,
-    POTM, top scorer, top wicket, bbb path, notes).
+  • Append post row: `python3 scripts/log_prediction.py post <json> --push`
+    (JSON with actual winner, POTM, top scorer, top wicket, bbb path, notes).
+    **Always use --push** (or IPLPRED_LOG_AUTO_PUSH=1) so the post row reaches GitHub/Vercel.
   • Storage: data/processed/prediction_log.csv
   • Review winner_correct, potm_correct; optional BBB-backed top 5/3 checks when
     bbb_match_file is set.
@@ -174,12 +185,14 @@ F — PREDICTION VS ACTUAL + ERROR REVIEW
 PROCESS 3 — AFTER EVERY PROCESS 2: MODEL IMPROVEMENT REVIEW
 --------------------------------------------------------------------------------
 After each completed Process 2, do the review checklist below, then **log
-Process 3** so the web app shows step 3 complete for that match:
+Process 3** so the web app shows step 3 complete for that match — **with push**:
 
-    python3 scripts/log_prediction.py process3 examples/prediction_log_process3.example.json
+    python3 scripts/log_prediction.py process3 examples/prediction_log_process3.example.json --push
 
   JSON: `match_key` (required), `process3_notes` (optional — short improvement
   notes; shown on the history page).
+
+  Same rule as P1/P2: never skip **`--push`** (unless IPLPRED_LOG_AUTO_PUSH=1 is set).
 
 Review checklist:
 
@@ -207,13 +220,14 @@ prediction_log.csv (and optional BBB paths referenced there) to show:
 Run: pip install -r requirements-web.txt
      uvicorn web.dashboard:app --reload --host 0.0.0.0 --port 8000
 
-Pre-match predictions and logging: always use CLI + log_prediction.py as above.
-**Refresh the browser** after each log command to see updates.
+Pre-match predictions and logging: always use CLI + log_prediction.py as above, with
+**`--push` after every Process 1 / 2 / 3** (see top of file). **Refresh the browser**
+after each successful push to see updates.
 
-**Vercel (iplpred.vercel.app):** the live site loads ``prediction_log.csv`` from GitHub (same
-branch as the deployment), not only the file baked into the last deploy. After each
-``log_prediction.py`` run, **commit and push** ``data/processed/prediction_log.csv`` (shortcut:
-``bash scripts/push_prediction_log.sh``). No redeploy is required. Check
+**Vercel (iplpred.vercel.app):** the live site loads ``prediction_log.csv`` from GitHub.
+Using ``log_prediction.py … --push`` commits and pushes that file (and syncs ``main`` when
+not already on ``main``). If you logged without ``--push``, run
+``bash scripts/push_prediction_log.sh`` or push manually. No redeploy is required. Check
 ``GET /api/build-info`` for ``source`` and ``row_count``.
 
 --------------------------------------------------------------------------------

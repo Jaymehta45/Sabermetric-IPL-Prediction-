@@ -64,6 +64,9 @@ def _is_high_scoring_par_track(t: str) -> bool:
         return True
     if "250" in t and ("average" in t or "par " in t or "score" in t):
         return True
+    # Cited 250+ with explicit "runs galore" / very high scoring — still a belter read
+    if "250" in t and ("galore" in t or "runs galore" in t or "very high scoring" in t):
+        return True
     if "high scoring" in t and ("chase" in t or "run chase" in t):
         return True
     if "runs on the board" in t and ("average" in t or "216" in t or "200" in t):
@@ -81,6 +84,9 @@ def _high_par_target_lift(t: str) -> float:
         lift += 0.20
     if "199" in t and "average" in t:
         lift += 0.24
+    # Same idea as 199 — many reports cite ~198 first-innings par at Kotla-style venues
+    if "198" in t and "average" in t:
+        lift += 0.22
     if "216" in t and "average" in t:
         lift += 0.26
     if "200" in t:
@@ -91,6 +97,12 @@ def _high_par_target_lift(t: str) -> float:
         lift += 0.12
     if "250" in t and ("average" in t or "par" in t):
         lift += 0.14
+    # Broadcast: "250, runs galore" without tying 250 to the word "average" in the same clause
+    if "250" in t and ("galore" in t or "runs galore" in t):
+        lift += 0.16
+    # Small ground + high-scoring language — extra toward 200+ innings totals
+    if "small ground" in t and ("high scoring" in t or "batting" in t):
+        lift += 0.06
     if "bat dominating" in t or "batting dominating" in t:
         lift += 0.08
     if "fours" in t and "sixes" in t:
@@ -190,6 +202,9 @@ def _venue_run_pitch_nudge(venue: str | None) -> float:
     v = str(venue).lower()
     if "ahmedabad" in v or "narendra modi" in v or "motera" in v:
         return 1.028
+    # Arun Jaitley / Kotla — short boundaries, T20 totals often ~190–210+ on good decks
+    if "jaitley" in v or "arun jaitley" in v:
+        return 1.032
     return 1.0
 
 

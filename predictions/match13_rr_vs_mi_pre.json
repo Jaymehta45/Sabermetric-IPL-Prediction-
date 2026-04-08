@@ -23,6 +23,8 @@
   ],
   "pred_potm": "YBK Jaiswal",
   "pred_extra": {
+    "pre_match_assessment": "unpredictable",
+    "pre_match_assessment_note": "Marked unpredictable due to variable parameters (conditions, format, inputs).",
     "sims": 5000,
     "ensemble_p_team1": 0.98,
     "sim_win_probability_team1": 0.4666,
