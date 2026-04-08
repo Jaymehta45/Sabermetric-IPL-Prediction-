@@ -1,0 +1,63 @@
+{
+  "match_key": "match13-rr-mi-2026-04-07",
+  "match_date": "2026-04-07",
+  "venue": "Barsapara Cricket Stadium, Guwahati",
+  "team1_name": "Rajasthan Royals",
+  "team2_name": "Mumbai Indians",
+  "team1_bats_first": true,
+  "pred_winner": "Mumbai Indians",
+  "pred_p_team1_win": 0.4666,
+  "pred_best_bat": "YBK Jaiswal",
+  "pred_best_bowl": "TU Deshpande",
+  "pred_top5_bats": [
+    "YBK Jaiswal",
+    "SA Yadav",
+    "Tilak Varma",
+    "SO Hetmyer",
+    "RG Sharma"
+  ],
+  "pred_top3_bowls": [
+    "TU Deshpande",
+    "JC Archer",
+    "R Parag"
+  ],
+  "pred_potm": "YBK Jaiswal",
+  "pred_extra": {
+    "sims": 5000,
+    "ensemble_p_team1": 0.98,
+    "sim_win_probability_team1": 0.4666,
+    "leader_model_p_team1": 0.8459976452385949,
+    "batting_order_swapped": false,
+    "impact_trim_lowest": false,
+    "impact_dropped_team1": null,
+    "impact_dropped_team2": null,
+    "pitch_multipliers": {
+      "first_innings_runs": 1.021,
+      "second_innings_runs": 1.021,
+      "first_innings_wickets": 0.985,
+      "second_innings_wickets": 0.985
+    },
+    "venue_spin_harshness": 0.48,
+    "process_variant": "1A",
+    "full_playing_twelve": false,
+    "pred_first_innings_team_runs": 173.26050262018634,
+    "pred_second_innings_team_runs": 174.8194973798137,
+    "pred_first_innings_team_wickets": 2.798787059090909,
+    "pred_second_innings_team_wickets": 3.227876340909091,
+    "pred_first_innings_team_wickets_raw_sum": 2.798787059090909,
+    "pred_second_innings_team_wickets_raw_sum": 3.227876340909091,
+    "ml_team_total_runs_team1": 117.97080807519511,
+    "ml_team_total_runs_team2": 119.03230719817412,
+    "team_run_calibration": {
+      "method": "ml_team_total",
+      "scale_team1": 1.8309269386301512,
+      "scale_team2": 1.5643749940072382,
+      "sum_player_runs_before_team1": 94.62993796454545,
+      "sum_player_runs_before_team2": 111.75037829772725
+    },
+    "player_process1": {
+      "heuristic": "role_aware_v1",
+      "summary": "Best bat / top 5 runs exclude pure bowlers when enough batters exist; best bowl / top 3 wickets prefer bowlers and allrounders; POTM uses a role-weighted composite (not the official match award)."
+    }
+  }
+}

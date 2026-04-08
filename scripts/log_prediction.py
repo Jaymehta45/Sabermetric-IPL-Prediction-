@@ -18,6 +18,9 @@ Post: match_key, actual_winner, actual_top_scorer, actual_top_scorer_runs (optio
   actual_first_innings_team_runs, actual_second_innings_team_runs (optional — if omitted and
   bbb_match_file points at a CSV, totals are filled from ball-by-ball).
 
+  For rain / abandonment with no winner, set actual_winner to "No result" (or "NR").
+  winner_correct is then logged as skipped_no_result (not scored against the pre-match pick).
+
 Process 3 (after post-match review — updates same match_key):
     python3 scripts/log_prediction.py process3 examples/prediction_log_process3.example.json
 
@@ -286,6 +289,12 @@ def _normalize(s: str) -> str:
     return " ".join(str(s).lower().strip().split())
 
 
+def _actual_winner_is_no_result(s: str) -> bool:
+    """Rain / abandonment — no winner to compare against the pre-match pick."""
+    t = _normalize(s)
+    return t in ("no result", "nr", "abandoned", "match abandoned")
+
+
 def _df_for_update() -> pd.DataFrame:
     df = pd.read_csv(LOG_PATH, low_memory=False)
     df = _ensure_columns(df)
@@ -340,11 +349,16 @@ def cmd_post(args: argparse.Namespace) -> None:
     ).isoformat()
 
     pred_w = _normalize(str(df.iat[i, df.columns.get_loc("pred_winner")]))
-    act_w = _normalize(str(df.iat[i, df.columns.get_loc("actual_winner")]))
+    raw_act_w = str(df.iat[i, df.columns.get_loc("actual_winner")]).strip()
+    act_w = _normalize(raw_act_w)
     if act_w:
-        df.iat[i, df.columns.get_loc("winner_correct")] = (
-            pred_w == act_w if pred_w else ""
-        )
+        if _actual_winner_is_no_result(raw_act_w):
+            # Avoid the literal "n/a" — pandas read_csv treats it as NaN.
+            df.iat[i, df.columns.get_loc("winner_correct")] = "skipped_no_result"
+        else:
+            df.iat[i, df.columns.get_loc("winner_correct")] = (
+                pred_w == act_w if pred_w else ""
+            )
 
     pp = _normalize(str(df.iat[i, df.columns.get_loc("pred_potm")]))
     op = _normalize(str(df.iat[i, df.columns.get_loc("official_potm")]))

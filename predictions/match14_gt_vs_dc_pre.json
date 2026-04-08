@@ -1,0 +1,80 @@
+{
+  "match_key": "match14-gt-dc-2026-04-08",
+  "match_date": "2026-04-08",
+  "venue": "Arun Jaitley Stadium, Delhi",
+  "team1_name": "Gujarat Titans",
+  "team2_name": "Delhi Capitals",
+  "team1_bats_first": true,
+  "pred_winner": "Gujarat Titans",
+  "pred_p_team1_win": 0.612,
+  "pred_best_bat": "KL Rahul",
+  "pred_best_bowl": "Kuldeep Yadav",
+  "pred_top5_bats": [
+    "KL Rahul",
+    "T Stubbs",
+    "AR Patel",
+    "JC Buttler",
+    "M Shahrukh Khan"
+  ],
+  "pred_top3_bowls": [
+    "Kuldeep Yadav",
+    "Mukesh Kumar",
+    "K Rabada"
+  ],
+  "pred_potm": "T Stubbs",
+  "pred_extra": {
+    "sims": 1500,
+    "ensemble_p_team1": 0.16666666666666666,
+    "sim_win_probability_team1": 0.612,
+    "leader_model_p_team1": 0.47269946510307703,
+    "batting_order_swapped": false,
+    "impact_trim_lowest": false,
+    "impact_dropped_team1": null,
+    "impact_dropped_team2": null,
+    "pitch_multipliers": {
+      "first_innings_runs": 1.1759100000000002,
+      "second_innings_runs": 1.1759100000000002,
+      "first_innings_wickets": 0.9733,
+      "second_innings_wickets": 0.9733
+    },
+    "venue_spin_harshness": 0.0,
+    "process_variant": "1A",
+    "full_playing_twelve": false,
+    "pred_first_innings_team_runs": 159.346506514077,
+    "pred_second_innings_team_runs": 152.7246886367942,
+    "pred_first_innings_team_wickets": 3.757301217863637,
+    "pred_second_innings_team_wickets": 1.983240320909091,
+    "pred_first_innings_team_wickets_raw_sum": 3.757301217863637,
+    "pred_second_innings_team_wickets_raw_sum": 1.983240320909091,
+    "ml_team_total_runs_team1": 118.58121584639524,
+    "ml_team_total_runs_team2": 113.6534440854736,
+    "team_run_calibration": {
+      "method": "ml_team_total",
+      "scale_team1": 0.9915635990001194,
+      "scale_team2": 1.7081463830406527,
+      "sum_player_runs_before_team1": 160.70225518036364,
+      "sum_player_runs_before_team2": 89.40960221742274
+    },
+    "player_process1": {
+      "heuristic": "role_aware_v1",
+      "summary": "Best bat / top 5 runs exclude pure bowlers when enough batters exist; best bowl / top 3 wickets prefer bowlers and allrounders; POTM uses a role-weighted composite (not the official match award)."
+    },
+    "impact_sub_pools": {
+      "Gujarat Titans": [
+        "Prasidh Krishna",
+        "Jason Holder",
+        "Manav Suthar",
+        "Jayant Yadav",
+        "Anuj Rawat"
+      ],
+      "Delhi Capitals": [
+        "Ashutosh Sharma",
+        "Auqib Nabi Dar",
+        "Sameer Rizvi",
+        "Dushmantha Chameera",
+        "Karun Nair"
+      ]
+    },
+    "xi_input_note": "DC chose to bowl first → GT bats first. Stats-style ids used where needed: ashok-sharma, pathum-nissanka, nitish-rana, david-miller, lungi-ngidi. --no-squad-check for bridge/low-history ids. 11v11 sim (impact pools for reference only)."
+  }
+}
