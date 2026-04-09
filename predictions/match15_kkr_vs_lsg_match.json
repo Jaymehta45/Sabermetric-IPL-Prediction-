@@ -1,0 +1,37 @@
+{
+  "match_id": "match15-kkr-lsg-2026-04-09",
+  "match_date": "2026-04-09",
+  "team1_name": "Kolkata Knight Riders",
+  "team2_name": "Lucknow Super Giants",
+  "venue": "Eden Gardens, Kolkata",
+  "toss_winner": "Lucknow Super Giants",
+  "elected_to": "field",
+  "pitch_text": "Eden Gardens, Kolkata — Deep Dasgupta & Faf du Plessis: very high-scoring venue; quick outfield; not that big (65m one side, 64m other, 74m straight). Same pitch as other night — swung around; looks a bit drier, slow, dry patches on one side — spinners from that end. Batting-first venue: last six games, four wins batting first; KKR did that. Weather/rain — teams may prefer to chase (Duckworth-Lewis). High-scoring game expected; ball onto bat; watch new ball — might swing a little.",
+  "xi1": [
+    "AM Rahane",
+    "Finn Allen",
+    "C Green",
+    "A Raghuvanshi",
+    "RK Singh",
+    "R Powell",
+    "Ramandeep Singh",
+    "AS Roy",
+    "SP Narine",
+    "Navdeep Saini",
+    "Kartik Tyagi"
+  ],
+  "xi2": [
+    "MR Marsh",
+    "AK Markram",
+    "RR Pant",
+    "N Pooran",
+    "Abdul Samad",
+    "mukul-choudhary",
+    "M Siddharth",
+    "Avesh Khan",
+    "Mohammed Shami",
+    "DS Rathi",
+    "Prince Yadav"
+  ],
+  "notes": "Match 15: LSG won toss, chose to bowl → KKR bat first (team1). Impact pools — KKR: Manish Pandey, Vaibhav Arora, Tejasvi Dahiya, Rahul Tripathi, Tim Seifert. LSG: Ayush Badoni, Matthew Breetzke, Shahbaz Ahmad, Mayank Yadav, Himmat Singh. 11v11 Process 1A; registry ids (A Raghuvanshi, DS Rathi, M Siddharth); --no-squad-check if needed."
+}

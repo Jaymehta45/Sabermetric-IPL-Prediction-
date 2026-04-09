@@ -1,0 +1,80 @@
+{
+  "match_key": "match15-kkr-lsg-2026-04-09",
+  "match_date": "2026-04-09",
+  "venue": "Eden Gardens, Kolkata",
+  "team1_name": "Kolkata Knight Riders",
+  "team2_name": "Lucknow Super Giants",
+  "team1_bats_first": true,
+  "pred_winner": "Lucknow Super Giants",
+  "pred_p_team1_win": 0.43666666666666665,
+  "pred_best_bat": "N Pooran",
+  "pred_best_bowl": "AS Roy",
+  "pred_top5_bats": [
+    "N Pooran",
+    "MR Marsh",
+    "AM Rahane",
+    "AK Markram",
+    "C Green"
+  ],
+  "pred_top3_bowls": [
+    "AS Roy",
+    "Avesh Khan",
+    "SP Narine"
+  ],
+  "pred_potm": "N Pooran",
+  "pred_extra": {
+    "sims": 3000,
+    "ensemble_p_team1": 0.48484848484848486,
+    "sim_win_probability_team1": 0.43666666666666665,
+    "leader_model_p_team1": 0.5504531419772087,
+    "batting_order_swapped": false,
+    "impact_trim_lowest": false,
+    "impact_dropped_team1": null,
+    "impact_dropped_team2": null,
+    "pitch_multipliers": {
+      "first_innings_runs": 1.021,
+      "second_innings_runs": 1.045504,
+      "first_innings_wickets": 0.985,
+      "second_innings_wickets": 0.9731799999999999
+    },
+    "venue_spin_harshness": 0.55,
+    "process_variant": "1A",
+    "full_playing_twelve": false,
+    "pred_first_innings_team_runs": 184.7310595044956,
+    "pred_second_innings_team_runs": 188.0689404955045,
+    "pred_first_innings_team_wickets": 2.6470024892409088,
+    "pred_second_innings_team_wickets": 2.606005545454545,
+    "pred_first_innings_team_wickets_raw_sum": 2.6470024892409088,
+    "pred_second_innings_team_wickets_raw_sum": 2.606005545454545,
+    "ml_team_total_runs_team1": 154.31627970096088,
+    "ml_team_total_runs_team2": 153.42246100906547,
+    "team_run_calibration": {
+      "method": "ml_team_total",
+      "scale_team1": 1.3676746750944384,
+      "scale_team2": 1.6343097300096077,
+      "sum_player_runs_before_team1": 135.06944514545452,
+      "sum_player_runs_before_team2": 115.07545787810909
+    },
+    "player_process1": {
+      "heuristic": "role_aware_v1",
+      "summary": "Best bat / top 5 runs exclude pure bowlers when enough batters exist; best bowl / top 3 wickets prefer bowlers and allrounders; POTM uses a role-weighted composite (not the official match award)."
+    },
+    "impact_sub_pools": {
+      "Kolkata Knight Riders": [
+        "Manish Pandey",
+        "Vaibhav Arora",
+        "Tejasvi Dahiya",
+        "Rahul Tripathi",
+        "Tim Seifert"
+      ],
+      "Lucknow Super Giants": [
+        "Ayush Badoni",
+        "Matthew Breetzke",
+        "Shahbaz Ahmad",
+        "Mayank Yadav",
+        "Himmat Singh"
+      ]
+    },
+    "xi_input_note": "LSG won toss, bowled first → KKR bats first. Stats ids in match JSON (e.g. RK Singh, MR Marsh, mukul-choudhary, DS Rathi); --no-squad-check. Eden pitch report: high-scoring Eden, drier patches, swing early, spin from one end; rain/chase/DL mentioned."
+  }
+}
