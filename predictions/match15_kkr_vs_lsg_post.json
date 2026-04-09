@@ -1,0 +1,13 @@
+{
+  "match_key": "match15-kkr-lsg-2026-04-09",
+  "actual_winner": "Lucknow Super Giants",
+  "actual_top_scorer": "Mukul Choudhary",
+  "actual_top_scorer_runs": 56,
+  "actual_top_wicket_bowler": "Vaibhav Arora",
+  "actual_top_wickets": 2,
+  "official_potm": "Mukul Choudhary",
+  "bbb_match_file": "matches/match15_kkr_vs_lsg.csv",
+  "actual_first_innings_team_runs": 181,
+  "actual_second_innings_team_runs": 182,
+  "post_notes": "BBB: KKR 181 (1st) vs LSG 182 (chase). Top runs mukul-choudhary 56; Ayush Badoni 52. Top wkts Vaibhav Arora 2 & Anukul Roy 2 (Arora first to 2 in sequence). Pred LSG win + innings totals in ballpark (~185/188 pred vs 181/182). POTM set to Mukul Choudhary — correct if official differed."
+}
