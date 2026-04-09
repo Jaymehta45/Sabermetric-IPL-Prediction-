@@ -1,0 +1,13 @@
+{
+  "match_key": "match14-gt-dc-2026-04-08",
+  "actual_winner": "Gujarat Titans",
+  "actual_top_scorer": "KL Rahul",
+  "actual_top_scorer_runs": 91,
+  "actual_top_wicket_bowler": "Rashid Khan",
+  "actual_top_wickets": 3,
+  "official_potm": "Rashid Khan",
+  "bbb_match_file": "matches/match14_dc_vs_gt.csv",
+  "actual_first_innings_team_runs": 210,
+  "actual_second_innings_team_runs": 209,
+  "post_notes": "BBB: GT 210 (1st) vs DC 209 (chase). Rashid Khan 3/38 and Prasidh Krishna 3/32 (Rashid first to 3 wkts in sequence). Top runs KL Rahul 91. POTM set to Rashid Khan — correct in post if official award differed."
+}
