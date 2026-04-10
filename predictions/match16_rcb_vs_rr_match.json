@@ -1,0 +1,37 @@
+{
+  "match_id": "match16-rcb-rr-2026-04-10",
+  "match_date": "2026-04-10",
+  "team1_name": "Royal Challengers Bengaluru",
+  "team2_name": "Rajasthan Royals",
+  "venue": "Barsapara Cricket Stadium, Guwahati",
+  "toss_winner": "Rajasthan Royals",
+  "elected_to": "field",
+  "pitch_text": "Guwahati (ACA/Barsapara), same surface as RR vs MI — pitch 5; square ~65–66 m, straight ~72–75 m, equidistant. Hard, consistent pace and bounce; looks dry under the grass but no moisture — commentators call it a batting paradise; change of pace key for bowlers; early powerplay wickets matter. Small venue sample: defending teams slightly ahead overall. No dew called out; no rain in forecast (but toss and match start delayed ~30+ min due to rain — keep reduced-overs / interruptions in mind).",
+  "xi1": [
+    "V Kohli",
+    "PD Salt",
+    "D Padikkal",
+    "RM Patidar",
+    "JM Sharma",
+    "TH David",
+    "R Shepherd",
+    "KH Pandya",
+    "B Kumar",
+    "abhinandan-singh",
+    "JR Hazlewood"
+  ],
+  "xi2": [
+    "YBK Jaiswal",
+    "Dhruv Jurel",
+    "R Parag",
+    "SO Hetmyer",
+    "D Ferreira",
+    "RA Jadeja",
+    "JC Archer",
+    "N Burger",
+    "Sandeep Sharma",
+    "Ravi Bishnoi",
+    "brijesh-sharma"
+  ],
+  "notes": "Match 16: RR won toss, chose to bowl → RCB bat first (team1). Rain: toss delayed ~30 min; further start delay — conditions may be stop-start. Impact pools — RCB: Suyash Sharma, Jacob Bethell, Rasikh Salam Dar, Kanishk Chouhan, Venkatesh Iyer. RR: vaibhav-sooryavanshi, Lhuan-dre Pretorius, Ravi Singh, Shubham Dubey, Tushar Deshpande. Process 1A with --team1-impact Suyash Sharma, --team2-impact vaibhav-sooryavanshi; registry ids (abhinandan-singh, brijesh-sharma); --no-squad-check for cross-franchise / bridge rows."
+}

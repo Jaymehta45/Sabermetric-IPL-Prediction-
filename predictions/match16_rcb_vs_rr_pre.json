@@ -1,0 +1,80 @@
+{
+  "match_key": "match16-rcb-rr-2026-04-10",
+  "match_date": "2026-04-10",
+  "venue": "Barsapara Cricket Stadium, Guwahati",
+  "team1_name": "Royal Challengers Bengaluru",
+  "team2_name": "Rajasthan Royals",
+  "team1_bats_first": true,
+  "pred_winner": "Royal Challengers Bengaluru",
+  "pred_p_team1_win": 0.569,
+  "pred_best_bat": "Dhruv Jurel",
+  "pred_best_bowl": "Ravi Bishnoi",
+  "pred_top5_bats": [
+    "Dhruv Jurel",
+    "SO Hetmyer",
+    "YBK Jaiswal",
+    "PD Salt",
+    "RA Jadeja"
+  ],
+  "pred_top3_bowls": [
+    "Ravi Bishnoi",
+    "JR Hazlewood",
+    "JC Archer"
+  ],
+  "pred_potm": "Dhruv Jurel",
+  "pred_extra": {
+    "sims": 3000,
+    "ensemble_p_team1": 0.16666666666666666,
+    "sim_win_probability_team1": 0.569,
+    "leader_model_p_team1": 0.47269946510307703,
+    "batting_order_swapped": false,
+    "impact_trim_lowest": true,
+    "impact_dropped_team1": "abhinandan-singh",
+    "impact_dropped_team2": "brijesh-sharma",
+    "pitch_multipliers": {
+      "first_innings_runs": 1.0105,
+      "second_innings_runs": 1.022626,
+      "first_innings_wickets": 0.9925,
+      "second_innings_wickets": 0.986545
+    },
+    "venue_spin_harshness": 0.48,
+    "process_variant": "1A",
+    "full_playing_twelve": false,
+    "pred_first_innings_team_runs": 176.13461334348608,
+    "pred_second_innings_team_runs": 171.9453866565139,
+    "pred_first_innings_team_wickets": 3.0422857670100005,
+    "pred_second_innings_team_wickets": 2.6769789400000006,
+    "pred_first_innings_team_wickets_raw_sum": 3.0422857670100005,
+    "pred_second_innings_team_wickets_raw_sum": 2.6769789400000006,
+    "ml_team_total_runs_team1": 120.33668025016208,
+    "ml_team_total_runs_team2": 116.08158557906941,
+    "team_run_calibration": {
+      "method": "ml_team_total",
+      "scale_team1": 1.0874316361928376,
+      "scale_team2": 1.6779614794967432,
+      "sum_player_runs_before_team1": 161.97304499999998,
+      "sum_player_runs_before_team2": 102.47278543491002
+    },
+    "player_process1": {
+      "heuristic": "role_aware_v1",
+      "summary": "Best bat / top 5 runs exclude pure bowlers when enough batters exist; best bowl / top 3 wickets prefer bowlers and allrounders; POTM uses a role-weighted composite (not the official match award)."
+    },
+    "impact_sub_pools": {
+      "Royal Challengers Bengaluru": [
+        "Suyash Sharma",
+        "Jacob Bethell",
+        "Rasikh Salam Dar",
+        "Kanishk Chouhan",
+        "Venkatesh Iyer"
+      ],
+      "Rajasthan Royals": [
+        "Vaibhav Sooryavanshi",
+        "Lhuan-dre Pretorius",
+        "Ravi Singh",
+        "Shubham Dubey",
+        "Tushar Deshpande"
+      ]
+    },
+    "xi_input_note": "RR won toss, bowled first → RCB bats first. Rain: toss ~30 min late; further start delay — possible reduced overs / soft outfield. Impact subs passed: Suyash Sharma (RCB), vaibhav-sooryavanshi (RR). Registry ids: abhinandan-singh, brijesh-sharma; RA Jadeja / Ravi Bishnoi cross-franchise history; --no-squad-check. Guwahati: same strip as RR vs MI; batting-friendly, pace/bounce consistent."
+  }
+}
