@@ -6,14 +6,14 @@
   "team2_name": "Punjab Kings",
   "team1_bats_first": true,
   "pred_winner": "Sunrisers Hyderabad",
-  "pred_p_team1_win": 0.6576666666666666,
+  "pred_p_team1_win": 0.8473333333333334,
   "pred_best_bat": "TM Head",
   "pred_best_bowl": "JD Unadkat",
   "pred_top5_bats": [
     "TM Head",
     "MP Stoinis",
-    "Shashank Singh",
     "H Klaasen",
+    "Shashank Singh",
     "SS Iyer"
   ],
   "pred_top3_bowls": [
@@ -24,8 +24,8 @@
   "pred_potm": "TM Head",
   "pred_extra": {
     "sims": 3000,
-    "ensemble_p_team1": 0.16666666666666666,
-    "sim_win_probability_team1": 0.6576666666666666,
+    "ensemble_p_team1": 0.5714285714285714,
+    "sim_win_probability_team1": 0.8473333333333334,
     "leader_model_p_team1": 0.4111469707840643,
     "batting_order_swapped": false,
     "impact_trim_lowest": true,
@@ -40,7 +40,7 @@
     "venue_spin_harshness": 0.55,
     "process_variant": "1A",
     "full_playing_twelve": false,
-    "pred_first_innings_team_runs": 182.02623444822885,
+    "pred_first_innings_team_runs": 196.57936524491748,
     "pred_second_innings_team_runs": 172.70281320590848,
     "pred_first_innings_team_wickets": 2.4895388263776796,
     "pred_second_innings_team_wickets": 2.74607718,
@@ -50,32 +50,18 @@
     "ml_team_total_runs_team2": 111.9812552565547,
     "team_run_calibration": {
       "method": "ml_team_total",
-      "scale_team1": 1.5314276166696787,
+      "scale_team1": 1.6538663765474138,
       "scale_team2": 1.6839008781583016,
       "sum_player_runs_before_team1": 118.86048838800001,
       "sum_player_runs_before_team2": 102.56115157727999
     },
+    "dynamic_batting_par_mult": {
+      "team1": 1.0799507326007327,
+      "team2": 1.0
+    },
     "player_process1": {
       "heuristic": "role_aware_v1",
       "summary": "Best bat / top 5 runs exclude pure bowlers when enough batters exist; best bowl / top 3 wickets prefer bowlers and allrounders; POTM uses a role-weighted composite (not the official match award)."
-    },
-    "impact_sub_pools": {
-      "Sunrisers Hyderabad": [
-        "Jaydev Unadkat",
-        "Liam Livingstone",
-        "Shivam Mavi",
-        "Praful Hinge",
-        "Kamindu Mendis"
-      ],
-      "Punjab Kings": [
-        "Nehal Wadhera",
-        "Vishnu Vinod",
-        "Suryansh Shedge",
-        "Yash Thakur",
-        "Harpreet Brar"
-      ]
-    },
-    "xi_input_note": "PK won toss, bowled first → SRH bats first. Mullanpur day game: ~160–170 territory per broadcast; slower than belters. H2H: SRH 4 straight; SRH power top order. Impact: JD Unadkat (SRH), nehal-wadhera (PK). 1A trim: salil-arora, nehal-wadhera. Registry slugs + Nithish vs Nitish; --no-squad-check.",
-    "calibration_note": "Headline innings totals use Ridge team-total × pitch mult, then venue lift + ML-path floor when mean target < 132 (~165×pitch par); raw Ridge here ~119/112 was implausible for IPL — rescaled to ~182/173 aligned with T20 par + pitch."
+    }
   }
 }
