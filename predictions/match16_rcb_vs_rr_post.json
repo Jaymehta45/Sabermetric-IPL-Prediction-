@@ -1,0 +1,11 @@
+{
+  "match_key": "match16-rcb-rr-2026-04-10",
+  "actual_winner": "Rajasthan Royals",
+  "actual_top_scorer": "Dhruv Jurel",
+  "actual_top_scorer_runs": 81,
+  "actual_top_wicket_bowler": "Jofra Archer",
+  "actual_top_wickets": 2,
+  "official_potm": "Dhruv Jurel",
+  "bbb_match_file": "matches/match16_rr_vs_rcb.csv",
+  "post_notes": "RCB 201/8 (1st) vs RR 202/4; RR chase. Five bowlers took 2 wickets; Archer listed as joint-high by BBB sort. Innings totals from BBB via log script."
+}
