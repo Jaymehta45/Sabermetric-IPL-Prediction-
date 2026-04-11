@@ -37,21 +37,21 @@
       "first_innings_wickets": 1.012,
       "second_innings_wickets": 1.005928
     },
-    "venue_spin_harshness": 0.0,
+    "venue_spin_harshness": 0.55,
     "process_variant": "1A",
     "full_playing_twelve": false,
-    "pred_first_innings_team_runs": 117.43628028917992,
-    "pred_second_innings_team_runs": 111.42116981026352,
-    "pred_first_innings_team_wickets": 2.5195176837599997,
-    "pred_second_innings_team_wickets": 2.80485414,
-    "pred_first_innings_team_wickets_raw_sum": 2.5195176837599997,
-    "pred_second_innings_team_wickets_raw_sum": 2.80485414,
+    "pred_first_innings_team_runs": 182.02623444822885,
+    "pred_second_innings_team_runs": 172.70281320590848,
+    "pred_first_innings_team_wickets": 2.4895388263776796,
+    "pred_second_innings_team_wickets": 2.74607718,
+    "pred_first_innings_team_wickets_raw_sum": 2.4895388263776796,
+    "pred_second_innings_team_wickets_raw_sum": 2.74607718,
     "ml_team_total_runs_team1": 119.4429213681651,
     "ml_team_total_runs_team2": 111.9812552565547,
     "team_run_calibration": {
       "method": "ml_team_total",
-      "scale_team1": 0.9880178172062444,
-      "scale_team2": 1.0863876633279366,
+      "scale_team1": 1.5314276166696787,
+      "scale_team2": 1.6839008781583016,
       "sum_player_runs_before_team1": 118.86048838800001,
       "sum_player_runs_before_team2": 102.56115157727999
     },
@@ -75,6 +75,7 @@
         "Harpreet Brar"
       ]
     },
-    "xi_input_note": "PK won toss, bowled first → SRH bats first. Mullanpur day game: ~160–170 territory, slower/bowler-friendly vs flat belters; no dew. H2H: SRH 4 straight — SRH still explosive on paper but pitch report pulls scoring down in keywords. Impact subs passed: JD Unadkat (SRH), nehal-wadhera (PK). 1A trim dropped salil-arora (team1 12) and nehal-wadhera (team2 12 — impact was lowest predicted impact). Registry: salil-arora, shivang-kumar, prabhsimran-singh, cooper-connolly, marco-jansen; Nithish Kumar Reddy in features vs Nitish in squad list; --no-squad-check."
+    "xi_input_note": "PK won toss, bowled first → SRH bats first. Mullanpur day game: ~160–170 territory per broadcast; slower than belters. H2H: SRH 4 straight; SRH power top order. Impact: JD Unadkat (SRH), nehal-wadhera (PK). 1A trim: salil-arora, nehal-wadhera. Registry slugs + Nithish vs Nitish; --no-squad-check.",
+    "calibration_note": "Headline innings totals use Ridge team-total × pitch mult, then venue lift + ML-path floor when mean target < 132 (~165×pitch par); raw Ridge here ~119/112 was implausible for IPL — rescaled to ~182/173 aligned with T20 par + pitch."
   }
 }

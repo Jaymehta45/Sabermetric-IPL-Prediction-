@@ -238,6 +238,30 @@ def _lift_low_totals_for_batting_venue(
     return t1, t2
 
 
+def _ensure_ml_innings_targets_sane(
+    t1: float,
+    t2: float,
+    pm: PitchMultipliers,
+) -> tuple[float, float]:
+    """
+    Ridge team-total heads can land ~95–125 (sparse / bridge-heavy rosters, etc.).
+    Without a batting-venue lift, those become headline innings totals far below IPL par.
+
+    When the **mean** target is still very low after pitch mults + belter blend + venue lift,
+    scale both teams toward ``T20_INNINGS_ANCHOR`` × average innings run multiplier (capped),
+    preserving relative strength.
+    """
+    mid = (float(t1) + float(t2)) / 2.0
+    if mid >= 132.0:
+        return t1, t2
+    run_avg = (float(pm.first_innings_runs) + float(pm.second_innings_runs)) / 2.0
+    par = float(np.clip(T20_INNINGS_ANCHOR * run_avg, 145.0, 178.0))
+    scale = float(np.clip(par / max(mid, 72.0), 1.0, 1.62))
+    t1n = float(np.clip(t1 * scale, MIN_INNINGS_DISPLAY, MAX_INNINGS_DISPLAY))
+    t2n = float(np.clip(t2 * scale, MIN_INNINGS_DISPLAY, MAX_INNINGS_DISPLAY))
+    return t1n, t2n
+
+
 def _blend_high_scoring_pitch_totals(
     t1: float,
     t2: float,
@@ -292,6 +316,7 @@ def _calibrated_innings_targets(
         t2 = float(np.clip(m2 * pm.second_innings_runs, MIN_INNINGS_DISPLAY, MAX_INNINGS_DISPLAY))
         t1, t2 = _blend_high_scoring_pitch_totals(t1, t2, pm)
         t1, t2 = _lift_low_totals_for_batting_venue(t1, t2, venue)
+        t1, t2 = _ensure_ml_innings_targets_sane(t1, t2, pm)
         return t1, t2, "ml_team_total"
     mid = (float(raw1) + float(raw2)) / 2.0
     k = T20_INNINGS_ANCHOR / max(mid, 45.0)

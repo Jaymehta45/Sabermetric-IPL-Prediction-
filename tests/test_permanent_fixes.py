@@ -127,6 +127,19 @@ class TestTeamRunCalibration(unittest.TestCase):
         self.assertGreater((t1 + t2) / 2.0, 150.0)
         self.assertLess((t1 + t2) / 2.0, 200.0)
 
+    def test_ml_floor_when_ridge_collapses_unknown_venue(self) -> None:
+        """Low Ridge heads (~115 mean after pitch) must not print as headline IPL innings."""
+        pm = PitchMultipliers(first_innings_runs=0.983, second_innings_runs=0.995)
+        t1, t2, m = _calibrated_innings_targets(
+            40.0,
+            50.0,
+            pm,
+            (119.4, 112.0),
+            "Some Unknown Ground, Xyz",
+        )
+        self.assertEqual(m, "ml_team_total")
+        self.assertGreater((t1 + t2) / 2.0, 145.0)
+
 
 class TestImpactBase(unittest.TestCase):
     def test_bowler_not_minimal(self) -> None:
