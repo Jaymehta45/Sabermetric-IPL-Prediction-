@@ -9,6 +9,9 @@ cd "$ROOT"
 echo "==> build_unified_dataset.py"
 python3 build_unified_dataset.py
 
+echo "==> build_team_franchise_profiles.py"
+python3 build_team_franchise_profiles.py
+
 echo "==> build_player_match_stats.py"
 python3 build_player_match_stats.py
 

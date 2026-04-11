@@ -10,6 +10,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from iplpred.core.team_franchise_profile import franchise_profile_feature_row
 from iplpred.core.team_momentum import attach_momentum_columns_chronological
 from iplpred.paths import DATA_DIR, PROCESSED_DIR
 
@@ -258,6 +259,7 @@ def build_match_rows(
         else:
             row["team1_form_runs_ipl"] = row["team1_form_runs"]
             row["team2_form_runs_ipl"] = row["team2_form_runs"]
+        row.update(franchise_profile_feature_row(t1, t2))
         if team_totals is not None and len(team_totals):
             tt = team_totals[
                 (team_totals["match_id"] == mid)

@@ -6,6 +6,7 @@ build-all: build-data
 
 build-data:
 	python3 build_unified_dataset.py
+	python3 build_team_franchise_profiles.py
 	python3 build_player_match_stats.py
 	python3 build_features.py
 	python3 scripts/build_player_registry.py

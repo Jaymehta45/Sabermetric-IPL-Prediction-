@@ -17,6 +17,7 @@ import numpy as np
 import pandas as pd
 
 from iplpred.core.match_context import PitchMultipliers
+from iplpred.core.team_franchise_profile import apply_franchise_innings_profile
 from iplpred.core.venue_bowling_adjust import apply_venue_bowling_style_to_team_df
 from iplpred.match.win_prob_ensemble import (
     apply_ensemble_and_calibrate,
@@ -711,6 +712,7 @@ def run_simulation(
     tgt1, tgt2, calib_method = _calibrated_innings_targets(
         raw1, raw2, pm, ml_team_totals, venue
     )
+    tgt1, tgt2 = apply_franchise_innings_profile(team1_name, team2_name, tgt1, tgt2)
     dyn1 = _dynamic_batting_par_multiplier(t1_act)
     dyn2 = _dynamic_batting_par_multiplier(t2_act)
     tgt1 = float(np.clip(tgt1 * dyn1, MIN_INNINGS_DISPLAY, MAX_INNINGS_DISPLAY))

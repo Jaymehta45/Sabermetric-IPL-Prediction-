@@ -122,11 +122,25 @@ PROCESS 1A vs 1B — impact substitutes (same models; different team-total rule)
 C — PARAMETERS / SIGNALS (what B actually depends on)
   Player-level (from player_features.csv, built from history + priors):
     form_runs, form_wickets, IPL windows, momentum, SR/economy, venue and
-    matchup columns, opponent_strength, volatility, role_encoded, etc.
-  Team-level winner model: roster aggregates and diffs (strength, form, SR, economy).
+    matchup columns, opponent_strength, volatility, role_encoded, and compact
+    play-style tags (e.g. aggressive vs anchor batting; economical vs
+    expensive wicket-taking bowlers — see build_features.py).
+  Team-level winner model + Ridge team-total heads: roster aggregates and diffs
+    (strength, form, SR, economy) **plus** franchise profile features from
+    data/processed/team_franchise_profiles.csv when that file exists (built by
+    build_team_franchise_profiles.py): batting-first vs chasing run productivity
+    vs league, powerplay batting ratio, bowling “stinginess” in innings 1 vs 2,
+    and batting / bowling / fielding dominance z-scores. Diff columns include
+    bat_dom_diff, bowl_dom_diff, field_dom_diff.
+  Unified ball-by-ball (data/processed/unified_ball_by_ball.csv) carries
+    innings, over, ball_in_over, and competition when the source CSV/JSON
+    provides them; franchise profiles use IPL-labelled rows (or legacy rows
+    with blank competition) for those aggregates.
   Inference-time: toss order, pitch keywords (match_context), shrinkage for
     low-data players, playing probability, Monte Carlo sims + ensemble with
-    calibrated P(team1).
+    calibrated P(team1). Expected innings totals are also nudged by
+    apply_franchise_innings_profile (first innings vs chase, opposite bowling,
+    dominance) after Ridge/anchor calibration — see iplpred/core/team_franchise_profile.py.
   CLI knobs: --sims, --use-registry, --no-squad-check, impact subs,
     --process-variant 1a|1b, pitch file.
 
@@ -177,13 +191,18 @@ E — POST-MATCH DATA + REBUILD / TRAIN
   What we run (batch retrain on full history):
     bash scripts/retrain_after_match.sh
     (or: ``make retrain-after-match``)
-    This chain includes ``train_match_winner_model.py`` then
+    This chain includes ``build_team_franchise_profiles.py`` immediately after
+    ``build_unified_dataset.py``, then ``train_match_winner_model.py`` and
     ``python3 -m iplpred.training.train_win_prob_ensemble`` so **Process 1**
     hybrid win probabilities stay aligned with the updated match-level model.
-  Or manually: build_unified_dataset.py → build_player_match_stats.py →
-    build_features.py → build_training_dataset.py → train_player_model →
-    train_match_winner_model → ``python3 -m iplpred.training.train_win_prob_ensemble``
-    → train_team_total_model → build_player_registry.py (see Makefile).
+  Or manually: build_unified_dataset.py → **build_team_franchise_profiles.py** →
+    build_player_match_stats.py → build_features.py → build_training_dataset.py →
+    train_player_model → train_match_winner_model →
+    ``python3 -m iplpred.training.train_win_prob_ensemble`` →
+    train_team_total_model → build_player_registry.py (see Makefile ``build-data``).
+  Artifact: data/processed/team_franchise_profiles.csv (one row per canonical
+    franchise). Without innings/competition in the BBB feed, profiles may be empty
+    or neutral — keep match CSVs innings-aware and competition=IPL where possible.
 
 F — PREDICTION VS ACTUAL + ERROR REVIEW
   • Append post row: `python3 scripts/log_prediction.py post <json> --push`
@@ -211,12 +230,14 @@ Review checklist:
   1. Data & identity — Any new players or name collisions? Update aliases,
      re-run build_player_registry / build_player_identity as needed.
   2. BBB quality — Duplicate balls, wrong wicket rows, over numbering; fix
-     source CSV before the next retrain.
+     source CSV before the next retrain. Innings and competition columns feed
+     franchise profiles; omitting them weakens first-innings vs chase signals.
   3. Where the model missed — data issue vs calibration vs T20 variance?
      Note in post_notes or process3_notes in the log.
   4. Calibration — Bin pred_p_team1_win vs outcome frequency when N is large
      enough; adjust ensemble / calibration if systematically off.
   5. Features — Low-data priors still sensible? New venues or roles?
+     Franchise profiles refreshed (team_franchise_profiles.csv after unified)?
   6. Process — Anything to automate (validate_bbb_csv, Makefile targets)?
 
 (This replaces the old “G. IDEAS” list as the standing post-match checklist.)

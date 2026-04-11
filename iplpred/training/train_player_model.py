@@ -35,6 +35,10 @@ FEATURE_COLS = [
     "std_runs",
     "std_wickets",
     "role_encoded",
+    "style_bat_aggressive",
+    "style_bat_anchor",
+    "style_bowl_economical",
+    "style_bowl_expensive_wicket_taker",
 ]
 
 OPTIONAL_FROM_CSV = [
@@ -148,6 +152,10 @@ def load_and_prepare() -> pd.DataFrame:
         "form_runs_ipl",
         "form_wickets_ipl",
         "days_since_prev_match",
+        "style_bat_aggressive",
+        "style_bat_anchor",
+        "style_bowl_economical",
+        "style_bowl_expensive_wicket_taker",
     ]
     fill_new_features_with_player_global(df, new_like)
 

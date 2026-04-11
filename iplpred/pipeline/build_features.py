@@ -397,6 +397,38 @@ def add_opponent_strength_features(pms: pd.DataFrame, tm: pd.DataFrame) -> pd.Da
     return pms
 
 
+def add_play_style_archetypes(pms: pd.DataFrame) -> pd.DataFrame:
+    """
+    Compact role-aware style tags from rolling strike rate / economy / form
+    (aggressive vs anchor batters; economical vs expensive wicket-taking bowlers).
+    """
+    pms = pms.copy()
+    sr = pd.to_numeric(pms["strike_rate"], errors="coerce").fillna(120.0)
+    er = pd.to_numeric(pms["economy"], errors="coerce").fillna(8.5)
+    fr = pd.to_numeric(pms["form_runs"], errors="coerce").fillna(0.0)
+    fw = pd.to_numeric(pms["form_wickets"], errors="coerce").fillna(0.0)
+    role = pms["role"].fillna("").astype(str).str.strip().str.lower()
+    is_bat = role.eq("batter") | role.eq("allrounder")
+    is_bowl = role.eq("bowler") | role.eq("allrounder")
+    pms["style_bat_aggressive"] = np.where(
+        is_bat, np.clip((sr - 126.0) / 38.0, -1.2, 1.4), 0.0
+    )
+    pms["style_bat_anchor"] = np.where(
+        is_bat,
+        np.clip((122.0 - sr) / 28.0, 0.0, 1.3) * np.clip(fr / 32.0, 0.15, 1.0),
+        0.0,
+    )
+    pms["style_bowl_economical"] = np.where(
+        is_bowl, np.clip((8.25 - er) / 2.8, -0.8, 1.4), 0.0
+    )
+    pms["style_bowl_expensive_wicket_taker"] = np.where(
+        is_bowl,
+        np.clip((er - 8.1) / 2.9, 0.0, 1.5) * np.clip(fw / 2.2, 0.0, 1.1),
+        0.0,
+    )
+    return pms
+
+
 def leakage_check_opponent_past(pms: pd.DataFrame, tm: pd.DataFrame) -> None:
     """Confirm opponent_past_* is not identical to opponent's current-match top5 totals."""
     cur = tm.rename(
@@ -545,6 +577,7 @@ def main() -> None:
 
     tm_team = build_team_match_strength_past(pms)
     pms = add_opponent_strength_features(pms, tm_team)
+    pms = add_play_style_archetypes(pms)
     print_old_vs_new_strength_sample(tm_team)
     leakage_check_opponent_past(pms, tm_team)
 
@@ -581,6 +614,10 @@ def main() -> None:
             "opponent_past_batting_strength",
             "opponent_past_bowling_strength",
             "opponent_strength",
+            "style_bat_aggressive",
+            "style_bat_anchor",
+            "style_bowl_economical",
+            "style_bowl_expensive_wicket_taker",
         ]
     ].copy()
 

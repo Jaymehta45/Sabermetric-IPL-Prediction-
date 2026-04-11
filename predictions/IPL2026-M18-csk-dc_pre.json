@@ -1,0 +1,68 @@
+{
+  "match_key": "IPL2026-M18-csk-dc",
+  "match_date": "2026-04-11",
+  "venue": "MA Chidambaram Stadium, Chennai",
+  "team1_name": "Chennai Super Kings",
+  "team2_name": "Delhi Capitals",
+  "team1_bats_first": true,
+  "pred_winner": "Delhi Capitals",
+  "pred_p_team1_win": 0.49780675106965844,
+  "pred_best_bat": "KL Rahul",
+  "pred_best_bowl": "T Natarajan",
+  "pred_top5_bats": [
+    "KL Rahul",
+    "RD Gaikwad",
+    "Sameer Rizvi",
+    "Sanju Samson",
+    "Shivam Dube"
+  ],
+  "pred_top3_bowls": [
+    "T Natarajan",
+    "Kuldeep Yadav",
+    "Mukesh Kumar"
+  ],
+  "pred_potm": "KL Rahul",
+  "pred_extra": {
+    "sims": 300,
+    "win_probability_basis": "hybrid_ensemble",
+    "ensemble_p_team1": 0.49780675106965844,
+    "sim_win_probability_team1": 0.6533333333333333,
+    "leader_model_p_team1": 0.4881244807685403,
+    "batting_order_swapped": false,
+    "impact_trim_lowest": false,
+    "impact_dropped_team1": null,
+    "impact_dropped_team2": null,
+    "pitch_multipliers": {
+      "first_innings_runs": 1.15594,
+      "second_innings_runs": 1.15594,
+      "first_innings_wickets": 0.9976999999999999,
+      "second_innings_wickets": 0.9976999999999999
+    },
+    "venue_spin_harshness": 0.15,
+    "process_variant": "1A",
+    "full_playing_twelve": false,
+    "pred_first_innings_team_runs": 183.065706023968,
+    "pred_second_innings_team_runs": 171.34470714493474,
+    "pred_first_innings_team_wickets": 2.2185808933239994,
+    "pred_second_innings_team_wickets": 0.7131108786987499,
+    "pred_first_innings_team_wickets_raw_sum": 2.2185808933239994,
+    "pred_second_innings_team_wickets_raw_sum": 0.7131108786987499,
+    "ml_team_total_runs_team1": 153.28380013620495,
+    "ml_team_total_runs_team2": 146.8421327547291,
+    "team_run_calibration": {
+      "method": "ml_team_total",
+      "scale_team1": 4.416757825206099,
+      "scale_team2": 2.520095756613841,
+      "sum_player_runs_before_team1": 41.44798362709092,
+      "sum_player_runs_before_team2": 67.99134782686365
+    },
+    "dynamic_batting_par_mult": {
+      "team1": 1.0224100081168392,
+      "team2": 1.0
+    },
+    "player_process1": {
+      "heuristic": "role_aware_v1",
+      "summary": "Best bat / top 5 runs exclude pure bowlers when enough batters exist; best bowl / top 3 wickets prefer bowlers and allrounders; POTM uses a role-weighted composite (not the official match award)."
+    }
+  }
+}

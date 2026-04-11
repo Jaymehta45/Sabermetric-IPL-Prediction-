@@ -24,6 +24,9 @@ WINNER_FEATURE_COLS: list[str] = [
     "momentum_diff",
     "strike_rate_diff",
     "economy_diff",
+    "bat_dom_diff",
+    "bowl_dom_diff",
+    "field_dom_diff",
     "team1_strength",
     "team2_strength",
     "team1_form_runs",
@@ -36,14 +39,64 @@ WINNER_FEATURE_COLS: list[str] = [
     "team2_strike_rate",
     "team1_economy",
     "team2_economy",
+    "team1_bat_first_ratio",
+    "team2_bat_first_ratio",
+    "team1_chase_ratio",
+    "team2_chase_ratio",
+    "team1_bowl_first_stingy",
+    "team2_bowl_first_stingy",
+    "team1_bowl_second_stingy",
+    "team2_bowl_second_stingy",
+    "team1_pp_bat_ratio",
+    "team2_pp_bat_ratio",
+    "team1_bat_dom",
+    "team2_bat_dom",
+    "team1_bowl_dom",
+    "team2_bowl_dom",
+    "team1_field_dom",
+    "team2_field_dom",
 ]
 
 MOMENTUM_NEUTRAL = 0.5
 
 
+def _default_profile_columns(out: pd.DataFrame) -> None:
+    ratio_cols = [
+        "team1_bat_first_ratio",
+        "team2_bat_first_ratio",
+        "team1_chase_ratio",
+        "team2_chase_ratio",
+        "team1_bowl_first_stingy",
+        "team2_bowl_first_stingy",
+        "team1_bowl_second_stingy",
+        "team2_bowl_second_stingy",
+        "team1_pp_bat_ratio",
+        "team2_pp_bat_ratio",
+    ]
+    dom_cols = [
+        "team1_bat_dom",
+        "team2_bat_dom",
+        "team1_bowl_dom",
+        "team2_bowl_dom",
+        "team1_field_dom",
+        "team2_field_dom",
+    ]
+    for c in ratio_cols:
+        if c not in out.columns:
+            out[c] = 1.0
+        else:
+            out[c] = pd.to_numeric(out[c], errors="coerce").fillna(1.0)
+    for c in dom_cols:
+        if c not in out.columns:
+            out[c] = 0.0
+        else:
+            out[c] = pd.to_numeric(out[c], errors="coerce").fillna(0.0)
+
+
 def add_winner_feature_columns(df: pd.DataFrame) -> pd.DataFrame:
     """Add diff columns; expects team1_* / team2_* base columns."""
     out = df.copy()
+    _default_profile_columns(out)
     for c in ("team1_form_runs_ipl", "team2_form_runs_ipl"):
         if c not in out.columns:
             alt = "team1_form_runs" if c.startswith("team1") else "team2_form_runs"
@@ -59,6 +112,9 @@ def add_winner_feature_columns(df: pd.DataFrame) -> pd.DataFrame:
     out["momentum_diff"] = out["team1_momentum"] - out["team2_momentum"]
     out["strike_rate_diff"] = out["team1_strike_rate"] - out["team2_strike_rate"]
     out["economy_diff"] = out["team1_economy"] - out["team2_economy"]
+    out["bat_dom_diff"] = out["team1_bat_dom"] - out["team2_bat_dom"]
+    out["bowl_dom_diff"] = out["team1_bowl_dom"] - out["team2_bowl_dom"]
+    out["field_dom_diff"] = out["team1_field_dom"] - out["team2_field_dom"]
     return out
 
 
@@ -175,6 +231,8 @@ def learned_team1_win_proba_from_rosters(
             team2_economy=m2["team_avg_economy"],
             team1_momentum=mo1,
             team2_momentum=mo2,
+            team1_name=team1_name or "",
+            team2_name=team2_name or "",
         )
     except FileNotFoundError:
         return None
@@ -194,28 +252,30 @@ def predict_team1_win_proba_single(
     team2_economy: float,
     team1_momentum: float | None = None,
     team2_momentum: float | None = None,
+    team1_name: str = "",
+    team2_name: str = "",
 ) -> float:
     """Convenience for one match."""
+    from iplpred.core.team_franchise_profile import franchise_profile_feature_row
+
     t1i = team1_form_runs if team1_form_runs_ipl is None else team1_form_runs_ipl
     t2i = team2_form_runs if team2_form_runs_ipl is None else team2_form_runs_ipl
     m1 = MOMENTUM_NEUTRAL if team1_momentum is None else float(team1_momentum)
     m2 = MOMENTUM_NEUTRAL if team2_momentum is None else float(team2_momentum)
-    row = pd.DataFrame(
-        [
-            {
-                "team1_strength": team1_strength,
-                "team2_strength": team2_strength,
-                "team1_form_runs": team1_form_runs,
-                "team2_form_runs": team2_form_runs,
-                "team1_form_runs_ipl": t1i,
-                "team2_form_runs_ipl": t2i,
-                "team1_momentum": m1,
-                "team2_momentum": m2,
-                "team1_strike_rate": team1_strike_rate,
-                "team2_strike_rate": team2_strike_rate,
-                "team1_economy": team1_economy,
-                "team2_economy": team2_economy,
-            }
-        ]
-    )
+    base = {
+        "team1_strength": team1_strength,
+        "team2_strength": team2_strength,
+        "team1_form_runs": team1_form_runs,
+        "team2_form_runs": team2_form_runs,
+        "team1_form_runs_ipl": t1i,
+        "team2_form_runs_ipl": t2i,
+        "team1_momentum": m1,
+        "team2_momentum": m2,
+        "team1_strike_rate": team1_strike_rate,
+        "team2_strike_rate": team2_strike_rate,
+        "team1_economy": team1_economy,
+        "team2_economy": team2_economy,
+    }
+    base.update(franchise_profile_feature_row(str(team1_name).strip(), str(team2_name).strip()))
+    row = pd.DataFrame([base])
     return float(predict_team1_win_proba(row)[0])

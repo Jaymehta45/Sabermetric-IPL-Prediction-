@@ -36,6 +36,10 @@ Export JSON for prediction_log (log_prediction.py pre):
   --export-json predictions/match_pre.json --match-date 2026-03-28 \\
     [--match-key IPL2026-M01] [--venue "M Chinnaswamy Stadium, Bengaluru"]
 
+After the six outcomes, the CLI always prints a **win probability breakdown**
+(Monte Carlo vs roster ML vs hybrid headline) so tight hybrids are traceable when
+the components disagree.
+
 **Innings team scores:** After the six outcomes, the CLI prints **calibrated**
 mean team runs for innings 1 and 2: per-player RF outputs are scaled so the
 team sum matches the Ridge **team-total** model when available, otherwise a
@@ -312,6 +316,63 @@ def print_six(six: dict, meta: dict | None = None) -> None:
     )
     print()
     print("=" * 60)
+
+
+def print_win_probability_breakdown(
+    sim: dict,
+    six: dict,
+    team1_name: str | None,
+    team2_name: str | None,
+    n_sims: int,
+) -> None:
+    """
+    Always-on diagnostics: MC vs roster ML vs headline P(team1), so tight hybrids
+    are explainable when the two components disagree.
+    """
+    if not team1_name or not team2_name:
+        return
+    mc = sim.get("win_probability_team1")
+    ml = sim.get("leader_model_p_team1")
+    headline = six.get("p_team1_win")
+    basis = str(six.get("win_probability_basis") or "")
+
+    has_any = headline is not None or ml is not None or (n_sims > 0 and mc is not None)
+    if not has_any:
+        return
+
+    print()
+    print("Win probability breakdown (P for team1 = first innings):")
+    if n_sims > 0:
+        if mc is not None:
+            print(f"  Monte Carlo:      P({team1_name}) = {float(mc):.2%}")
+        else:
+            print("  Monte Carlo:      —")
+    else:
+        print("  Monte Carlo:      —  (--sims 0; no stochastic win draw)")
+    if ml is not None:
+        print(f"  Roster ML model:  P({team1_name}) = {float(ml):.2%}")
+    else:
+        print("  Roster ML model:  —  (match_winner_classifier missing or failed)")
+    if headline is not None:
+        if basis == "hybrid_ensemble":
+            hnote = "Hybrid (headline)"
+        elif basis == "monte_carlo":
+            hnote = "Monte Carlo (headline)"
+        else:
+            hnote = "Headline"
+        print(f"  {hnote:18} P({team1_name}) = {float(headline):.2%}")
+    if (
+        basis == "hybrid_ensemble"
+        and mc is not None
+        and ml is not None
+        and headline is not None
+    ):
+        d = abs(float(mc) - float(ml))
+        if d >= 0.10:
+            print(
+                f"  Note: MC vs roster ML differ by {d:.0%} probability points; "
+                "the hybrid blends them, so the final value often sits near the middle."
+            )
 
 
 def _player_id_from_row(row: object) -> str:
@@ -610,7 +671,7 @@ def main() -> None:
     parser.add_argument(
         "--show-ensemble-details",
         action="store_true",
-        help="Print ML/ensemble win probability (secondary to Monte Carlo headline)",
+        help="No-op: MC / roster ML / hybrid lines are always printed after the six outcomes.",
     )
     args = parser.parse_args()
 
@@ -728,6 +789,9 @@ def main() -> None:
             "venue_spin_harshness": sim.get("venue_spin_harshness"),
         },
     )
+    print_win_probability_breakdown(
+        sim, out["six"], t1_name_eff, t2_name_eff, int(args.sims)
+    )
     t1r = sim.get("team1_total_runs")
     t2r = sim.get("team2_total_runs")
     w1i = sim.get("pred_wickets_first_innings")
@@ -784,16 +848,6 @@ def main() -> None:
             "Impact pool: excluded from team total (lowest runs + 25×wickets among 12) — "
             f"team1={id1!s}, team2={id2!s}"
         )
-    if args.show_ensemble_details:
-        wp = sim.get("win_probability_team1")
-        if wp is not None:
-            print(f"Monte Carlo P(team1 wins): {wp:.2%} (component; headline uses hybrid when set)")
-        lm = sim.get("leader_model_p_team1")
-        if lm is not None:
-            print(f"Leader (roster) model P(team1 wins): {lm:.2%}")
-        if sim.get("ensemble_p_team1") is not None:
-            print(f"Ensemble (ML + sim + calibration) P(team1 wins): {sim['ensemble_p_team1']:.2%}")
-
     export_json = (args.export_json or "").strip()
     if export_json:
         export_path = Path(export_json)

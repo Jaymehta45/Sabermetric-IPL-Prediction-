@@ -13,6 +13,7 @@ import traceback
 import os
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 from iplpred.paths import DATA_DIR, MATCHES_DIR, PROCESSED_DIR
@@ -35,6 +36,10 @@ FINAL_COLUMNS = [
     "is_noball",
     "dismissal_kind",
     "player_dismissed",
+    "innings",
+    "over",
+    "ball_in_over",
+    "competition",
 ]
 
 
@@ -178,9 +183,29 @@ def standardize_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     if df["date"].fillna("").astype(str).str.strip().eq("").all():
         df["date"] = "2026-03-28"
 
-    for c in ("batter", "bowler", "non_striker", "venue", "batting_team", "bowling_team", "dismissal_kind", "player_dismissed", "date"):
+    for c in (
+        "batter",
+        "bowler",
+        "non_striker",
+        "venue",
+        "batting_team",
+        "bowling_team",
+        "dismissal_kind",
+        "player_dismissed",
+        "date",
+        "competition",
+    ):
         if c in df.columns:
             df[c] = df[c].apply(lambda x: _strip_str(x) if pd.notna(x) else "")
+
+    if "innings" not in df.columns:
+        df["innings"] = np.nan
+    if "over" not in df.columns:
+        df["over"] = np.nan
+    if "ball_in_over" not in df.columns:
+        df["ball_in_over"] = np.nan
+    if "competition" not in df.columns:
+        df["competition"] = ""
 
     return df
 
@@ -226,6 +251,17 @@ def parse_csv_file(path: Path) -> pd.DataFrame | None:
     out["dismissal_kind"] = df["dismissal_kind"] if "dismissal_kind" in df.columns else ""
     out["player_dismissed"] = df["player_dismissed"] if "player_dismissed" in df.columns else ""
 
+    def _col(name: str, default):
+        return df[name] if name in df.columns else default
+
+    out["innings"] = pd.to_numeric(_col("innings", pd.Series(np.nan, index=df.index)), errors="coerce")
+    out["over"] = pd.to_numeric(_col("over", pd.Series(np.nan, index=df.index)), errors="coerce")
+    out["ball_in_over"] = pd.to_numeric(
+        _col("ball_in_over", pd.Series(np.nan, index=df.index)), errors="coerce"
+    )
+    comp = _col("competition", pd.Series("", index=df.index, dtype=object))
+    out["competition"] = comp.astype(str).str.strip()
+
     out = out[out["batter"].astype(str).str.len() > 0]
     out = out[out["bowler"].astype(str).str.len() > 0]
 
@@ -260,6 +296,19 @@ def _bowling_team(info: dict, batting_team: str) -> str:
     return ""
 
 
+def _norm_competition_from_info(info: dict) -> str:
+    ev = info.get("event")
+    if isinstance(ev, dict):
+        name = _strip_str(ev.get("name", ""))
+    else:
+        name = ""
+    comp = _strip_str(info.get("competition", "")) or name
+    low = comp.lower()
+    if "ipl" in low or "indian premier" in low:
+        return "IPL"
+    return comp[:64] if comp else ""
+
+
 def parse_json_cricsheet(path: Path) -> pd.DataFrame | None:
     try:
         with open(path, encoding="utf-8") as f:
@@ -275,16 +324,17 @@ def parse_json_cricsheet(path: Path) -> pd.DataFrame | None:
     match_id = path.stem
     match_date = _json_match_date(info)
     venue = _strip_str(info.get("venue", ""))
+    competition = _norm_competition_from_info(info)
 
     rows: list[dict] = []
 
-    for inning in innings_list:
+    for inn_idx, inning in enumerate(innings_list, start=1):
         batting_team = inning.get("team") or ""
         bowling_team = _bowling_team(info, batting_team)
         overs_list = inning.get("overs") or []
-        for over in overs_list:
+        for over_idx, over in enumerate(overs_list):
             deliveries = over.get("deliveries") or []
-            for delivery in deliveries:
+            for ball_idx, delivery in enumerate(deliveries):
                 batter = delivery.get("batter") or delivery.get("batsman") or ""
                 bowler = delivery.get("bowler") or ""
                 non_striker = delivery.get("non_striker") or ""
@@ -338,6 +388,10 @@ def parse_json_cricsheet(path: Path) -> pd.DataFrame | None:
                         "is_noball": is_noball,
                         "dismissal_kind": dismissal_kind,
                         "player_dismissed": player_dismissed,
+                        "innings": inn_idx,
+                        "over": over_idx,
+                        "ball_in_over": ball_idx + 1,
+                        "competition": competition,
                     }
                 )
 
@@ -436,16 +490,37 @@ def main() -> None:
 
     unified["date"] = pd.to_datetime(unified["date"], errors="coerce")
 
-    unified = unified.drop_duplicates(
-        subset=[
-            "match_id",
-            "batter",
-            "bowler",
-            "non_striker",
-            "runs_off_bat",
-            "extras",
-        ]
-    )
+    for c in ("innings", "over", "ball_in_over"):
+        if c in unified.columns:
+            unified[c] = pd.to_numeric(unified[c], errors="coerce")
+
+    inn = pd.to_numeric(unified.get("innings", pd.Series(dtype=float)), errors="coerce")
+    use_ball_id = len(inn) > 0 and inn.notna().mean() >= 0.9 and (inn.dropna() > 0).any()
+    if use_ball_id:
+        unified = unified.drop_duplicates(
+            subset=[
+                "match_id",
+                "innings",
+                "over",
+                "ball_in_over",
+                "batter",
+                "bowler",
+                "non_striker",
+                "runs_off_bat",
+                "extras",
+            ]
+        )
+    else:
+        unified = unified.drop_duplicates(
+            subset=[
+                "match_id",
+                "batter",
+                "bowler",
+                "non_striker",
+                "runs_off_bat",
+                "extras",
+            ]
+        )
     print("Rows after deduplication:", len(unified))
 
     unified.to_csv(OUTPUT_PATH, index=False)

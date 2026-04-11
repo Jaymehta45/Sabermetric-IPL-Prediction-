@@ -58,24 +58,26 @@ def predict_team_totals_from_rosters(
             str(team2_name).strip(),
             match_date,
         )
-    row = pd.DataFrame(
-        [
-            {
-                "team1_strength": m1["team_strength"],
-                "team2_strength": m2["team_strength"],
-                "team1_form_runs": m1["team_avg_form_runs"],
-                "team2_form_runs": m2["team_avg_form_runs"],
-                "team1_form_runs_ipl": m1["team_avg_form_runs_ipl"],
-                "team2_form_runs_ipl": m2["team_avg_form_runs_ipl"],
-                "team1_momentum": mo1,
-                "team2_momentum": mo2,
-                "team1_strike_rate": m1["team_avg_strike_rate"],
-                "team2_strike_rate": m2["team_avg_strike_rate"],
-                "team1_economy": m1["team_avg_economy"],
-                "team2_economy": m2["team_avg_economy"],
-            }
-        ]
-    )
+    from iplpred.core.team_franchise_profile import franchise_profile_feature_row
+
+    n1 = str(team1_name or "").strip()
+    n2 = str(team2_name or "").strip()
+    row_d: dict = {
+        "team1_strength": m1["team_strength"],
+        "team2_strength": m2["team_strength"],
+        "team1_form_runs": m1["team_avg_form_runs"],
+        "team2_form_runs": m2["team_avg_form_runs"],
+        "team1_form_runs_ipl": m1["team_avg_form_runs_ipl"],
+        "team2_form_runs_ipl": m2["team_avg_form_runs_ipl"],
+        "team1_momentum": mo1,
+        "team2_momentum": mo2,
+        "team1_strike_rate": m1["team_avg_strike_rate"],
+        "team2_strike_rate": m2["team_avg_strike_rate"],
+        "team1_economy": m1["team_avg_economy"],
+        "team2_economy": m2["team_avg_economy"],
+    }
+    row_d.update(franchise_profile_feature_row(n1, n2))
+    row = pd.DataFrame([row_d])
     X = build_winner_feature_matrix(row)
     r1 = float(bundle["model_team1"].predict(X)[0])
     r2 = float(bundle["model_team2"].predict(X)[0])
