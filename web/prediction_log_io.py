@@ -26,13 +26,33 @@ from iplpred.paths import PROCESSED_DIR
 
 LOG_PATH = PROCESSED_DIR / "prediction_log.csv"
 
-# Public repo — used when VERCEL_* slug/ref are missing in the Python runtime.
+# Public repo — CSV on `main` is the dashboard source of truth (see DAILY_WORKFLOW).
 _DEFAULT_GITHUB_REPO = "Jaymehta45/Sabermetric-IPL-Prediction-"
 
 _CACHE_LOCK = threading.Lock()
 _CACHE_T: float | None = None
 _CACHE_DF: pd.DataFrame | None = None
 _CACHE_META: dict = {}
+
+
+def _bootstrap_vercel_prediction_log_env() -> None:
+    """
+    Vercel often does not inject ``vercel.json`` ``env`` into the Python serverless runtime.
+    Without ``PREDICTION_LOG_GITHUB_REPO``, we would fall back to ``VERCEL_GIT_REPO_SLUG`` (can
+    mismatch the real GitHub path) or to the **bundled** CSV (frozen at deploy) after a failed fetch.
+    """
+    if not (
+        os.environ.get("VERCEL", "").strip() == "1"
+        or bool(os.environ.get("VERCEL_ENV", "").strip())
+    ):
+        return
+    if not os.environ.get("PREDICTION_LOG_GITHUB_REPO", "").strip():
+        os.environ["PREDICTION_LOG_GITHUB_REPO"] = _DEFAULT_GITHUB_REPO
+    if not os.environ.get("PREDICTION_LOG_GITHUB_BRANCH", "").strip():
+        os.environ["PREDICTION_LOG_GITHUB_BRANCH"] = "main"
+
+
+_bootstrap_vercel_prediction_log_env()
 
 
 def _resolved_remote_url() -> str | None:
@@ -82,7 +102,11 @@ def _cache_ttl_seconds() -> float:
 
 
 def _fetch_url(url: str) -> bytes:
-    req = Request(url, headers={"User-Agent": "iplpred-web/1.0"})
+    # GitHub raw uses CDN Cache-Control ~300s; varying the query string busts stale edge caches.
+    sep = "&" if "?" in url else "?"
+    bust = int(time.time() // 90)
+    busted = f"{url}{sep}iplpred_cb={bust}"
+    req = Request(busted, headers={"User-Agent": "iplpred-web/1.0"})
     with urlopen(req, timeout=20) as resp:
         return resp.read()
 
@@ -108,13 +132,23 @@ def read_prediction_log_dataframe() -> pd.DataFrame | None:
             return _CACHE_DF.copy()
 
     url = _resolved_remote_url()
-    meta: dict = {"source": "local_file", "remote_url": None, "error": None}
+    meta: dict = {
+        "source": "local_file",
+        "remote_url": None,
+        "error": None,
+        "bundled_csv_stale_risk": False,
+    }
 
     if url:
         try:
             raw = _fetch_url(url)
             df = pd.read_csv(io.BytesIO(raw), low_memory=False)
-            meta = {"source": "remote_url", "remote_url": url, "error": None}
+            meta = {
+                "source": "remote_url",
+                "remote_url": url,
+                "error": None,
+                "bundled_csv_stale_risk": False,
+            }
             with _CACHE_LOCK:
                 _CACHE_T = now
                 _CACHE_DF = df
@@ -125,13 +159,19 @@ def read_prediction_log_dataframe() -> pd.DataFrame | None:
                 "source": "remote_failed",
                 "remote_url": url,
                 "error": repr(e)[:240],
+                "bundled_csv_stale_risk": False,
             }
 
+    on_vercel = bool(
+        os.environ.get("VERCEL", "").strip()
+        or os.environ.get("VERCEL_ENV", "").strip()
+    )
     if LOG_PATH.is_file():
         try:
             df = pd.read_csv(LOG_PATH, low_memory=False)
             if meta.get("error"):
                 meta["source"] = "local_fallback"
+                meta["bundled_csv_stale_risk"] = bool(on_vercel)
             else:
                 meta["source"] = "local_file"
             meta["remote_url"] = url
