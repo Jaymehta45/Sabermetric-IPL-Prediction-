@@ -24,6 +24,9 @@ python3 train_player_model.py
 echo "==> train_match_winner_model.py"
 python3 train_match_winner_model.py
 
+echo "==> train_win_prob_ensemble (hybrid ML + MC stack / calibration; requires match winner model)"
+python3 -m iplpred.training.train_win_prob_ensemble
+
 echo "==> train_team_total_model.py"
 python3 train_team_total_model.py
 

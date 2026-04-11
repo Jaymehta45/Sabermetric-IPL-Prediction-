@@ -102,6 +102,14 @@ def main() -> None:
         raise SystemExit(f"Train match winner model first: {WINNER_MODEL_PATH}")
 
     df = load_match_training_with_dates()
+    df = df[df["winner"].isin(["team1", "team2"])].copy()
+    if len(df) < 40:
+        print(
+            f"Skipping win_prob_ensemble training: need at least 40 labeled matches, got {len(df)}. "
+            f"Keeping existing {ENSEMBLE_BUNDLE_PATH.name} if present (fallback: 0.6/0.4 blend, no stack)."
+        )
+        return
+
     train, test = time_based_split(df, test_frac=0.2)
 
     y_train = (train["winner"] == "team1").astype(int).values

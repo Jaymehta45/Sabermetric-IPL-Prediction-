@@ -1,5 +1,5 @@
 # Full data refresh: unified → match stats (incl. ICC supplement) → features → priors → registry/identity → training tables.
-.PHONY: build-all build-data test
+.PHONY: build-all build-data test retrain-after-match train-win-ensemble
 
 build-all: build-data
 	python3 build_training_dataset.py
@@ -16,6 +16,14 @@ build-data:
 
 test:
 	python3 -m unittest discover -s tests -p "test_*.py" -v
+
+# Full rebuild + retrain after adding a ball-by-ball file under matches/ (Process 2 — data half).
+retrain-after-match:
+	bash scripts/retrain_after_match.sh
+
+# Refresh hybrid win-probability bundle after train_match_winner_model.py (safe if <40 matches: skips).
+train-win-ensemble:
+	python3 -m iplpred.training.train_win_prob_ensemble
 
 eval:
 	python3 scripts/evaluate_match_models.py
