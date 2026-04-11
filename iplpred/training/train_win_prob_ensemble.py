@@ -15,6 +15,7 @@ import joblib
 import numpy as np
 import pandas as pd
 from sklearn.isotonic import IsotonicRegression
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import brier_score_loss, log_loss
 from sklearn.model_selection import TimeSeriesSplit
 
@@ -135,13 +136,45 @@ def main() -> None:
     blend_tr = np.clip(w_ml * ml_train + w_sim * sim_proxy_train, 1e-6, 1.0 - 1e-6)
     blend_te = np.clip(w_ml * ml_test + w_sim * sim_proxy_test, 1e-6, 1.0 - 1e-6)
 
-    X_tr = _logit(blend_tr)
+    Xs_tr = np.column_stack([_logit(ml_train), _logit(sim_proxy_train)])
+    Xs_te = np.column_stack([_logit(ml_test), _logit(sim_proxy_test)])
+    stack_clf = LogisticRegression(C=0.5, random_state=0, max_iter=500)
+    stack_clf.fit(Xs_tr, y_train)
+    p_stack_tr = np.clip(stack_clf.predict_proba(Xs_tr)[:, 1], 1e-6, 1.0 - 1e-6)
+    p_stack_te = np.clip(stack_clf.predict_proba(Xs_te)[:, 1], 1e-6, 1.0 - 1e-6)
+
+    use_stack = False
+    try:
+        if log_loss(y_test, p_stack_te) + 1e-4 < log_loss(y_test, blend_te):
+            use_stack = True
+    except ValueError:
+        pass
+
+    if use_stack:
+        calib_tr = p_stack_tr
+        calib_te = p_stack_te
+        stack_payload: dict | None = {
+            "coef": stack_clf.coef_[0].tolist(),
+            "intercept": float(stack_clf.intercept_[0]),
+        }
+        print(
+            "Logit stack on (ML, sim proxy) beats linear blend on holdout — "
+            "calibrating stack output with isotonic."
+        )
+    else:
+        calib_tr = blend_tr
+        calib_te = blend_te
+        stack_payload = None
+        print("Linear blend kept (logit stack did not improve holdout log loss).")
+
+    X_tr = _logit(calib_tr)
     mask_f = ml_train >= 0.5
     n_f, n_u = int(mask_f.sum()), int((~mask_f).sum())
 
     bundle: dict = {
         "ml_weight": w_ml,
         "sim_weight": w_sim,
+        "stack_logit": stack_payload,
         "isotonic": None,
         "isotonic_favorite": None,
         "isotonic_underdog": None,
@@ -149,7 +182,7 @@ def main() -> None:
         "het_noise_gamma": 0.45,
     }
 
-    ll_raw_te = log_loss(y_test, blend_te)
+    ll_raw_te = log_loss(y_test, calib_te)
     p_split = None
     p_single = None
 
@@ -158,9 +191,9 @@ def main() -> None:
         iso_u = IsotonicRegression(out_of_bounds="clip")
         iso_f.fit(X_tr[mask_f], y_train[mask_f])
         iso_u.fit(X_tr[~mask_f], y_train[~mask_f])
-        lo_te = _logit(blend_te)
+        lo_te = _logit(calib_te)
         mf_te = ml_test >= 0.5
-        p_split = np.zeros_like(blend_te, dtype=float)
+        p_split = np.zeros_like(calib_te, dtype=float)
         if mf_te.any():
             p_split[mf_te] = iso_f.predict(lo_te[mf_te])
         if (~mf_te).any():
@@ -169,7 +202,7 @@ def main() -> None:
 
     iso_one = IsotonicRegression(out_of_bounds="clip")
     iso_one.fit(X_tr, y_train)
-    lo_te = _logit(blend_te)
+    lo_te = _logit(calib_te)
     p_single = np.clip(iso_one.predict(lo_te), 1e-6, 1.0 - 1e-6)
 
     if p_split is not None:
@@ -188,7 +221,7 @@ def main() -> None:
     elif bundle["isotonic_favorite"] is None:
         print("Skipped single isotonic (no test log-loss gain vs raw blend).")
 
-    p_test = blend_te.copy()
+    p_test = calib_te.copy()
     if bundle.get("isotonic_favorite") is not None:
         p_test = p_split
     elif bundle.get("isotonic") is not None:

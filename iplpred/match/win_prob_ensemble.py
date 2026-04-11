@@ -1,7 +1,8 @@
 """
-Learned blend of ML vs simulation win probability + optional isotonic calibration.
+Learned blend of ML vs simulation win probability, optional logit stacking of both,
+and optional isotonic calibration.
 
-Trained by train_win_prob_ensemble.py; saved to models/win_prob_ensemble.pkl.
+Trained by iplpred/training/train_win_prob_ensemble.py → models/win_prob_ensemble.pkl.
 If missing, falls back to fixed 0.6/0.4 blend with no extra calibration.
 """
 
@@ -46,7 +47,7 @@ def apply_ensemble_and_calibrate(
     sim_p: float | None,
 ) -> float | None:
     """
-    Blend ML and MC sim win prob, then apply optional regime isotonic calibration.
+    Blend ML and MC sim win prob (or learned logit stack of both), then apply optional isotonic.
     """
     b = load_ensemble_bundle()
     w_ml = float(b.get("ml_weight", _DEFAULT_ML)) if b else _DEFAULT_ML
@@ -57,12 +58,30 @@ def apply_ensemble_and_calibrate(
 
     if ml_p is None and sim_p is None:
         return None
-    if ml_p is None:
+
+    stack = b.get("stack_logit") if b else None
+    if (
+        isinstance(stack, dict)
+        and ml_p is not None
+        and sim_p is not None
+        and stack.get("coef") is not None
+    ):
+        coef = np.asarray(stack["coef"], dtype=float).ravel()
+        b0 = float(stack.get("intercept", 0.0))
+        if len(coef) >= 2:
+            lo_m = float(logit(_clip_p(float(ml_p))))
+            lo_s = float(logit(_clip_p(float(sim_p))))
+            raw = float(expit(b0 + float(coef[0]) * lo_m + float(coef[1]) * lo_s))
+            raw = _clip_p(raw)
+        else:
+            raw = _clip_p(w_ml * float(ml_p) + w_sim * float(sim_p))
+    elif ml_p is None:
         raw = float(sim_p)
     elif sim_p is None:
         raw = float(ml_p)
     else:
         raw = w_ml * float(ml_p) + w_sim * float(sim_p)
+        raw = _clip_p(raw)
 
     raw = _clip_p(raw)
 

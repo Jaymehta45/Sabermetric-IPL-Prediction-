@@ -248,14 +248,19 @@ def print_six(six: dict, meta: dict | None = None) -> None:
                 "scaled down at batting-friendly / small grounds; pace slightly up."
             )
             print()
-    # Single headline: winner matches Monte Carlo majority when sims > 0
     p1 = six.get("p_team1_win")
     basis = six.get("win_probability_basis") or ""
     n1 = meta.get("team1_name") if meta else None
     n2 = meta.get("team2_name") if meta else None
+    if basis == "hybrid_ensemble":
+        basis_lbl = "Hybrid ML+sim+calibration"
+    elif basis == "monte_carlo":
+        basis_lbl = "Monte Carlo"
+    else:
+        basis_lbl = basis or "deterministic totals"
     if p1 is not None and n1 and n2 and six.get("winning_team") == "tie":
         print(
-            f"1. Essentially tied (Monte Carlo) — P({n1})={float(p1):.1%}, "
+            f"1. Essentially tied ({basis_lbl}) — P({n1})={float(p1):.1%}, "
             f"P({n2})={1.0 - float(p1):.1%}"
         )
     elif p1 is not None and n1 and n2:
@@ -264,12 +269,12 @@ def print_six(six: dict, meta: dict | None = None) -> None:
         print(
             f"1. Predicted winner: {six['winning_team']} — "
             f"P({six['winning_team']} wins) = {pp_s} "
-            f"(Monte Carlo; P({n1})={float(p1):.1%}, P({n2})={1.0 - float(p1):.1%})"
+            f"({basis_lbl}; P({n1})={float(p1):.1%}, P({n2})={1.0 - float(p1):.1%})"
         )
     elif p1 is not None:
         print(
             f"1. Predicted winner: {six['winning_team']} — "
-            f"P(win) = {float(six.get('p_predicted_winner') or 0):.1%} (Monte Carlo, basis={basis})"
+            f"P(win) = {float(six.get('p_predicted_winner') or 0):.1%} ({basis_lbl})"
         )
     else:
         print(f"1. Predicted winner: {six['winning_team']} (mean team totals; use --sims > 0 for win %)")
@@ -357,10 +362,12 @@ def build_prediction_log_payload(
     while len(ids3) < 3:
         ids3.append("")
 
-    # Primary logged probability = Monte Carlo (same as headline winner); ensemble optional in pred_extra
-    p1 = sim.get("win_probability_team1")
+    # Logged P(team1) matches headline six outcomes: hybrid ensemble when available, else MC, else 0.5
+    p1 = six.get("p_team1_win")
     if p1 is None:
         p1 = sim.get("ensemble_p_team1")
+    if p1 is None:
+        p1 = sim.get("win_probability_team1")
     if p1 is None:
         p1 = 0.5
     p1 = float(p1)
@@ -368,6 +375,7 @@ def build_prediction_log_payload(
     pm = sim.get("pitch_multipliers")
     pred_extra: dict = {
         "sims": int(n_sims),
+        "win_probability_basis": six.get("win_probability_basis"),
         "ensemble_p_team1": sim.get("ensemble_p_team1"),
         "sim_win_probability_team1": sim.get("win_probability_team1"),
         "leader_model_p_team1": sim.get("leader_model_p_team1"),
@@ -779,7 +787,7 @@ def main() -> None:
     if args.show_ensemble_details:
         wp = sim.get("win_probability_team1")
         if wp is not None:
-            print(f"Monte Carlo P(team1 wins): {wp:.2%} (primary headline)")
+            print(f"Monte Carlo P(team1 wins): {wp:.2%} (component; headline uses hybrid when set)")
         lm = sim.get("leader_model_p_team1")
         if lm is not None:
             print(f"Leader (roster) model P(team1 wins): {lm:.2%}")

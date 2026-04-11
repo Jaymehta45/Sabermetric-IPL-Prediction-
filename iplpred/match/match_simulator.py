@@ -868,16 +868,28 @@ def six_match_outcomes(
     Six pre-match style predictions from a simulation dict:
     winning team, best batsman, best bowler, top 5 batsmen, top 3 bowlers, player of the match.
 
-    **Winner** is aligned with **Monte Carlo win rate** when ``n_monte_carlo > 0`` and
-    ``win_probability_team1`` is set — otherwise falls back to **deterministic** totals
-    (``winner`` / ``pick_winner`` on **calibrated** team runs).
+    **Winner** and **P(team1)** prefer the **calibrated hybrid** (``ensemble_p_team1``: ML roster
+    model + Monte Carlo + optional stack/isotonic) when present, so the headline pick matches the
+    logged probability. If the ensemble is missing, uses **Monte Carlo** when ``n_monte_carlo > 0``,
+    else **deterministic** totals (``winner`` / ``pick_winner`` on calibrated team runs).
     """
-    p1 = sim_out.get("win_probability_team1")
+    p_ens = sim_out.get("ensemble_p_team1")
+    p_mc = sim_out.get("win_probability_team1")
     n_mc = int(sim_out.get("n_monte_carlo") or 0)
     win_basis = "deterministic_totals"
+    p1: float | None = None
 
-    if p1 is not None and n_mc > 0:
-        p1 = float(p1)
+    if p_ens is not None:
+        p1 = float(p_ens)
+        win_basis = "hybrid_ensemble"
+        if p1 > 0.5:
+            winning_team = team1_name or "team1"
+        elif p1 < 0.5:
+            winning_team = team2_name or "team2"
+        else:
+            winning_team = "tie"
+    elif p_mc is not None and n_mc > 0:
+        p1 = float(p_mc)
         win_basis = "monte_carlo"
         if p1 > 0.5:
             winning_team = team1_name or "team1"
@@ -959,21 +971,25 @@ def print_report(out: dict) -> None:
             f"(trained on official IPL results when available; see train_match_winner_model.py)"
         )
     wp = out.get("win_probability_team1")
-    if wp is not None:
-        print(f"Monte Carlo P(team1 wins): {wp:.2%} (headline; use this with predicted winner above)")
     ens = out.get("ensemble_p_team1")
+    b = load_ensemble_bundle()
     if ens is not None:
-        b = load_ensemble_bundle()
+        stack = b.get("stack_logit") if b else None
+        extra = ""
+        if isinstance(stack, dict) and stack.get("coef"):
+            extra = " + logit stack"
+        cal = " + isotonic" if b and (b.get("isotonic") or b.get("isotonic_favorite")) else ""
         w_ml = float(b.get("ml_weight", 0.6)) if b else 0.6
         w_sim = float(b.get("sim_weight", 0.4)) if b else 0.4
         s = w_ml + w_sim
         if s > 0:
             w_ml, w_sim = w_ml / s, w_sim / s
-        cal = " + isotonic calibration" if b and (b.get("isotonic") or b.get("isotonic_favorite")) else ""
         print(
-            f"Ensemble P(team1 wins) [secondary]: {ens:.2%} "
-            f"({w_ml:.0%} ML + {w_sim:.0%} simulation{cal})"
+            f"Hybrid P(team1 wins) [headline / logged]: {ens:.2%} "
+            f"({w_ml:.0%} ML + {w_sim:.0%} MC blend{extra}{cal})"
         )
+    if wp is not None:
+        print(f"Monte Carlo P(team1 wins): {wp:.2%} (sim component)")
     t1m = out.get("ml_team1_total_runs")
     t2m = out.get("ml_team2_total_runs")
     if t1m is not None and t2m is not None:
@@ -1004,7 +1020,7 @@ def print_report(out: dict) -> None:
     if ens is not None:
         fav = max(ens, 1.0 - ens)
         print(
-            f"Confidence level (ensemble): {confidence_level(fav)} "
+            f"Confidence level (hybrid): {confidence_level(fav)} "
             f"(favorite {fav:.2%}; HIGH >65%, MEDIUM 55–65%, LOW <55%)"
         )
     elif wp is not None:
