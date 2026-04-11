@@ -50,28 +50,25 @@ def _resolved_remote_url() -> str | None:
             "/data/processed/prediction_log.csv"
         )
     slug = os.environ.get("VERCEL_GIT_REPO_SLUG", "").strip()
-    ref = os.environ.get("VERCEL_GIT_COMMIT_REF", "").strip()
-    if slug and ref:
-        # Vercel often sets SLUG to repo name only — raw.githubusercontent.com needs owner/repo.
+    if slug:
+        # Always use a branch name here, never VERCEL_GIT_COMMIT_REF — a deploy-SHA URL would
+        # freeze prediction_log.csv at the bundle from that deploy until the next deploy.
         if "/" not in slug:
             owner = os.environ.get("VERCEL_GIT_REPO_OWNER", "").strip() or "Jaymehta45"
             slug = f"{owner}/{slug}"
+        br = os.environ.get("PREDICTION_LOG_GITHUB_BRANCH", "main").strip() or "main"
         return (
-            f"https://raw.githubusercontent.com/{slug}/{ref}"
+            f"https://raw.githubusercontent.com/{slug}/{br}"
             "/data/processed/prediction_log.csv"
         )
     # Vercel: system git env vars are sometimes unset in the serverless runtime.
     if os.environ.get("VERCEL", "").strip() == "1" or bool(
         os.environ.get("VERCEL_ENV", "").strip()
     ):
-        ref = (
-            os.environ.get("VERCEL_GIT_COMMIT_REF", "").strip()
-            or os.environ.get("PREDICTION_LOG_GITHUB_BRANCH", "").strip()
-            or "main"
-        )
+        br = os.environ.get("PREDICTION_LOG_GITHUB_BRANCH", "main").strip() or "main"
         r = os.environ.get("PREDICTION_LOG_GITHUB_REPO", "").strip() or _DEFAULT_GITHUB_REPO
         return (
-            f"https://raw.githubusercontent.com/{r}/{ref}"
+            f"https://raw.githubusercontent.com/{r}/{br}"
             "/data/processed/prediction_log.csv"
         )
     return None
