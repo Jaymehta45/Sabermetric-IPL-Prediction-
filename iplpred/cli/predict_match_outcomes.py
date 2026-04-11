@@ -430,6 +430,13 @@ def build_prediction_log_payload(
             "sum_player_runs_before_team1": sim.get("team1_raw_runs"),
             "sum_player_runs_before_team2": sim.get("team2_raw_runs"),
         }
+    db1 = sim.get("team1_dynamic_bat_mult")
+    db2 = sim.get("team2_dynamic_bat_mult")
+    if db1 is not None and db2 is not None:
+        pred_extra["dynamic_batting_par_mult"] = {
+            "team1": float(db1),
+            "team2": float(db2),
+        }
 
     pred_extra["player_process1"] = {
         "heuristic": "role_aware_v1",

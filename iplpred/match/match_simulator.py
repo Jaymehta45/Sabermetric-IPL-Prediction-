@@ -498,6 +498,39 @@ def _batting_eligible_mask(combined: pd.DataFrame) -> pd.Series:
     return re != 1.0
 
 
+def _dynamic_batting_par_multiplier(team_df: pd.DataFrame) -> float:
+    """
+    Extra ceiling for power-heavy XIs (e.g. deep SRH-type top orders).
+
+    Ridge + mean-XI strike rate under-weights innings par when several150+ SR
+    hitters anchor the lineup. Take the top **six** batting-eligible players by
+    ``predicted_runs`` and compare their mean feature ``strike_rate`` to an IPL
+    batting-core baseline (~130); scale innings targets modestly (capped).
+    """
+    if team_df.empty or "predicted_runs" not in team_df.columns:
+        return 1.0
+    if "strike_rate" not in team_df.columns:
+        return 1.0
+    df = team_df.copy()
+    if "role_encoded" in df.columns:
+        pool = df[_batting_eligible_mask(df)]
+        if len(pool) < 4:
+            pool = df
+    else:
+        pool = df
+    k = min(6, len(pool))
+    if k < 1:
+        return 1.0
+    pool = pool.nlargest(k, "predicted_runs")
+    sr = pd.to_numeric(pool["strike_rate"], errors="coerce").fillna(130.0)
+    mean_sr = float(sr.mean())
+    base_sr = 130.0
+    excess = max(0.0, mean_sr - base_sr)
+    # ~3% per 10 SR points above baseline; cap +12% so calibration stays bounded
+    lift = 1.0 + min(0.12, excess * 0.003)
+    return float(np.clip(lift, 1.0, 1.12))
+
+
 def _bowling_eligible_mask(combined: pd.DataFrame) -> pd.Series:
     """Prefer bowlers + allrounders for wicket leaderboards."""
     re = _role_encoded_series(combined)
@@ -678,6 +711,10 @@ def run_simulation(
     tgt1, tgt2, calib_method = _calibrated_innings_targets(
         raw1, raw2, pm, ml_team_totals, venue
     )
+    dyn1 = _dynamic_batting_par_multiplier(t1_act)
+    dyn2 = _dynamic_batting_par_multiplier(t2_act)
+    tgt1 = float(np.clip(tgt1 * dyn1, MIN_INNINGS_DISPLAY, MAX_INNINGS_DISPLAY))
+    tgt2 = float(np.clip(tgt2 * dyn2, MIN_INNINGS_DISPLAY, MAX_INNINGS_DISPLAY))
     s1, s2 = _team_calibration_scales(
         raw1, raw2, tgt1, tgt2, cap_large_scales=(ml_team_totals is None)
     )
@@ -813,6 +850,8 @@ def run_simulation(
         "team2_calibration_scale": s2,
         "team1_calibration_target": tgt1,
         "team2_calibration_target": tgt2,
+        "team1_dynamic_bat_mult": dyn1,
+        "team2_dynamic_bat_mult": dyn2,
         "pred_wickets_first_innings": min(10.0, w_first_raw),
         "pred_wickets_second_innings": min(10.0, w_second_raw),
         "pred_wickets_first_innings_raw_sum": w_first_raw,

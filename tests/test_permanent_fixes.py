@@ -17,6 +17,7 @@ from iplpred.core.match_context import (
 from iplpred.match.inference_feature_rows import franchise_match, venue_matches
 from iplpred.match.match_simulator import (
     _calibrated_innings_targets,
+    _dynamic_batting_par_multiplier,
     _impact_base,
     _team_calibration_scales,
 )
@@ -139,6 +140,19 @@ class TestTeamRunCalibration(unittest.TestCase):
         )
         self.assertEqual(m, "ml_team_total")
         self.assertGreater((t1 + t2) / 2.0, 145.0)
+
+    def test_dynamic_batting_multiplier_high_sr_top_order(self) -> None:
+        """Power top six (high feature SR) lifts innings par multiplier above 1."""
+        df = pd.DataFrame(
+            {
+                "predicted_runs": [32.0, 30.0, 28.0, 12.0, 8.0, 4.0, 2.0, 1.0],
+                "strike_rate": [175.0, 168.0, 160.0, 152.0, 145.0, 140.0, 120.0, 110.0],
+                "role_encoded": [0.0, 0.0, 0.0, 2.0, 2.0, 0.0, 1.0, 1.0],
+            }
+        )
+        m = _dynamic_batting_par_multiplier(df)
+        self.assertGreater(m, 1.02)
+        self.assertLessEqual(m, 1.12)
 
 
 class TestImpactBase(unittest.TestCase):
