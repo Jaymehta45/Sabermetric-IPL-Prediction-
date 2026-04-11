@@ -46,7 +46,7 @@ from web.prediction_log_io import prediction_log_meta, read_prediction_log_dataf
 WEB_DIR = Path(__file__).resolve().parent
 templates = Jinja2Templates(directory=str(WEB_DIR / "templates"))
 # Bump when CSS/JS change so browsers fetch fresh static files (cache-bust query string).
-UI_BUILD_ID = "202604291"
+UI_BUILD_ID = "202604292"
 templates.env.globals["asset_version"] = UI_BUILD_ID
 templates.env.globals["ui_build_id"] = UI_BUILD_ID
 
@@ -398,20 +398,32 @@ def _grade_best_pick(pred: str, actual: str, has_actual: bool) -> str:
 
 
 def _sort_log_for_display(df: pd.DataFrame) -> pd.DataFrame:
-    """Newest match_date first; same calendar day → lexicographically later match_key first (match9 before match8)."""
+    """
+    Newest match_date first. Same day: newest ``logged_at_pre`` first (so the latest
+    Process 1 push surfaces at the top even when match_key slugs sort oddly, e.g.
+    match17-* vs IPL2026-M18-*). Then match_key descending as a final tie-break.
+    """
     if df.empty:
         return df
     d = df.copy()
     if "match_date" not in d.columns:
         return d.sort_index(ascending=False)
     d["_sort"] = pd.to_datetime(d["match_date"], errors="coerce")
+    if "logged_at_pre" in d.columns:
+        d["_pre"] = pd.to_datetime(d["logged_at_pre"], errors="coerce")
+    else:
+        d["_pre"] = pd.NaT
     if "match_key" in d.columns:
         d["_mk"] = d["match_key"].astype(str)
-        d = d.sort_values(["_sort", "_mk"], ascending=[False, False], na_position="last")
+        d = d.sort_values(
+            ["_sort", "_pre", "_mk"],
+            ascending=[False, False, False],
+            na_position="last",
+        )
         d = d.drop(columns=["_mk"], errors="ignore")
     else:
-        d = d.sort_values("_sort", ascending=False, na_position="last")
-    return d.drop(columns=["_sort"], errors="ignore")
+        d = d.sort_values(["_sort", "_pre"], ascending=[False, False], na_position="last")
+    return d.drop(columns=["_sort", "_pre"], errors="ignore")
 
 
 def _comparison_rows(df: pd.DataFrame) -> list[dict]:

@@ -18,6 +18,13 @@ Or set **`export IPLPRED_LOG_AUTO_PUSH=1`** once in your shell so every
 
 Refresh the web app (/) after each push to see P1·P2·P3 move forward.
 
+**Assistants / automation:** If you generate a pre/post/process3 JSON or update
+``prediction_log.csv``, run the matching ``log_prediction.py … --push`` in the
+same session unless the user explicitly opts out. The live site reads the CSV
+from GitHub ``main``; local-only writes are invisible on Vercel. After a push,
+``GET /api/build-info`` on the deployed app should show an updated ``row_count``
+(may take a short cache window; hard-refresh the browser).
+
 **Process 1 prerequisites (one-time per machine / after clone):** build ``data/processed/player_features.csv`` and trained models under ``models/``.
 Quick check from repo root:
   ``python3 scripts/check_prediction_ready.py``
