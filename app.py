@@ -14,8 +14,9 @@ ROOT = Path(__file__).resolve().parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-# Vercel runtime often omits vercel.json env for Python; set canonical repo before imports so
-# prediction_log_io fetches live main, not a wrong slug URL or stale bundled CSV.
+# Vercel runtime sometimes omits vercel.json env; set explicit raw URL before imports.
+_CANON = "https://raw.githubusercontent.com/Jaymehta45/Sabermetric-IPL-Prediction-/main/data/processed/prediction_log.csv"
+os.environ.setdefault("PREDICTION_LOG_URL", _CANON)
 os.environ.setdefault("PREDICTION_LOG_GITHUB_REPO", "Jaymehta45/Sabermetric-IPL-Prediction-")
 os.environ.setdefault("PREDICTION_LOG_GITHUB_BRANCH", "main")
 

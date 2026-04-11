@@ -46,7 +46,7 @@ from web.prediction_log_io import prediction_log_meta, read_prediction_log_dataf
 WEB_DIR = Path(__file__).resolve().parent
 templates = Jinja2Templates(directory=str(WEB_DIR / "templates"))
 # Bump when CSS/JS change so browsers fetch fresh static files (cache-bust query string).
-UI_BUILD_ID = "202604283"
+UI_BUILD_ID = "202604291"
 templates.env.globals["asset_version"] = UI_BUILD_ID
 templates.env.globals["ui_build_id"] = UI_BUILD_ID
 
