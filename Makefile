@@ -1,5 +1,5 @@
 # Full data refresh: unified → match stats (incl. ICC supplement) → features → priors → registry/identity → training tables.
-.PHONY: build-all build-data test retrain-after-match train-win-ensemble
+.PHONY: build-all build-data test retrain-after-match train-win-ensemble clean-generated
 
 build-all: build-data
 	python3 build_training_dataset.py
@@ -24,6 +24,10 @@ retrain-after-match:
 # Refresh hybrid win-probability bundle after train_match_winner_model.py (safe if <40 matches: skips).
 train-win-ensemble:
 	python3 -m iplpred.training.train_win_prob_ensemble
+
+# Remove local __pycache__ and .DS_Store (ignored by git; safe before commits).
+clean-generated:
+	bash scripts/clean_generated.sh
 
 eval:
 	python3 scripts/evaluate_match_models.py
