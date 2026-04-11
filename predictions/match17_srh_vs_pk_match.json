@@ -1,0 +1,37 @@
+{
+  "match_id": "match17-srh-pk-2026-04-11",
+  "match_date": "2026-04-11",
+  "team1_name": "Sunrisers Hyderabad",
+  "team2_name": "Punjab Kings",
+  "venue": "Maharaja Yadavindra Singh International Cricket Stadium, Mullanpur, New Chandigarh",
+  "toss_winner": "Punjab Kings",
+  "elected_to": "field",
+  "pitch_text": "Mullanpur (New Chandigarh), day game — Dale Steyn: not a 220–230 surface; recent games in the ~160–170 band; slower deck, bowlers stay in the game; hold length; batters must create pace; new ball then wears into a trickier, slower phase; evening may skid a touch more. No dew (afternoon). Context: SRH have won the last four H2H meetings; both sides have power — SRH top order especially destructive on better surfaces, but this pitch tempers raw ball-striking vs a bowling-heavy read.",
+  "xi1": [
+    "TM Head",
+    "Abhishek Sharma",
+    "Ishan Kishan",
+    "H Klaasen",
+    "salil-arora",
+    "Aniket Verma",
+    "Nithish Kumar Reddy",
+    "Harsh Dubey",
+    "shivang-kumar",
+    "HV Patel",
+    "E Malinga"
+  ],
+  "xi2": [
+    "Priyansh Arya",
+    "prabhsimran-singh",
+    "cooper-connolly",
+    "SS Iyer",
+    "Shashank Singh",
+    "MP Stoinis",
+    "marco-jansen",
+    "XC Bartlett",
+    "Vijaykumar Vyshak",
+    "Arshdeep Singh",
+    "YS Chahal"
+  ],
+  "notes": "Match 17: PK won toss, chose to bowl → SRH bat first (team1). Impact pools — SRH: Jaydev Unadkat, Liam Livingstone, Shivam Mavi, Praful Hinge, Kamindu Mendis. PK: Nehal Wadhera, Vishnu Vinod, Suryansh Shedge, Yash Thakur, Harpreet Brar. Process 1A: --team1-impact JD Unadkat, --team2-impact nehal-wadhera; registry/coach slugs (salil-arora, shivang-kumar, prabhsimran-singh, cooper-connolly, marco-jansen); Nithish vs Nitish spelling in features; --no-squad-check as needed."
+}

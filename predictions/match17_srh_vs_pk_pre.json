@@ -1,0 +1,80 @@
+{
+  "match_key": "match17-srh-pk-2026-04-11",
+  "match_date": "2026-04-11",
+  "venue": "Maharaja Yadavindra Singh International Cricket Stadium, Mullanpur, New Chandigarh",
+  "team1_name": "Sunrisers Hyderabad",
+  "team2_name": "Punjab Kings",
+  "team1_bats_first": true,
+  "pred_winner": "Sunrisers Hyderabad",
+  "pred_p_team1_win": 0.6576666666666666,
+  "pred_best_bat": "TM Head",
+  "pred_best_bowl": "JD Unadkat",
+  "pred_top5_bats": [
+    "TM Head",
+    "MP Stoinis",
+    "Shashank Singh",
+    "H Klaasen",
+    "SS Iyer"
+  ],
+  "pred_top3_bowls": [
+    "JD Unadkat",
+    "Arshdeep Singh",
+    "Vijaykumar Vyshak"
+  ],
+  "pred_potm": "TM Head",
+  "pred_extra": {
+    "sims": 3000,
+    "ensemble_p_team1": 0.16666666666666666,
+    "sim_win_probability_team1": 0.6576666666666666,
+    "leader_model_p_team1": 0.4111469707840643,
+    "batting_order_swapped": false,
+    "impact_trim_lowest": true,
+    "impact_dropped_team1": "salil-arora",
+    "impact_dropped_team2": "nehal-wadhera",
+    "pitch_multipliers": {
+      "first_innings_runs": 0.9832,
+      "second_innings_runs": 0.9949984,
+      "first_innings_wickets": 1.012,
+      "second_innings_wickets": 1.005928
+    },
+    "venue_spin_harshness": 0.0,
+    "process_variant": "1A",
+    "full_playing_twelve": false,
+    "pred_first_innings_team_runs": 117.43628028917992,
+    "pred_second_innings_team_runs": 111.42116981026352,
+    "pred_first_innings_team_wickets": 2.5195176837599997,
+    "pred_second_innings_team_wickets": 2.80485414,
+    "pred_first_innings_team_wickets_raw_sum": 2.5195176837599997,
+    "pred_second_innings_team_wickets_raw_sum": 2.80485414,
+    "ml_team_total_runs_team1": 119.4429213681651,
+    "ml_team_total_runs_team2": 111.9812552565547,
+    "team_run_calibration": {
+      "method": "ml_team_total",
+      "scale_team1": 0.9880178172062444,
+      "scale_team2": 1.0863876633279366,
+      "sum_player_runs_before_team1": 118.86048838800001,
+      "sum_player_runs_before_team2": 102.56115157727999
+    },
+    "player_process1": {
+      "heuristic": "role_aware_v1",
+      "summary": "Best bat / top 5 runs exclude pure bowlers when enough batters exist; best bowl / top 3 wickets prefer bowlers and allrounders; POTM uses a role-weighted composite (not the official match award)."
+    },
+    "impact_sub_pools": {
+      "Sunrisers Hyderabad": [
+        "Jaydev Unadkat",
+        "Liam Livingstone",
+        "Shivam Mavi",
+        "Praful Hinge",
+        "Kamindu Mendis"
+      ],
+      "Punjab Kings": [
+        "Nehal Wadhera",
+        "Vishnu Vinod",
+        "Suryansh Shedge",
+        "Yash Thakur",
+        "Harpreet Brar"
+      ]
+    },
+    "xi_input_note": "PK won toss, bowled first → SRH bats first. Mullanpur day game: ~160–170 territory, slower/bowler-friendly vs flat belters; no dew. H2H: SRH 4 straight — SRH still explosive on paper but pitch report pulls scoring down in keywords. Impact subs passed: JD Unadkat (SRH), nehal-wadhera (PK). 1A trim dropped salil-arora (team1 12) and nehal-wadhera (team2 12 — impact was lowest predicted impact). Registry: salil-arora, shivang-kumar, prabhsimran-singh, cooper-connolly, marco-jansen; Nithish Kumar Reddy in features vs Nitish in squad list; --no-squad-check."
+  }
+}
