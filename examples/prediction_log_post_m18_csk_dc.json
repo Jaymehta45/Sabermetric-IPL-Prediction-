@@ -1,0 +1,13 @@
+{
+  "match_key": "IPL2026-M18-csk-dc",
+  "actual_winner": "Chennai Super Kings",
+  "actual_top_scorer": "Sanju Samson",
+  "actual_top_scorer_runs": 115,
+  "actual_top_wicket_bowler": "Jamie Overton",
+  "actual_top_wickets": 4,
+  "official_potm": "Sanju Samson",
+  "bbb_match_file": "matches/match18_csk_vs_dc.csv",
+  "post_notes": "POTM assumed top scorer if official award differs.",
+  "actual_first_innings_team_runs": 212,
+  "actual_second_innings_team_runs": 192
+}

@@ -1,0 +1,13 @@
+{
+  "match_key": "match17-srh-pk-2026-04-11",
+  "actual_winner": "Tie",
+  "actual_top_scorer": "Abhishek Sharma",
+  "actual_top_scorer_runs": 74,
+  "actual_top_wicket_bowler": "Shivang Kumar",
+  "actual_top_wickets": 3,
+  "official_potm": "Abhishek Sharma",
+  "bbb_match_file": "matches/match17_pbks_vs_srh.csv",
+  "post_notes": "Main innings tied 223–223 (BBB ends 18.5 second innings). Super over not in CSV; winner logged as Tie. POTM assumed top scorer if official differs.",
+  "actual_first_innings_team_runs": 223,
+  "actual_second_innings_team_runs": 223
+}
