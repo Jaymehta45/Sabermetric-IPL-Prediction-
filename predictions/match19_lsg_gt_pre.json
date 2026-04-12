@@ -1,0 +1,69 @@
+{
+  "match_key": "match19-lsg-gt-2026-04-12",
+  "match_date": "2026-04-12",
+  "venue": "Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",
+  "team1_name": "Lucknow Super Giants",
+  "team2_name": "Gujarat Titans",
+  "team1_bats_first": true,
+  "pred_winner": "Gujarat Titans",
+  "pred_p_team1_win": 0.10139735657958858,
+  "pred_best_bat": "JC Buttler",
+  "pred_best_bowl": "A Badoni",
+  "pred_top5_bats": [
+    "JC Buttler",
+    "B Sai Sudharsan",
+    "MR Marsh",
+    "N Pooran",
+    "AK Markram"
+  ],
+  "pred_top3_bowls": [
+    "A Badoni",
+    "Avesh Khan",
+    "M Prasidh Krishna"
+  ],
+  "pred_potm": "JC Buttler",
+  "pred_extra": {
+    "sims": 3000,
+    "win_probability_basis": "hybrid_ensemble",
+    "ensemble_p_team1": 0.10139735657958858,
+    "sim_win_probability_team1": 0.15466666666666667,
+    "leader_model_p_team1": 0.5574224197892468,
+    "batting_order_swapped": false,
+    "impact_trim_lowest": true,
+    "impact_dropped_team1": "mukul-choudhary",
+    "impact_dropped_team2": "Glenn Phillips",
+    "pitch_multipliers": {
+      "first_innings_runs": 0.9797,
+      "second_innings_runs": 0.9797,
+      "first_innings_wickets": 1.0145,
+      "second_innings_wickets": 1.0145
+    },
+    "venue_spin_harshness": 0.0,
+    "process_variant": "1A",
+    "full_playing_twelve": false,
+    "pred_first_innings_team_runs": 163.98496687173625,
+    "pred_second_innings_team_runs": 185.32309096033126,
+    "pred_first_innings_team_wickets": 3.1444922068750003,
+    "pred_second_innings_team_wickets": 4.2247838,
+    "pred_first_innings_team_wickets_raw_sum": 3.1444922068750003,
+    "pred_second_innings_team_wickets_raw_sum": 4.2247838,
+    "ml_team_total_runs_team1": 121.17382036049706,
+    "ml_team_total_runs_team2": 120.55048681084185,
+    "team_run_calibration": {
+      "method": "ml_team_total",
+      "scale_team1": 1.3301982666959156,
+      "scale_team2": 1.3604522259307237,
+      "sum_player_runs_before_team1": 123.2785901,
+      "sum_player_runs_before_team2": 136.221682340625
+    },
+    "dynamic_batting_par_mult": {
+      "team1": 1.0521300713012478,
+      "team2": 1.12
+    },
+    "player_process1": {
+      "heuristic": "role_aware_v1",
+      "summary": "Best bat / top 5 runs exclude pure bowlers when enough batters exist; best bowl / top 3 wickets prefer bowlers and allrounders; POTM uses a role-weighted composite (not the official match award)."
+    },
+    "process1_input_notes": "GT won toss, elected to bowl (LSG bats first). Impact subs modeled: LSG MP Yadav (Mayank Yadav), GT M Shahrukh Khan. CLI used --no-squad-check; XI uses stats ids aligned to BBB/registry (e.g. mukul-choudhary, DS Rathi, ashok-sharma, M Prasidh Krishna, R Tewatia). Pitch/commentary from Ekana TV report (dry/hard, batting-friendly, possible later turn)."
+  }
+}
