@@ -1,17 +1,17 @@
 """
 Load ``data/processed/prediction_log.csv`` from GitHub at request time or from the local bundle.
 
-**Important:** ``raw.githubusercontent.com/.../BRANCH/...`` is CDN-cached and can lag **hours** behind
-the real ``BRANCH`` tip after a push. That made the dashboard show stale rows even though ``main``
-was updated. When ``PREDICTION_LOG_GITHUB_REPO`` is set, we **prefer the GitHub Contents API**
-(``GET /repos/{owner}/{repo}/contents/...?ref=branch``), which tracks ``ref`` promptly. We still
-fall back to raw URL + local file.
+**Important:** ``raw.githubusercontent.com/.../BRANCH/...`` can lag the real branch tip (CDN).
+**Primary path:** ``GET /repos/{owner}/{repo}/git/ref/heads/{branch}`` → tip commit ``sha``, then
+``raw.githubusercontent.com/{owner}/{repo}/{sha}/data/processed/prediction_log.csv`` — immutable per
+commit, always matches Git. **Fallback:** Contents API, then branch raw URL, then local bundle.
 
 On Vercel, set ``PREDICTION_LOG_GITHUB_REPO`` + ``PREDICTION_LOG_GITHUB_BRANCH`` (see ``vercel.json``).
 Optional ``GITHUB_TOKEN`` raises API rate limits (5000/hr vs 60/hr unauthenticated).
 
-Override with ``PREDICTION_LOG_URL`` (full https URL) — used only if repo-based API fetch is skipped
-(see ``PREDICTION_LOG_FETCH``).
+Override with ``PREDICTION_LOG_URL`` (full https URL) — used only when ``PREDICTION_LOG_GITHUB_REPO``
+is unset (see ``PREDICTION_LOG_FETCH``). When the repo is set, the branch raw URL is derived from
+repo + branch so env overrides cannot bypass the GitHub API path.
 """
 
 from __future__ import annotations
@@ -62,19 +62,22 @@ _bootstrap_vercel_prediction_log_env()
 
 
 def _resolved_remote_url() -> str | None:
+    # Prefer repo + branch over PREDICTION_LOG_URL whenever the repo is set. That keeps branch-raw
+    # fallback consistent with PREDICTION_LOG_GITHUB_* and avoids a stale/explicit URL masking the
+    # real source in metadata.
+    repo = os.environ.get("PREDICTION_LOG_GITHUB_REPO", "").strip()
+    branch = os.environ.get("PREDICTION_LOG_GITHUB_BRANCH", "main").strip() or "main"
+    if repo:
+        return (
+            f"https://raw.githubusercontent.com/{repo}/{branch}"
+            "/data/processed/prediction_log.csv"
+        )
     explicit = os.environ.get("PREDICTION_LOG_URL", "").strip()
     if explicit:
         return explicit
     # Prefer branch-based raw URL so pushes to GitHub update the live site without redeploying.
     # If we used VERCEL_GIT_COMMIT_REF here, the CSV would be pinned to the deployment commit
     # (immutable); prediction_log.csv updates on main would never appear until a new deploy.
-    repo = os.environ.get("PREDICTION_LOG_GITHUB_REPO", "").strip()
-    branch = os.environ.get("PREDICTION_LOG_GITHUB_BRANCH", "main").strip()
-    if repo:
-        return (
-            f"https://raw.githubusercontent.com/{repo}/{branch}"
-            "/data/processed/prediction_log.csv"
-        )
     slug = os.environ.get("VERCEL_GIT_REPO_SLUG", "").strip()
     if slug:
         # Always use a branch name here, never VERCEL_GIT_COMMIT_REF — a deploy-SHA URL would
@@ -102,9 +105,9 @@ def _resolved_remote_url() -> str | None:
 
 def _cache_ttl_seconds() -> float:
     try:
-        return max(0.0, float(os.environ.get("PREDICTION_LOG_CACHE_SECONDS", "30")))
+        return max(0.0, float(os.environ.get("PREDICTION_LOG_CACHE_SECONDS", "8")))
     except ValueError:
-        return 30.0
+        return 8.0
 
 
 def _fetch_url(url: str) -> bytes:
@@ -127,6 +130,43 @@ def _github_repo_owner_name(repo_slug: str) -> tuple[str, str] | None:
     return None
 
 
+def _github_api_headers() -> dict[str, str]:
+    h = {
+        "User-Agent": "iplpred-web/1.0",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+    token = os.environ.get("GITHUB_TOKEN", "").strip()
+    if token:
+        h["Authorization"] = f"Bearer {token}"
+    return h
+
+
+def _github_branch_tip_sha(owner: str, repo: str, branch: str) -> str:
+    """Resolve ``branch`` tip commit (40-char sha) via GitHub Git Data API."""
+    br = quote(str(branch).strip(), safe="")
+    ref_url = f"https://api.github.com/repos/{owner}/{repo}/git/ref/heads/{br}"
+    req = Request(ref_url, headers=_github_api_headers())
+    with urlopen(req, timeout=25) as resp:
+        payload = json.loads(resp.read().decode("utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("ref API: expected object")
+    obj = payload.get("object")
+    if not isinstance(obj, dict):
+        raise ValueError("ref API: missing object")
+    sha = str(obj.get("sha") or "").strip()
+    if len(sha) < 40:
+        raise ValueError("ref API: bad sha")
+    return sha[:40]
+
+
+def _fetch_raw_github_blob(owner: str, repo: str, sha: str, path_in_repo: str) -> bytes:
+    """File bytes at exact commit ``sha`` (not a branch name — avoids branch CDN staleness)."""
+    path = str(path_in_repo).strip().lstrip("/")
+    raw_base = f"https://raw.githubusercontent.com/{owner}/{repo}/{sha}/{path}"
+    return _fetch_url(raw_base)
+
+
 def _fetch_github_contents_file(
     owner: str,
     repo: str,
@@ -137,15 +177,7 @@ def _fetch_github_contents_file(
     enc_path = quote(path_in_repo, safe="")
     enc_ref = quote(ref, safe="")
     api_url = f"https://api.github.com/repos/{owner}/{repo}/contents/{enc_path}?ref={enc_ref}"
-    headers = {
-        "User-Agent": "iplpred-web/1.0",
-        "Accept": "application/vnd.github+json",
-        "X-GitHub-Api-Version": "2022-11-28",
-    }
-    token = os.environ.get("GITHUB_TOKEN", "").strip()
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
-    req = Request(api_url, headers=headers)
+    req = Request(api_url, headers=_github_api_headers())
     with urlopen(req, timeout=25) as resp:
         payload = json.loads(resp.read().decode("utf-8"))
     if not isinstance(payload, dict):
@@ -187,6 +219,8 @@ def read_prediction_log_dataframe() -> pd.DataFrame | None:
         "source": "local_file",
         "remote_url": None,
         "github_api_url": None,
+        "github_ref_sha": None,
+        "github_raw_sha_url": None,
         "error": None,
         "bundled_csv_stale_risk": False,
     }
@@ -201,17 +235,55 @@ def read_prediction_log_dataframe() -> pd.DataFrame | None:
         own_repo = _github_repo_owner_name(repo_full)
         if own_repo:
             owner, repo = own_repo
-            api_url = (
+            contents_api_url = (
                 f"https://api.github.com/repos/{owner}/{repo}/contents/"
                 f"{quote(path_in_repo, safe='')}?ref={quote(branch, safe='')}"
             )
+            # 1) Tip SHA + raw blob (immutable URL — permanent fix for branch CDN lag)
+            if mode in ("api_then_raw", "api", "contents", "github_api"):
+                try:
+                    tip_sha = _github_branch_tip_sha(owner, repo, branch)
+                    raw = _fetch_raw_github_blob(owner, repo, tip_sha, path_in_repo)
+                    df = pd.read_csv(io.BytesIO(raw), low_memory=False)
+                    raw_sha_url = (
+                        f"https://raw.githubusercontent.com/{owner}/{repo}/{tip_sha}/{path_in_repo}"
+                    )
+                    meta = {
+                        "source": "github_raw_at_sha",
+                        "remote_url": url,
+                        "github_api_url": contents_api_url,
+                        "github_ref_sha": tip_sha,
+                        "github_raw_sha_url": raw_sha_url,
+                        "error": None,
+                        "bundled_csv_stale_risk": False,
+                    }
+                    with _CACHE_LOCK:
+                        _CACHE_T = now
+                        _CACHE_DF = df
+                        _CACHE_META = dict(meta)
+                    return df.copy()
+                except (HTTPError, URLError, OSError, TimeoutError, ValueError, json.JSONDecodeError) as e:
+                    meta = {
+                        "source": "github_raw_at_sha_failed",
+                        "remote_url": url,
+                        "github_api_url": contents_api_url,
+                        "github_ref_sha": None,
+                        "github_raw_sha_url": None,
+                        "error": repr(e)[:240],
+                        "bundled_csv_stale_risk": False,
+                    }
+            # 2) Contents API (base64)
             try:
                 raw = _fetch_github_contents_file(owner, repo, path_in_repo, branch)
                 df = pd.read_csv(io.BytesIO(raw), low_memory=False)
+                prev_ref_sha = meta.get("github_ref_sha")
+                prev_raw_sha_url = meta.get("github_raw_sha_url")
                 meta = {
                     "source": "github_contents_api",
                     "remote_url": url,
-                    "github_api_url": api_url,
+                    "github_api_url": contents_api_url,
+                    "github_ref_sha": prev_ref_sha,
+                    "github_raw_sha_url": prev_raw_sha_url,
                     "error": None,
                     "bundled_csv_stale_risk": False,
                 }
@@ -221,11 +293,17 @@ def read_prediction_log_dataframe() -> pd.DataFrame | None:
                     _CACHE_META = dict(meta)
                 return df.copy()
             except (HTTPError, URLError, OSError, TimeoutError, ValueError, json.JSONDecodeError) as e:
+                err_prev = (meta.get("error") or "").strip()
+                err_new = repr(e)[:240]
+                prev_ref_sha = meta.get("github_ref_sha")
+                prev_raw_sha_url = meta.get("github_raw_sha_url")
                 meta = {
                     "source": "github_contents_api_failed",
                     "remote_url": url,
-                    "github_api_url": api_url,
-                    "error": repr(e)[:240],
+                    "github_api_url": contents_api_url,
+                    "github_ref_sha": prev_ref_sha,
+                    "github_raw_sha_url": prev_raw_sha_url,
+                    "error": f"{err_prev} | {err_new}" if err_prev else err_new,
                     "bundled_csv_stale_risk": False,
                 }
                 if mode in ("api", "contents", "github_api"):
@@ -260,6 +338,8 @@ def read_prediction_log_dataframe() -> pd.DataFrame | None:
                 "source": "remote_url",
                 "remote_url": url,
                 "github_api_url": meta.get("github_api_url"),
+                "github_ref_sha": meta.get("github_ref_sha"),
+                "github_raw_sha_url": meta.get("github_raw_sha_url"),
                 "error": None,
                 "bundled_csv_stale_risk": False,
             }
@@ -275,6 +355,8 @@ def read_prediction_log_dataframe() -> pd.DataFrame | None:
                 "source": "remote_failed",
                 "remote_url": url,
                 "github_api_url": meta.get("github_api_url"),
+                "github_ref_sha": meta.get("github_ref_sha"),
+                "github_raw_sha_url": meta.get("github_raw_sha_url"),
                 "error": f"{err_prev} | {err_new}" if err_prev else err_new,
                 "bundled_csv_stale_risk": False,
             }
