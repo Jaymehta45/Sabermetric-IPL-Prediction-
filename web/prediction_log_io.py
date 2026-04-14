@@ -1,23 +1,29 @@
 """
-Load ``data/processed/prediction_log.csv`` from GitHub (raw) at request time or from the local bundle.
+Load ``data/processed/prediction_log.csv`` from GitHub at request time or from the local bundle.
 
-On Vercel, prefer ``PREDICTION_LOG_GITHUB_REPO`` + ``PREDICTION_LOG_GITHUB_BRANCH`` (see ``vercel.json``
-``env``) so the CSV is read from branch ``main`` (or your override). That way a ``git push`` of an
-updated ``prediction_log.csv`` is picked up **without redeploying** (short in-process cache only).
+**Important:** ``raw.githubusercontent.com/.../BRANCH/...`` is CDN-cached and can lag **hours** behind
+the real ``BRANCH`` tip after a push. That made the dashboard show stale rows even though ``main``
+was updated. When ``PREDICTION_LOG_GITHUB_REPO`` is set, we **prefer the GitHub Contents API**
+(``GET /repos/{owner}/{repo}/contents/...?ref=branch``), which tracks ``ref`` promptly. We still
+fall back to raw URL + local file.
 
-Using the deployment commit ref for the raw URL would pin the CSV to the deploy SHA and hide new
-rows until the next deploy.
+On Vercel, set ``PREDICTION_LOG_GITHUB_REPO`` + ``PREDICTION_LOG_GITHUB_BRANCH`` (see ``vercel.json``).
+Optional ``GITHUB_TOKEN`` raises API rate limits (5000/hr vs 60/hr unauthenticated).
 
-Override with ``PREDICTION_LOG_URL`` (full https URL to a CSV).
+Override with ``PREDICTION_LOG_URL`` (full https URL) — used only if repo-based API fetch is skipped
+(see ``PREDICTION_LOG_FETCH``).
 """
 
 from __future__ import annotations
 
+import base64
 import io
+import json
 import os
 import threading
 import time
 from urllib.error import HTTPError, URLError
+from urllib.parse import quote
 from urllib.request import Request, urlopen
 
 import pandas as pd
@@ -26,7 +32,7 @@ from iplpred.paths import PROCESSED_DIR
 
 LOG_PATH = PROCESSED_DIR / "prediction_log.csv"
 
-# Public repo — CSV on `main` is the dashboard source of truth (see DAILY_WORKFLOW).
+# Public repo — CSV on `main` is the dashboard source of truth (see docs/DAILY_WORKFLOW.txt).
 _DEFAULT_GITHUB_REPO = "Jaymehta45/Sabermetric-IPL-Prediction-"
 
 _CACHE_LOCK = threading.Lock()
@@ -111,6 +117,51 @@ def _fetch_url(url: str) -> bytes:
         return resp.read()
 
 
+_DEFAULT_LOG_PATH_IN_REPO = "data/processed/prediction_log.csv"
+
+
+def _github_repo_owner_name(repo_slug: str) -> tuple[str, str] | None:
+    parts = [p for p in str(repo_slug).strip().split("/") if p]
+    if len(parts) == 2:
+        return parts[0], parts[1]
+    return None
+
+
+def _fetch_github_contents_file(
+    owner: str,
+    repo: str,
+    path_in_repo: str,
+    ref: str,
+) -> bytes:
+    """Latest file bytes for ``ref`` (branch or SHA) via Contents API — avoids stale raw CDN on ``main``."""
+    enc_path = quote(path_in_repo, safe="")
+    enc_ref = quote(ref, safe="")
+    api_url = f"https://api.github.com/repos/{owner}/{repo}/contents/{enc_path}?ref={enc_ref}"
+    headers = {
+        "User-Agent": "iplpred-web/1.0",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+    token = os.environ.get("GITHUB_TOKEN", "").strip()
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    req = Request(api_url, headers=headers)
+    with urlopen(req, timeout=25) as resp:
+        payload = json.loads(resp.read().decode("utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("contents API: expected object")
+    if payload.get("type") != "file":
+        raise ValueError("contents API: not a file")
+    b64 = str(payload.get("content") or "")
+    if not b64:
+        raise ValueError("contents API: empty content")
+    return base64.b64decode(b64.replace("\n", ""))
+
+
+def _fetch_mode() -> str:
+    return os.environ.get("PREDICTION_LOG_FETCH", "api_then_raw").strip().lower()
+
+
 def read_prediction_log_dataframe() -> pd.DataFrame | None:
     """
     Return the latest prediction log as a DataFrame, or None if unavailable.
@@ -135,9 +186,71 @@ def read_prediction_log_dataframe() -> pd.DataFrame | None:
     meta: dict = {
         "source": "local_file",
         "remote_url": None,
+        "github_api_url": None,
         "error": None,
         "bundled_csv_stale_risk": False,
     }
+
+    mode = _fetch_mode()
+    repo_full = os.environ.get("PREDICTION_LOG_GITHUB_REPO", "").strip()
+    branch = os.environ.get("PREDICTION_LOG_GITHUB_BRANCH", "main").strip() or "main"
+    path_in_repo = os.environ.get("PREDICTION_LOG_PATH_IN_REPO", _DEFAULT_LOG_PATH_IN_REPO).strip()
+
+    try_api = mode in ("api_then_raw", "api", "contents", "github_api") and bool(repo_full)
+    if try_api:
+        own_repo = _github_repo_owner_name(repo_full)
+        if own_repo:
+            owner, repo = own_repo
+            api_url = (
+                f"https://api.github.com/repos/{owner}/{repo}/contents/"
+                f"{quote(path_in_repo, safe='')}?ref={quote(branch, safe='')}"
+            )
+            try:
+                raw = _fetch_github_contents_file(owner, repo, path_in_repo, branch)
+                df = pd.read_csv(io.BytesIO(raw), low_memory=False)
+                meta = {
+                    "source": "github_contents_api",
+                    "remote_url": url,
+                    "github_api_url": api_url,
+                    "error": None,
+                    "bundled_csv_stale_risk": False,
+                }
+                with _CACHE_LOCK:
+                    _CACHE_T = now
+                    _CACHE_DF = df
+                    _CACHE_META = dict(meta)
+                return df.copy()
+            except (HTTPError, URLError, OSError, TimeoutError, ValueError, json.JSONDecodeError) as e:
+                meta = {
+                    "source": "github_contents_api_failed",
+                    "remote_url": url,
+                    "github_api_url": api_url,
+                    "error": repr(e)[:240],
+                    "bundled_csv_stale_risk": False,
+                }
+                if mode in ("api", "contents", "github_api"):
+                    # strict: do not fall back to stale raw
+                    on_vercel = bool(
+                        os.environ.get("VERCEL", "").strip()
+                        or os.environ.get("VERCEL_ENV", "").strip()
+                    )
+                    if LOG_PATH.is_file():
+                        try:
+                            df = pd.read_csv(LOG_PATH, low_memory=False)
+                            meta["source"] = "local_fallback_after_api_error"
+                            meta["bundled_csv_stale_risk"] = bool(on_vercel)
+                            with _CACHE_LOCK:
+                                _CACHE_T = now
+                                _CACHE_DF = df
+                                _CACHE_META = dict(meta)
+                            return df.copy()
+                        except Exception as e2:
+                            meta["error"] = (meta.get("error") or "") + f" {repr(e2)[:120]}"
+                    with _CACHE_LOCK:
+                        _CACHE_T = now
+                        _CACHE_DF = None
+                        _CACHE_META = dict(meta)
+                    return None
 
     if url:
         try:
@@ -146,6 +259,7 @@ def read_prediction_log_dataframe() -> pd.DataFrame | None:
             meta = {
                 "source": "remote_url",
                 "remote_url": url,
+                "github_api_url": meta.get("github_api_url"),
                 "error": None,
                 "bundled_csv_stale_risk": False,
             }
@@ -155,10 +269,13 @@ def read_prediction_log_dataframe() -> pd.DataFrame | None:
                 _CACHE_META = dict(meta)
             return df.copy()
         except (HTTPError, URLError, OSError, TimeoutError, ValueError) as e:
+            err_prev = (meta.get("error") or "").strip()
+            err_new = repr(e)[:240]
             meta = {
                 "source": "remote_failed",
                 "remote_url": url,
-                "error": repr(e)[:240],
+                "github_api_url": meta.get("github_api_url"),
+                "error": f"{err_prev} | {err_new}" if err_prev else err_new,
                 "bundled_csv_stale_risk": False,
             }
 
