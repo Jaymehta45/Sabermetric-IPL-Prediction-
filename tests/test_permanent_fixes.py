@@ -20,6 +20,7 @@ from iplpred.match.match_simulator import (
     _dynamic_batting_par_multiplier,
     _impact_base,
     _team_calibration_scales,
+    apply_playing_prob_and_drop,
 )
 from iplpred.match.win_prob_ensemble import apply_ensemble_and_calibrate
 
@@ -32,12 +33,18 @@ class TestSquadBridge(unittest.TestCase):
 
 
 class TestWinProbBounds(unittest.TestCase):
-    def test_ensemble_clipped(self) -> None:
+    def test_ensemble_no_display_floor_ceiling(self) -> None:
+        """Blended prob is not forced into [2%, 98%]; only epsilon clip for stability."""
         p = apply_ensemble_and_calibrate(0.001, 0.001)
         self.assertIsNotNone(p)
         assert p is not None
-        self.assertGreaterEqual(p, 0.02)
-        self.assertLessEqual(p, 0.98)
+        self.assertGreater(p, 0.0)
+        self.assertLess(p, 0.01)
+        p_hi = apply_ensemble_and_calibrate(0.999, 0.999)
+        self.assertIsNotNone(p_hi)
+        assert p_hi is not None
+        self.assertGreater(p_hi, 0.99)
+        self.assertLess(p_hi, 1.0)
 
 
 class TestInferenceVenueFranchise(unittest.TestCase):
@@ -93,6 +100,18 @@ class TestPitchHighPar(unittest.TestCase):
         pm = resolve_pitch_multipliers(ctx)
         self.assertGreater(pm.first_innings_runs, 1.55)
 
+    def test_prior_encounter_500_runs_lifts_mults(self) -> None:
+        """Commentary citing ~500 runs in a prior fixture → stronger run multipliers."""
+        base = parse_pitch_report(
+            "Hyderabad belter, short boundaries, high-scoring, chase and dew."
+        )
+        with_500 = parse_pitch_report(
+            "Hyderabad belter, short boundaries. Last SRH vs RR here over 500 runs "
+            "in the game. High-scoring; dew helps chase."
+        )
+        self.assertGreater(with_500.first_innings_runs, base.first_innings_runs)
+        self.assertGreater(with_500.second_innings_runs, base.second_innings_runs)
+
 
 class TestTeamRunCalibration(unittest.TestCase):
     def test_anchor_lifts_low_raw_sums(self) -> None:
@@ -113,6 +132,33 @@ class TestTeamRunCalibration(unittest.TestCase):
         t1, t2, m = _calibrated_innings_targets(40.0, 50.0, pm, (118.0, 120.0), None)
         self.assertEqual(m, "ml_team_total")
         self.assertGreater((t1 + t2) / 2.0, 170.0)
+
+    def test_chepauk_belter_lifts_innings_above_spin_venue_floor(self) -> None:
+        """MA Chidambaram has low spin harshness (legacy spin assist) but modern belter reads need higher par."""
+        pm = PitchMultipliers(
+            first_innings_runs=1.175,
+            second_innings_runs=1.175,
+            first_innings_wickets=0.986,
+            second_innings_wickets=0.986,
+        )
+        v_chennai = "MA Chidambaram Stadium, Chennai"
+        t1, t2, m = _calibrated_innings_targets(
+            40.0,
+            50.0,
+            pm,
+            (124.0, 114.0),
+            v_chennai,
+        )
+        self.assertEqual(m, "ml_team_total")
+        self.assertGreater((t1 + t2) / 2.0, 175.0)
+        t1_other, t2_other, _ = _calibrated_innings_targets(
+            40.0,
+            50.0,
+            pm,
+            (124.0, 114.0),
+            "Some Unknown Ground, Xyz",
+        )
+        self.assertGreater((t1 + t2) / 2.0, (t1_other + t2_other) / 2.0)
 
     def test_batting_friendly_venue_lifts_low_ridge_heads(self) -> None:
         """Modest pitch mults + low ML totals should not stay floored at 110 at Chinnaswamy."""
@@ -163,6 +209,25 @@ class TestImpactBase(unittest.TestCase):
         ib = _impact_base(runs, wk, role)
         # Bowler (row 0) should have higher impact than raw 2+75=77
         self.assertGreater(float(ib.iloc[0]), 77.0)
+
+
+class TestProtectedImpactDrop(unittest.TestCase):
+    def test_named_impact_not_dropped(self) -> None:
+        """Lowest impact_base among 12 must not be the protected impact sub."""
+        sub = pd.DataFrame(
+            {
+                "player_id": [f"p{i}" for i in range(12)],
+                "pred_runs_raw": [1.0] * 11 + [100.0],
+                "pred_wk_raw": [0.0] * 12,
+                "role_encoded": [2.0] * 12,
+            }
+        )
+        pp = {f"p{i}": 1.0 for i in range(12)}
+        out, dropped = apply_playing_prob_and_drop(
+            sub, pp, drop_lowest=True, protected_player_id="p11"
+        )
+        self.assertEqual(dropped, "p0")
+        self.assertIn("p11", out["player_id"].tolist())
 
 
 if __name__ == "__main__":

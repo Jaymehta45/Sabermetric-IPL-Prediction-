@@ -16,7 +16,7 @@ import joblib
 import numpy as np
 import pandas as pd
 
-from iplpred.core.match_context import PitchMultipliers
+from iplpred.core.match_context import PitchMultipliers, dew_prior_from_pitch_multipliers
 from iplpred.core.team_franchise_profile import apply_franchise_innings_profile
 from iplpred.core.venue_bowling_adjust import apply_venue_bowling_style_to_team_df
 from iplpred.match.win_prob_ensemble import (
@@ -198,6 +198,44 @@ def clip_team_total(total: float) -> float:
     return float(np.clip(total, MIN_TEAM_RUNS, MAX_TEAM_RUNS))
 
 
+def _venue_is_ma_chidambaram_chepauk(venue: str | None) -> bool:
+    """MA Chidambaram / Chepauk — decoupled from spin-harshness (historically spin-assist, low *h*)."""
+    if not venue or not str(venue).strip():
+        return False
+    v = str(venue).lower()
+    if "chidambaram" in v or "chepauk" in v:
+        return True
+    return "chennai" in v and "stadium" in v
+
+
+def _lift_chepauk_modern_par_targets(
+    t1: float,
+    t2: float,
+    venue: str | None,
+    pm: PitchMultipliers,
+) -> tuple[float, float]:
+    """
+    Chepauk carries low ``venue_spin_harshness`` (spin-friendly legacy), so
+    ``_lift_low_totals_for_batting_venue`` often no-ops. Recent IPL surfaces there are
+    frequently hard / true with 190–210 first-innings totals when conditions read well.
+    When pitch run multipliers show a batting-positive deck, lift mean innings toward that band.
+    """
+    if not _venue_is_ma_chidambaram_chepauk(venue):
+        return t1, t2
+    run_m = (float(pm.first_innings_runs) + float(pm.second_innings_runs)) / 2.0
+    if run_m < 1.05:
+        return t1, t2
+    mid = (float(t1) + float(t2)) / 2.0
+    # e.g. run_m 1.06 → ~188 mean innings; 1.18 → ~199 (belter Chepauk band)
+    target_mean = float(np.clip(176.0 + (run_m - 1.05) * 95.0, 187.0, 204.0))
+    if mid >= target_mean - 2.0:
+        return t1, t2
+    scale = float(np.clip(target_mean / max(mid, 88.0), 1.0, 1.14))
+    t1n = float(np.clip(t1 * scale, MIN_INNINGS_DISPLAY, MAX_INNINGS_DISPLAY))
+    t2n = float(np.clip(t2 * scale, MIN_INNINGS_DISPLAY, MAX_INNINGS_DISPLAY))
+    return t1n, t2n
+
+
 def _lift_low_totals_for_batting_venue(
     t1: float,
     t2: float,
@@ -318,6 +356,7 @@ def _calibrated_innings_targets(
         t1, t2 = _blend_high_scoring_pitch_totals(t1, t2, pm)
         t1, t2 = _lift_low_totals_for_batting_venue(t1, t2, venue)
         t1, t2 = _ensure_ml_innings_targets_sane(t1, t2, pm)
+        t1, t2 = _lift_chepauk_modern_par_targets(t1, t2, venue, pm)
         return t1, t2, "ml_team_total"
     mid = (float(raw1) + float(raw2)) / 2.0
     k = T20_INNINGS_ANCHOR / max(mid, 45.0)
@@ -325,6 +364,7 @@ def _calibrated_innings_targets(
     t2 = float(np.clip(k * float(raw2), MIN_INNINGS_DISPLAY, MAX_INNINGS_DISPLAY))
     t1, t2 = _blend_high_scoring_pitch_totals(t1, t2, pm)
     t1, t2 = _lift_low_totals_for_batting_venue(t1, t2, venue)
+    t1, t2 = _lift_chepauk_modern_par_targets(t1, t2, venue, pm)
     return t1, t2, "raw_sum_anchor"
 
 
@@ -427,6 +467,7 @@ def apply_playing_prob_and_drop(
     sub: pd.DataFrame,
     playing_prob: dict[str, float],
     drop_lowest: bool = True,
+    protected_player_id: str | None = None,
 ) -> tuple[pd.DataFrame, str | None]:
     """predicted_runs/wickets *= playing_prob; optionally drop lowest impact (runs + 25*wickets)."""
     sub = sub.copy()
@@ -448,7 +489,14 @@ def apply_playing_prob_and_drop(
         sub["dropped"] = False
         return sub, None
 
-    drop_idx = sub["impact_base"].idxmin()
+    cand = sub
+    pid_prot = (protected_player_id or "").strip()
+    if pid_prot:
+        mask_prot = ~keys.eq(pid_prot)
+        if mask_prot.any():
+            cand = sub.loc[mask_prot]
+
+    drop_idx = cand["impact_base"].idxmin()
     dropped_id = str(sub.loc[drop_idx, "player_id"]).strip()
     sub["dropped"] = False
     sub.loc[drop_idx, "dropped"] = True
@@ -561,6 +609,7 @@ def pipeline_from_raw(
     rng: np.random.Generator | None,
     add_noise: bool,
     drop_lowest: bool = True,
+    protected_player_id: str | None = None,
 ) -> tuple[pd.DataFrame, str | None]:
     """Raw preds -> optional MC noise on preds -> * playing_prob -> optional drop lowest impact."""
     sub = sub.copy()
@@ -580,7 +629,12 @@ def pipeline_from_raw(
         )
     sub["pred_runs_raw"] = pr
     sub["pred_wk_raw"] = pw
-    return apply_playing_prob_and_drop(sub, playing_prob, drop_lowest=drop_lowest)
+    return apply_playing_prob_and_drop(
+        sub,
+        playing_prob,
+        drop_lowest=drop_lowest,
+        protected_player_id=protected_player_id,
+    )
 
 
 def team_total_runs(active: pd.DataFrame) -> float:
@@ -643,6 +697,8 @@ def run_simulation(
     shrink_team_prior_weight: float = 0.45,
     venue: str | None = None,
     match_date: str | None = None,
+    team1_impact_player_id: str | None = None,
+    team2_impact_player_id: str | None = None,
 ) -> dict:
     if validate_squad and team1_name and team2_name:
         validate_team_playing_xi(team1_name, team1)
@@ -680,10 +736,16 @@ def run_simulation(
     )
 
     t1_act, impact_drop_t1 = apply_playing_prob_and_drop(
-        t1_raw, playing_prob, drop_lowest=drop_lowest_impact
+        t1_raw,
+        playing_prob,
+        drop_lowest=drop_lowest_impact,
+        protected_player_id=team1_impact_player_id,
     )
     t2_act, impact_drop_t2 = apply_playing_prob_and_drop(
-        t2_raw, playing_prob, drop_lowest=drop_lowest_impact
+        t2_raw,
+        playing_prob,
+        drop_lowest=drop_lowest_impact,
+        protected_player_id=team2_impact_player_id,
     )
 
     pm = pitch or PitchMultipliers()
@@ -777,6 +839,7 @@ def run_simulation(
                 rng,
                 add_noise=True,
                 drop_lowest=drop_lowest_impact,
+                protected_player_id=team1_impact_player_id,
             )
             t2_mc, _ = pipeline_from_raw(
                 p2,
@@ -784,6 +847,7 @@ def run_simulation(
                 rng,
                 add_noise=True,
                 drop_lowest=drop_lowest_impact,
+                protected_player_id=team2_impact_player_id,
             )
             t1_mc = apply_pitch_to_team_df(
                 t1_mc, pm.first_innings_runs, pm.first_innings_wickets
@@ -804,6 +868,7 @@ def run_simulation(
                 wins1 += 1
         win_prob_team1 = wins1 / n_monte_carlo
 
+    dew_ml = dew_prior_from_pitch_multipliers(pitch)
     leader_p_team1 = learned_team1_win_proba_from_rosters(
         latest,
         eff_t1,
@@ -811,6 +876,8 @@ def run_simulation(
         team1_name=team1_name,
         team2_name=team2_name,
         match_date=match_date,
+        venue=venue,
+        second_innings_dew_prior=dew_ml,
     )
     ensemble_p_team1 = apply_ensemble_and_calibrate(leader_p_team1, win_prob_team1)
 
@@ -970,7 +1037,7 @@ def print_report(out: dict) -> None:
     if lm is not None:
         print(
             f"Learned team model P(team1 wins): {lm:.2%} "
-            f"(trained on official IPL results when available; see train_match_winner_model.py)"
+            f"(trained on official IPL results when available; see iplpred.training.train_match_winner_model)"
         )
     wp = out.get("win_probability_team1")
     ens = out.get("ensemble_p_team1")
