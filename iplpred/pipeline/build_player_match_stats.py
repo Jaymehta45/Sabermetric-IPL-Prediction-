@@ -64,6 +64,49 @@ def build_batting(df: pd.DataFrame) -> pd.DataFrame:
     return bat
 
 
+def build_batting_phase_totals(df: pd.DataFrame) -> pd.DataFrame:
+    """Per (match_id, batter): balls and runs in PP (0–5), middle (6–15), death (16+)."""
+    u = df.copy()
+    u["batter"] = u["batter"].fillna("").astype(str).str.strip()
+    u = u[u["batter"] != ""]
+    u["over"] = pd.to_numeric(u["over"], errors="coerce")
+    u = u[u["over"].notna()]
+    u["vb"] = (pd.to_numeric(u["is_wide"], errors="coerce").fillna(0).astype(int) == 0).astype(int)
+    ro = pd.to_numeric(u["runs_off_bat"], errors="coerce").fillna(0.0)
+    ov = u["over"].to_numpy()
+    ph = np.where(ov < 6, "pp", np.where(ov < 16, "mid", "death"))
+    u = u.assign(_ph=ph, _ro=ro)
+    agg = (
+        u.groupby(["match_id", "batter", "_ph"], as_index=False)
+        .agg(balls=("vb", "sum"), runs=("_ro", "sum"))
+        .rename(columns={"batter": "player_id"})
+    )
+    wide = agg.pivot_table(
+        index=["match_id", "player_id"],
+        columns="_ph",
+        values=["balls", "runs"],
+        aggfunc="sum",
+        fill_value=0.0,
+    )
+    wide.columns = [f"{a}_{b}" for a, b in wide.columns]
+    out = wide.reset_index()
+    for c in ("balls_pp", "runs_pp", "balls_mid", "runs_mid", "balls_death", "runs_death"):
+        if c not in out.columns:
+            out[c] = 0.0
+    return out[
+        [
+            "match_id",
+            "player_id",
+            "balls_pp",
+            "runs_pp",
+            "balls_mid",
+            "runs_mid",
+            "balls_death",
+            "runs_death",
+        ]
+    ]
+
+
 def build_bowling(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     df["valid_ball_bowl"] = ((df["is_wide"] == 0) & (df["is_noball"] == 0)).astype(int)
@@ -170,6 +213,11 @@ def main() -> None:
 
     merged = bat.merge(bowl, on=["player_id", "match_id"], how="outer")
 
+    phase_bat = build_batting_phase_totals(df)
+    merged = merged.merge(phase_bat, on=["player_id", "match_id"], how="left")
+    for c in ("balls_pp", "runs_pp", "balls_mid", "runs_mid", "balls_death", "runs_death"):
+        merged[c] = pd.to_numeric(merged[c], errors="coerce").fillna(0.0)
+
     merged["date"] = merged["date_bat"].combine_first(merged["date_bowl"])
     merged["venue"] = merged["venue_bat"].combine_first(merged["venue_bowl"])
     merged = merged.drop(columns=["date_bat", "date_bowl", "venue_bat", "venue_bowl"])
@@ -199,6 +247,12 @@ def main() -> None:
         "wickets",
         "balls_bowled",
         "runs_conceded",
+        "balls_pp",
+        "runs_pp",
+        "balls_mid",
+        "runs_mid",
+        "balls_death",
+        "runs_death",
     ]
     for c in numeric_cols:
         if c in merged.columns:
@@ -234,6 +288,12 @@ def main() -> None:
         "wickets",
         "balls_bowled",
         "runs_conceded",
+        "balls_pp",
+        "runs_pp",
+        "balls_mid",
+        "runs_mid",
+        "balls_death",
+        "runs_death",
         "total_balls_faced",
         "total_balls_bowled",
         "role",
@@ -249,6 +309,12 @@ def main() -> None:
         "wickets",
         "balls_bowled",
         "runs_conceded",
+        "balls_pp",
+        "runs_pp",
+        "balls_mid",
+        "runs_mid",
+        "balls_death",
+        "runs_death",
         "total_balls_faced",
         "total_balls_bowled",
     ]

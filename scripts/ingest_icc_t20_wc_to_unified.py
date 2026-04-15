@@ -7,7 +7,7 @@ Each real delivery is approximated by distributing runs across balls faced (inte
 Bowlers are parsed from dismissal text when possible (e.g. "c X b Arshdeep").
 
 Re-running skips matches already present: numeric match_id = 900000000 + match_no
-(from matches.csv) so build_features.py (int match_id) stays valid.
+(from matches.csv) so iplpred.pipeline.build_features (int match_id) stays valid.
 """
 
 from __future__ import annotations
@@ -209,7 +209,11 @@ def main() -> None:
 
     out.to_csv(UNIFIED_PATH, index=False)
     print(f"Appended {len(add)} rows to {UNIFIED_PATH}")
-    print("Next: python build_player_match_stats.py && python build_features.py (then train_player_model.py if needed)")
+    print(
+        "Next: python3 -m iplpred.pipeline.build_player_match_stats && "
+        "python3 -m iplpred.pipeline.build_features "
+        "(then python3 -m iplpred.training.train_player_model if needed)"
+    )
 
 
 if __name__ == "__main__":

@@ -2,13 +2,13 @@
 .PHONY: build-all build-data test retrain-after-match train-win-ensemble clean-generated
 
 build-all: build-data
-	python3 build_training_dataset.py
+	python3 -m iplpred.pipeline.build_training_dataset
 
 build-data:
-	python3 build_unified_dataset.py
-	python3 build_team_franchise_profiles.py
-	python3 build_player_match_stats.py
-	python3 build_features.py
+	python3 -m iplpred.pipeline.build_unified_dataset
+	python3 -m iplpred.pipeline.build_team_franchise_profiles
+	python3 -m iplpred.pipeline.build_player_match_stats
+	python3 -m iplpred.pipeline.build_features
 	python3 scripts/build_player_registry.py
 	python3 scripts/build_player_identity.py
 	python3 scripts/fill_player_feature_priors.py
@@ -22,7 +22,7 @@ test:
 retrain-after-match:
 	bash scripts/retrain_after_match.sh
 
-# Refresh hybrid win-probability bundle after train_match_winner_model.py (safe if <40 matches: skips).
+# Refresh hybrid win-probability bundle after training the match winner model (safe if <40 matches: skips).
 train-win-ensemble:
 	python3 -m iplpred.training.train_win_prob_ensemble
 
@@ -32,6 +32,9 @@ clean-generated:
 
 eval:
 	python3 scripts/evaluate_match_models.py
+
+eval-log:
+	python3 scripts/evaluate_prediction_log.py
 
 # Public URL via Cloudflare (requires cloudflared; app must listen on PORT, default 8000).
 .PHONY: tunnel

@@ -1,0 +1,10 @@
+{
+  "match_key": "match21-srh-rr-2026-04-13",
+  "actual_winner": "Sunrisers Hyderabad",
+  "actual_top_scorer": "Ishan Kishan",
+  "actual_top_scorer_runs": 91,
+  "actual_top_wicket_bowler": "Praful Hinge",
+  "actual_top_wickets": 4,
+  "bbb_match_file": "matches/match21_srh_vs_rr.csv",
+  "post_notes": "Process 2: BBB matches/match21_srh_vs_rr.csv. SRH 216/6; RR 159 all out (57 short). Pre-match hybrid P(SRH)~2%, pred_winner RR - wrong. BBB: Sakib Hussain also 4 wickets (tied top); Praful Hinge listed as top bowler for log."
+}

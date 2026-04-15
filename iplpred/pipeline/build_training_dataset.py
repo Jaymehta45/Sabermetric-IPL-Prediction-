@@ -10,8 +10,17 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from iplpred.core.match_history_extras import (
+    attach_h2h_chronological,
+    attach_season_table_chronological,
+    load_optional_injuries_csv,
+    load_optional_weather_csv,
+)
 from iplpred.core.team_franchise_profile import franchise_profile_feature_row
-from iplpred.core.team_momentum import attach_momentum_columns_chronological
+from iplpred.core.team_momentum import (
+    attach_momentum_columns_chronological,
+    attach_venue_momentum_chronological,
+)
 from iplpred.paths import DATA_DIR, PROCESSED_DIR
 
 PLAYER_FEATURES_PATH = PROCESSED_DIR / "player_features.csv"
@@ -36,6 +45,88 @@ def load_official_ipl_matches() -> pd.DataFrame:
     return out.dropna(subset=["match_id"])
 
 
+def load_official_match_extras() -> pd.DataFrame:
+    """match_id, toss_winner, toss_decision, season (toss + season table features)."""
+    cols = ["match_id", "toss_winner", "toss_decision", "season"]
+    if not IPL_MATCHES_PATH.exists():
+        return pd.DataFrame(columns=cols)
+    m = pd.read_csv(IPL_MATCHES_PATH, low_memory=False)
+    if "matchId" not in m.columns:
+        return pd.DataFrame(columns=cols)
+    out = pd.DataFrame()
+    out["match_id"] = pd.to_numeric(m["matchId"], errors="coerce").astype("int64")
+    out["toss_winner"] = (
+        m["toss_winner"].fillna("").astype(str).str.strip() if "toss_winner" in m.columns else ""
+    )
+    out["toss_decision"] = (
+        m["toss_decision"].fillna("").astype(str).str.strip() if "toss_decision" in m.columns else ""
+    )
+    out["season"] = m["season"].fillna("").astype(str).str.strip() if "season" in m.columns else ""
+    return out.dropna(subset=["match_id"])
+
+
+def lineup_bowler_shares_from_pms(pms: pd.DataFrame) -> pd.DataFrame:
+    """Fraction of squad rows labeled bowler per (match_id, team)."""
+    df = pms.copy()
+    df["team"] = df["batting_team"].fillna("").astype(str).str.strip()
+    mask = df["team"].eq("") | df["team"].str.lower().eq("unknown")
+    df.loc[mask, "team"] = df.loc[mask, "bowling_team"].fillna("").astype(str).str.strip()
+    df["is_bowler_lineup"] = (
+        df["role"].fillna("").astype(str).str.strip().str.lower().eq("bowler").astype(float)
+    )
+    return df.groupby(["match_id", "team"], as_index=False).agg(
+        lineup_bowler_share=("is_bowler_lineup", "mean")
+    )
+
+
+def apply_toss_columns(df: pd.DataFrame, extras: pd.DataFrame | None) -> pd.DataFrame:
+    """Merge toss + season; set toss_team1_won and team1_bats_first_signal."""
+    out = df.copy()
+    out["toss_team1_won"] = 0.5
+    out["team1_bats_first_signal"] = 0.5
+    md_y = pd.to_datetime(out["match_date"], errors="coerce").dt.year.astype(str)
+    out["season"] = md_y
+    if extras is None or extras.empty:
+        return out
+    ex = extras.copy()
+    ex["match_id"] = pd.to_numeric(ex["match_id"], errors="coerce").astype("int64")
+    out["match_id"] = pd.to_numeric(out["match_id"], errors="coerce").astype("int64")
+    ex = ex.drop_duplicates("match_id")
+    ex = ex.rename(columns={"season": "season_official"})
+    out = out.merge(
+        ex[["match_id", "toss_winner", "toss_decision", "season_official"]],
+        on="match_id",
+        how="left",
+    )
+    tw = out["toss_winner"].fillna("").astype(str).str.strip()
+    td = out["toss_decision"].fillna("").astype(str).str.strip().str.lower()
+    t1_won = np.array(
+        [teams_match_franchise(str(tw.iloc[i]), str(out["team1_name"].iloc[i])) for i in range(len(out))],
+        dtype=float,
+    )
+    out["toss_team1_won"] = t1_won
+    bats = np.array(
+        [
+            (t1_won[i] >= 0.5 and td.iloc[i] == "bat")
+            or (t1_won[i] < 0.5 and td.iloc[i] == "field")
+            for i in range(len(out))
+        ],
+        dtype=float,
+    )
+    unk = td.eq("") | td.isna()
+    out.loc[unk, "toss_team1_won"] = 0.5
+    out.loc[unk, "team1_bats_first_signal"] = 0.5
+    out.loc[~unk, "team1_bats_first_signal"] = bats[~unk]
+    out["season"] = (
+        out["season_official"].fillna("").astype(str).str.strip().replace("", np.nan)
+    )
+    out["season"] = out["season"].fillna(md_y)
+    out.drop(columns=["toss_winner", "toss_decision", "season_official"], inplace=True, errors="ignore")
+    out["season"] = out["season"].fillna("").astype(str).str.strip()
+    out.loc[out["season"].eq(""), "season"] = md_y[out["season"].eq("")]
+    return out
+
+
 def teams_match_franchise(a: str, b: str) -> bool:
     """Loose equality for franchise renames (e.g. Kings XI Punjab vs Punjab Kings)."""
     a, b = a.strip().lower(), b.strip().lower()
@@ -57,8 +148,15 @@ def resolve_winner_label(
     proxy_winners: pd.DataFrame,
 ) -> tuple[object, str]:
     """
-    Returns (winner_label, source) where winner_label is team1|team2|tie|nan.
+       Returns (winner_label, source) where winner_label is team1|team2|tie|nan.
     source is official|proxy|missing.
+
+    **Alignment with evaluation:** ``team1``/``team2`` here are **lexicographically
+    sorted** franchise names from ``player_features`` (same as training rows). Official
+    ``winner`` must match one of those strings (rename-tolerant). When no official row
+    matches ``match_id``, **proxy** uses total **runs** by team in that match (ties
+    possible; super overs not in runs-proxy). Train the binary classifier on
+    ``winner in {team1, team2}`` only; ties are excluded in ``train_match_winner_model``.
     """
     mid = match_id
     if official is not None and len(official) > 0:
@@ -169,6 +267,12 @@ def team_aggregates(pf: pd.DataFrame) -> pd.DataFrame:
         team_avg_economy=("economy", "mean"),
         team_n_players=("player_id", "count"),
     )
+    if "form_pp_sr" in pf.columns:
+        agg_kw["team_avg_form_pp_sr"] = ("form_pp_sr", "mean")
+    if "form_mid_sr" in pf.columns:
+        agg_kw["team_avg_form_mid_sr"] = ("form_mid_sr", "mean")
+    if "form_death_sr" in pf.columns:
+        agg_kw["team_avg_form_death_sr"] = ("form_death_sr", "mean")
     if "form_runs_ipl" in pf.columns:
         agg_kw["team_avg_form_runs_ipl"] = ("form_runs_ipl", "mean")
     if "form_wickets_ipl" in pf.columns:
@@ -222,6 +326,7 @@ def build_match_rows(
     proxy_winners: pd.DataFrame,
     official_matches: pd.DataFrame | None,
     team_totals: pd.DataFrame | None,
+    lineup_df: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
     rows = []
     official = official_matches if official_matches is not None else pd.DataFrame()
@@ -272,6 +377,35 @@ def build_match_rows(
             row["team1_total_runs"] = float("nan")
             row["team2_total_runs"] = float("nan")
 
+        if lineup_df is not None and len(lineup_df):
+            l1 = lineup_df[
+                (pd.to_numeric(lineup_df["match_id"], errors="coerce") == float(mid))
+                & (lineup_df["team"].astype(str).str.strip() == t1)
+            ]
+            l2 = lineup_df[
+                (pd.to_numeric(lineup_df["match_id"], errors="coerce") == float(mid))
+                & (lineup_df["team"].astype(str).str.strip() == t2)
+            ]
+            row["team1_lineup_bowler_share"] = (
+                float(l1["lineup_bowler_share"].iloc[0]) if len(l1) else 0.35
+            )
+            row["team2_lineup_bowler_share"] = (
+                float(l2["lineup_bowler_share"].iloc[0]) if len(l2) else 0.35
+            )
+        else:
+            row["team1_lineup_bowler_share"] = 0.35
+            row["team2_lineup_bowler_share"] = 0.35
+
+        if "team_avg_form_pp_sr" in r1.columns:
+            row["team1_avg_form_pp_sr"] = float(r1["team_avg_form_pp_sr"].iloc[0])
+            row["team2_avg_form_pp_sr"] = float(r2["team_avg_form_pp_sr"].iloc[0])
+        if "team_avg_form_mid_sr" in r1.columns:
+            row["team1_avg_form_mid_sr"] = float(r1["team_avg_form_mid_sr"].iloc[0])
+            row["team2_avg_form_mid_sr"] = float(r2["team_avg_form_mid_sr"].iloc[0])
+        if "team_avg_form_death_sr" in r1.columns:
+            row["team1_avg_form_death_sr"] = float(r1["team_avg_form_death_sr"].iloc[0])
+            row["team2_avg_form_death_sr"] = float(r2["team_avg_form_death_sr"].iloc[0])
+
         m = meta[meta["match_id"] == mid] if len(meta) else pd.DataFrame()
         if not m.empty:
             row["venue"] = m["venue"].iloc[0]
@@ -315,6 +449,12 @@ def main() -> None:
     )
     proxy_winners = match_winner_proxy(pf)
     official = load_official_ipl_matches()
+    extras = load_official_match_extras()
+
+    lineup_df = None
+    if PLAYER_MATCH_STATS_PATH.exists():
+        pms_full = pd.read_csv(PLAYER_MATCH_STATS_PATH, low_memory=False)
+        lineup_df = lineup_bowler_shares_from_pms(pms_full)
 
     out = build_match_rows(
         team_df,
@@ -322,8 +462,116 @@ def main() -> None:
         proxy_winners,
         official if len(official) else None,
         team_totals,
+        lineup_df=lineup_df,
     )
+    out = apply_toss_columns(out, extras if len(extras) else None)
+    out = attach_h2h_chronological(out)
     out = attach_momentum_columns_chronological(out)
+    out = attach_venue_momentum_chronological(out)
+    out = attach_season_table_chronological(out)
+    # Placeholder for future weather/dew CSV or manual priors (0 = neutral for history).
+    out["second_innings_dew_prior"] = 0.0
+    out["match_humidity_prior"] = 0.0
+    out["match_rain_risk"] = 0.0
+    out["team1_injury_availability"] = 1.0
+    out["team2_injury_availability"] = 1.0
+    wopt = load_optional_weather_csv()
+    if wopt is not None and not wopt.empty:
+        out["match_id"] = pd.to_numeric(out["match_id"], errors="coerce")
+        wopt = wopt.copy()
+        if "humidity" in wopt.columns:
+            wopt["match_humidity"] = pd.to_numeric(wopt["humidity"], errors="coerce").fillna(0.0)
+        elif "humidity_pct" in wopt.columns:
+            wopt["match_humidity"] = pd.to_numeric(wopt["humidity_pct"], errors="coerce").fillna(0.0)
+        else:
+            wopt["match_humidity"] = 0.0
+        if "rain_risk" in wopt.columns:
+            wopt["match_rain"] = pd.to_numeric(wopt["rain_risk"], errors="coerce").fillna(0.0)
+        else:
+            wopt["match_rain"] = 0.0
+        out = out.merge(
+            wopt[["match_id", "match_humidity", "match_rain"]],
+            on="match_id",
+            how="left",
+        )
+        out["match_humidity_prior"] = out["match_humidity"].fillna(0.0)
+        out["match_rain_risk"] = out["match_rain"].fillna(0.0)
+        out.drop(columns=["match_humidity", "match_rain"], inplace=True, errors="ignore")
+    iopt = load_optional_injuries_csv()
+    if iopt is not None and not iopt.empty and "team1_availability" in iopt.columns:
+        out = out.merge(
+            iopt[
+                [
+                    "match_id",
+                    "team1_availability",
+                    "team2_availability",
+                ]
+            ],
+            on="match_id",
+            how="left",
+        )
+        out["team1_injury_availability"] = pd.to_numeric(
+            out["team1_availability"], errors="coerce"
+        ).fillna(1.0)
+        out["team2_injury_availability"] = pd.to_numeric(
+            out["team2_availability"], errors="coerce"
+        ).fillna(1.0)
+        out.drop(columns=["team1_availability", "team2_availability"], inplace=True, errors="ignore")
+
+    franchise_cols = [
+        "team1_bat_first_ratio",
+        "team2_bat_first_ratio",
+        "team1_chase_ratio",
+        "team2_chase_ratio",
+        "team1_bowl_first_stingy",
+        "team2_bowl_first_stingy",
+        "team1_bowl_second_stingy",
+        "team2_bowl_second_stingy",
+        "team1_pp_bat_ratio",
+        "team2_pp_bat_ratio",
+        "team1_death_bat_ratio",
+        "team2_death_bat_ratio",
+        "team1_death_bowl_stingy",
+        "team2_death_bowl_stingy",
+        "team1_bat_dom",
+        "team2_bat_dom",
+        "team1_bowl_dom",
+        "team2_bowl_dom",
+        "team1_field_dom",
+        "team2_field_dom",
+    ]
+    extra_match_cols = [
+        "season",
+        "h2h_team1_win_prior",
+        "toss_team1_won",
+        "team1_bats_first_signal",
+        "team1_season_win_pct_prior",
+        "team2_season_win_pct_prior",
+        "team1_season_run_margin_prior",
+        "team2_season_run_margin_prior",
+        "team1_lineup_bowler_share",
+        "team2_lineup_bowler_share",
+        "team1_avg_form_pp_sr",
+        "team2_avg_form_pp_sr",
+        "team1_avg_form_mid_sr",
+        "team2_avg_form_mid_sr",
+        "team1_avg_form_death_sr",
+        "team2_avg_form_death_sr",
+        "match_humidity_prior",
+        "match_rain_risk",
+        "team1_injury_availability",
+        "team2_injury_availability",
+    ]
+    for c in extra_match_cols:
+        if c not in out.columns:
+            if "injury" in c or "availability" in c:
+                out[c] = 1.0
+            elif "lineup" in c:
+                out[c] = 0.35
+            elif "form" in c or "avg_form" in c:
+                out[c] = 120.0
+            else:
+                out[c] = 0.0
 
     final_cols = [
         "match_id",
@@ -345,6 +593,11 @@ def main() -> None:
         "match_date",
         "team1_momentum",
         "team2_momentum",
+        "team1_venue_momentum",
+        "team2_venue_momentum",
+        "second_innings_dew_prior",
+        *franchise_cols,
+        *extra_match_cols,
         "winner",
         "winner_source",
     ]
@@ -361,8 +614,9 @@ def main() -> None:
 
     n_off = (out["winner_source"] == "official").sum() if "winner_source" in out.columns else 0
     n_px = (out["winner_source"] == "proxy").sum() if "winner_source" in out.columns else 0
+    n_tie = (out["winner"] == "tie").sum() if "winner" in out.columns else 0
     print(f"number of matches: {len(out)}")
-    print(f"winner labels — official: {n_off}, proxy: {n_px}")
+    print(f"winner labels — official: {n_off}, proxy: {n_px}, tie: {n_tie}")
     print(f"correlation(team_strength_diff, team1_win): {corr:.4f}")
     print("sample rows:")
     with pd.option_context("display.max_columns", None, "display.width", 220):

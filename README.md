@@ -23,26 +23,26 @@ This repository builds **player-level** and **team-level** models from historica
 # From repo root (Python 3.10+ recommended)
 
 # 1) Build processed tables (large; run when raw data changes)
-python build_unified_dataset.py      # or iplpred.pipeline.build_unified_dataset
-python build_player_match_stats.py   # merges ICC WC key scorecards when present
-python build_features.py
-python scripts/build_player_registry.py        # v1: registry + player_aliases.csv (merges player_aliases_seed.csv)
-python scripts/build_player_identity.py        # player_identity + squad_stats_bridge for squad validation
-python scripts/fill_player_feature_priors.py   # median priors for squad players still missing from features
-python scripts/build_player_registry.py        # v2: pick up newly added prior player_ids
-python scripts/build_player_identity.py        # v2: refresh bridge after priors
-python build_training_dataset.py
+python3 -m iplpred.pipeline.build_unified_dataset
+python3 -m iplpred.pipeline.build_player_match_stats   # merges ICC WC key scorecards when present
+python3 -m iplpred.pipeline.build_features
+python3 scripts/build_player_registry.py        # v1: registry + player_aliases.csv (merges player_aliases_seed.csv)
+python3 scripts/build_player_identity.py        # player_identity + squad_stats_bridge for squad validation
+python3 scripts/fill_player_feature_priors.py   # median priors for squad players still missing from features
+python3 scripts/build_player_registry.py        # v2: pick up newly added prior player_ids
+python3 scripts/build_player_identity.py        # v2: refresh bridge after priors
+python3 -m iplpred.pipeline.build_training_dataset
 
 # Or: make build-all
 
 # 2) Train models
-python train_player_model.py
-python train_match_winner_model.py
-python train_team_total_model.py
-python train_win_prob_ensemble.py    # optional: ML vs sim weights + calibration
+python3 -m iplpred.training.train_player_model
+python3 -m iplpred.training.train_match_winner_model
+python3 -m iplpred.training.train_team_total_model
+python3 -m iplpred.training.train_win_prob_ensemble    # optional: ML vs sim weights + calibration
 
 # 3) Predict a fixture (11 vs 11 player_ids as in player_features.csv)
-python predict_match_outcomes.py --team1-name "..." --team2-name "..." \
+python3 -m iplpred.cli.predict_match_outcomes --team1-name "..." --team2-name "..." \
   --xi1 "id1,id2,..." --xi2 "id1,id2,..." --sims 200 --venue "M Chinnaswamy Stadium, Bengaluru"
 
 # 4) Web UI (optional)
@@ -50,7 +50,7 @@ pip install -r requirements-web.txt
 uvicorn web.dashboard:app --reload --host 0.0.0.0 --port 8000
 ```
 
-See `DAILY_WORKFLOW.txt` for per-match logging and retraining notes.
+See `docs/DAILY_WORKFLOW.txt` for per-match logging and retraining notes.
 
 ---
 
@@ -102,23 +102,30 @@ flowchart LR
 
 ## Repository map
 
-### Root entrypoints (thin wrappers)
+### CLI entrypoints (`python3 -m …` from repo root)
 
-These usually call into `iplpred/` so you can run `python train_player_model.py` from the repo root.
+Run modules under `iplpred.pipeline`, `iplpred.training`, and `iplpred.cli` (see `Makefile` targets `build-data`, `build-all`). Examples:
 
-| File | Role |
+| Module | Role |
+|--------|------|
+| `iplpred.pipeline.build_unified_dataset` | Builds `data/processed/unified_ball_by_ball.csv`. |
+| `iplpred.pipeline.build_player_match_stats` | Aggregates to `player_match_stats.csv`. |
+| `iplpred.pipeline.build_features` | Builds `player_features.csv` (rolling / venue / matchup features). |
+| `iplpred.pipeline.build_training_dataset` | Builds `match_training_dataset.csv` (match-level rows + winner). |
+| `iplpred.training.train_player_model` | Trains RandomForest runs + wickets → `models/player_*_model.pkl`. |
+| `iplpred.training.train_match_winner_model` | Trains calibrated team winner classifier → `match_winner_classifier.pkl`. |
+| `iplpred.training.train_team_total_model` | Trains Ridge team totals → `team_total_regressor.pkl`. |
+| `iplpred.training.train_win_prob_ensemble` | Blend + optional isotonic → `win_prob_ensemble.pkl`. |
+| `iplpred.match.match_simulator` | Monte Carlo / deterministic match simulation CLI. |
+| `iplpred.cli.predict_match_outcomes` | Six pre-match outcomes (winner, best bat/bowl, top 5/3, POTM). |
+| `iplpred.cli.predict_playing_xi` | Probable XI helper. |
+
+### `docs/` — workflow and notes
+
+| Path | Role |
 |------|------|
-| `build_unified_dataset.py` | Delegates to pipeline that builds `data/processed/unified_ball_by_ball.csv`. |
-| `build_player_match_stats.py` | Aggregates to `player_match_stats.csv`. |
-| `build_features.py` | Builds `player_features.csv` (rolling / venue / matchup features). |
-| `build_training_dataset.py` | Builds `match_training_dataset.csv` (match-level rows + winner). |
-| `train_player_model.py` | Trains RandomForest runs + wickets models → `models/player_*_model.pkl`. |
-| `train_match_winner_model.py` | Trains calibrated team winner classifier → `match_winner_classifier.pkl`. |
-| `train_team_total_model.py` | Trains Ridge team total regressors → `team_total_regressor.pkl`. |
-| `train_win_prob_ensemble.py` | Learns blend + optional isotonic calibration → `win_prob_ensemble.pkl`. |
-| `match_simulator.py` | CLI wrapper around `iplpred.match.match_simulator`. |
-| `predict_match_outcomes.py` | CLI for six pre-match outcomes (winner, best bat/bowl, top 5/3, POTM). |
-| `predict_playing_xi.py` | Helper for XI prediction flows. |
+| `docs/DAILY_WORKFLOW.txt` | Per-match logging, retrain steps, Process 1–3. |
+| `docs/MODEL_LIMITS.md` | Model and data limitations. |
 
 ### `iplpred/` — core package
 
@@ -324,8 +331,8 @@ Match data sources and redistribution rules depend on your upstream files (e.g. 
 
 ## Contributing / extending
 
-- **Features**: extend `FEATURE_COLS` and `build_features.py` consistently; retrain.  
-- **Calibration**: re-run `train_win_prob_ensemble.py` after substantial new seasons in `match_training_dataset.csv`.  
+- **Features**: extend `FEATURE_COLS` and `iplpred.pipeline.build_features` consistently; retrain.  
+- **Calibration**: re-run `python3 -m iplpred.training.train_win_prob_ensemble` after substantial new seasons in `match_training_dataset.csv`.  
 - **Compare UI**: place ball-by-ball CSVs under `matches/` and set `bbb_match_file` in the prediction log.
 
 If you add dependencies, pin them in `requirements-web.txt` or a root `requirements.txt` as appropriate.

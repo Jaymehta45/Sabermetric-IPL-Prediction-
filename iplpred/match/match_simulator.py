@@ -3,14 +3,20 @@ Simulate match outcomes using trained player runs/wickets models.
 
 Per-player run predictions are **scaled** after pitch/venue so each team's sum
 matches the Ridge team-innings model when ``team_total_regressor.pkl`` exists,
-otherwise a T20 anchor while preserving relative team strength. Monte Carlo
-win draws use the same scales. This replaces the old 80–250 clip that often
-floored both innings at 80.
+otherwise a T20 anchor while preserving relative team strength. After RF outputs
+(and optional shrinkage), the headline path applies **one draw of heteroskedastic
+execution noise per player** (``_apply_headline_execution_noise``); Monte Carlo
+re-draws that noise each iteration. Default impact rule is **no trim** (all 12
+count when a sub is listed). Monte Carlo win draws use the same team scales. Second-innings calibration is
+**capped** relative to the first so independent ML + venue lifts cannot imply an
+implausible chase (e.g. 171 vs 255); see ``_coerce_second_innings_chase_coherent``.
+This replaces the old 80–250 clip that often floored both innings at 80.
 """
 
 from __future__ import annotations
 
 import argparse
+import os
 
 import joblib
 import numpy as np
@@ -368,6 +374,63 @@ def _calibrated_innings_targets(
     return t1, t2, "raw_sum_anchor"
 
 
+def _max_chase_excess_runs(
+    first_innings_target: float,
+    venue: str | None,
+    pm: PitchMultipliers,
+) -> float:
+    """
+    Plausible upper margin for a **chase** mean total above the first-innings target.
+
+    Innings targets are calibrated from independent ML heads + venue lifts, which can
+    imply a second innings far above what is needed to pass the first (e.g. 171 vs 255).
+    Cap ``second - first`` to a T20-scaled band with small nudges for batting-friendly
+    venues and high-par pitch multipliers.
+    """
+    t = float(max(first_innings_target, MIN_INNINGS_DISPLAY))
+    from iplpred.core.venue_bowling_adjust import venue_spin_harshness
+
+    h = venue_spin_harshness(venue)
+    venue_bump = 5.0 * max(0.0, min(1.0, (h - 0.42) / 0.5))
+    run_m = (float(pm.first_innings_runs) + float(pm.second_innings_runs)) / 2.0
+    pitch_bump = 6.0 * max(0.0, min(1.0, (run_m - 1.05) / 0.35))
+    excess = 5.0 + 0.195 * t + venue_bump + pitch_bump
+    return float(np.clip(excess, 20.0, 62.0))
+
+
+def _coerce_second_innings_chase_coherent(
+    tgt_first: float,
+    tgt_second: float,
+    venue: str | None,
+    pm: PitchMultipliers,
+) -> tuple[float, dict]:
+    """
+    If the calibrated second innings is far above the first, pull it down so the
+    headline totals describe a coherent chase (same scales used for MC).
+    """
+    t1 = float(tgt_first)
+    t2 = float(tgt_second)
+    meta: dict = {
+        "applied": False,
+        "first_innings_target": t1,
+        "second_before": t2,
+        "second_after": t2,
+        "max_excess_runs": None,
+        "cap_ceiling": None,
+    }
+    if t2 <= t1 + 1e-6:
+        return t2, meta
+    cap_ex = _max_chase_excess_runs(t1, venue, pm)
+    ceiling = float(np.clip(t1 + cap_ex, MIN_INNINGS_DISPLAY, MAX_INNINGS_DISPLAY))
+    meta["max_excess_runs"] = cap_ex
+    meta["cap_ceiling"] = ceiling
+    if t2 <= ceiling:
+        return t2, meta
+    meta["applied"] = True
+    meta["second_after"] = ceiling
+    return ceiling, meta
+
+
 def _team_calibration_scales(
     raw1: float,
     raw2: float,
@@ -442,6 +505,59 @@ def _noise_on_preds(
     runs_n = r + rng.normal(0.0, std_r, size=r.shape)
     wk_n = w + rng.normal(0.0, std_w, size=w.shape)
     return np.maximum(runs_n, 0.0), np.maximum(wk_n, 0.0)
+
+
+def _headline_execution_noise_scales() -> tuple[float, float, float]:
+    """Runs scale, wickets scale, het_gamma — env can override bundle defaults."""
+    if os.environ.get("IPLPRED_NO_HEADLINE_EXECUTION_NOISE", "").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+    ):
+        return 0.0, 0.0, 0.0
+    np_het = get_mc_noise_params()
+    br = float(np_het.get("headline_runs_noise_scale", 0.18))
+    bw = float(np_het.get("headline_wk_noise_scale", 0.20))
+    g = float(np_het.get("het_noise_gamma", 0.45))
+    er = os.environ.get("IPLPRED_HEADLINE_RUNS_NOISE", "").strip()
+    ew = os.environ.get("IPLPRED_HEADLINE_WK_NOISE", "").strip()
+    if er:
+        br = float(er)
+    if ew:
+        bw = float(ew)
+    return br, bw, g
+
+
+def _apply_headline_execution_noise(
+    sub: pd.DataFrame,
+    rng: np.random.Generator,
+) -> pd.DataFrame:
+    """
+    One stochastic draw of per-player execution noise on headline RF outputs.
+
+    Every listed player gets a Gaussian shock scaled by their predicted mean
+    (and optional ``std_runs`` / ``std_wickets`` heteroskedasticity), matching
+    the Monte Carlo path but with its own seed for reproducible six-outcome prints.
+    """
+    br, bw, g = _headline_execution_noise_scales()
+    if br <= 0.0 and bw <= 0.0:
+        return sub
+    out = sub.copy()
+    sr = out["std_runs"].values if "std_runs" in out.columns else None
+    sw = out["std_wickets"].values if "std_wickets" in out.columns else None
+    pr, pw = _noise_on_preds(
+        out["pred_runs_raw"].values.astype(float),
+        out["pred_wk_raw"].values.astype(float),
+        rng,
+        std_runs_arr=sr,
+        std_wk_arr=sw,
+        base_scale_r=br,
+        base_scale_w=bw,
+        het_gamma=g,
+    )
+    out["pred_runs_raw"] = pr
+    out["pred_wk_raw"] = pw
+    return out
 
 
 def _impact_base(
@@ -625,6 +741,8 @@ def pipeline_from_raw(
             rng,
             std_runs_arr=sr,
             std_wk_arr=sw,
+            base_scale_r=float(np_het.get("mc_runs_noise_scale", 0.15)),
+            base_scale_w=float(np_het.get("mc_wk_noise_scale", 0.15)),
             het_gamma=float(np_het.get("het_noise_gamma", 0.45)),
         )
     sub["pred_runs_raw"] = pr
@@ -691,7 +809,7 @@ def run_simulation(
     team1_name: str | None = None,
     team2_name: str | None = None,
     validate_squad: bool = True,
-    drop_lowest_impact: bool = True,
+    drop_lowest_impact: bool = False,
     pitch: PitchMultipliers | None = None,
     use_recent_form_shrinkage: bool = True,
     shrink_team_prior_weight: float = 0.45,
@@ -734,6 +852,18 @@ def run_simulation(
         enabled=use_recent_form_shrinkage,
         team_mean_weight=shrink_team_prior_weight,
     )
+
+    br, bw, _gamma = _headline_execution_noise_scales()
+    seed_h = int(os.environ.get("IPLPRED_HEADLINE_NOISE_SEED", "42"))
+    rng_head = np.random.default_rng(seed_h)
+    t1_raw = _apply_headline_execution_noise(t1_raw, rng_head)
+    t2_raw = _apply_headline_execution_noise(t2_raw, rng_head)
+    headline_noise_meta = {
+        "enabled": bool(br > 0.0 or bw > 0.0),
+        "runs_scale": float(br),
+        "wickets_scale": float(bw),
+        "seed": seed_h,
+    }
 
     t1_act, impact_drop_t1 = apply_playing_prob_and_drop(
         t1_raw,
@@ -779,6 +909,9 @@ def run_simulation(
     dyn2 = _dynamic_batting_par_multiplier(t2_act)
     tgt1 = float(np.clip(tgt1 * dyn1, MIN_INNINGS_DISPLAY, MAX_INNINGS_DISPLAY))
     tgt2 = float(np.clip(tgt2 * dyn2, MIN_INNINGS_DISPLAY, MAX_INNINGS_DISPLAY))
+    tgt2, chase_coherence_meta = _coerce_second_innings_chase_coherent(
+        tgt1, tgt2, venue, pm
+    )
     s1, s2 = _team_calibration_scales(
         raw1, raw2, tgt1, tgt2, cap_large_scales=(ml_team_totals is None)
     )
@@ -925,6 +1058,8 @@ def run_simulation(
         "pred_wickets_second_innings": min(10.0, w_second_raw),
         "pred_wickets_first_innings_raw_sum": w_first_raw,
         "pred_wickets_second_innings_raw_sum": w_second_raw,
+        "headline_execution_noise": headline_noise_meta,
+        "chase_innings_coherence": chase_coherence_meta,
     }
 
 

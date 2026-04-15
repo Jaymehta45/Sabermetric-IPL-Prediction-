@@ -40,6 +40,8 @@ def _innings_table(u: pd.DataFrame) -> pd.DataFrame:
 
     u["is_pp"] = ((u["over"].notna()) & (u["over"] >= 0) & (u["over"] < 6)).astype(int)
     u["pp_row_runs"] = np.where(u["is_pp"] == 1, u["total_runs"], 0.0)
+    u["is_death"] = ((u["over"].notna()) & (u["over"] >= 15)).astype(int)
+    u["death_row_runs"] = np.where(u["is_death"] == 1, u["total_runs"], 0.0)
 
     dk = u["dismissal_kind"].fillna("").astype(str).str.strip().str.lower()
     pd_ = u["player_dismissed"].fillna("").astype(str).str.strip()
@@ -52,6 +54,7 @@ def _innings_table(u: pd.DataFrame) -> pd.DataFrame:
         .agg(
             runs=("total_runs", "sum"),
             pp_runs=("pp_row_runs", "sum"),
+            death_runs=("death_row_runs", "sum"),
             wickets=("bat_out", "sum"),
             run_outs=("run_out_row", "sum"),
         )
@@ -89,6 +92,8 @@ def build_profiles() -> pd.DataFrame:
     league_2 = max(league_2, 1.0)
     league_pp = float(inn["pp_runs"].mean())
     league_pp = max(league_pp, 1.0)
+    league_death = float(inn["death_runs"].mean())
+    league_death = max(league_death, 1.0)
 
     bat1 = inn[inn["innings"] == 1].groupby("batting_team", as_index=False)["runs"].mean()
     bat1 = bat1.rename(columns={"batting_team": "team_raw", "runs": "mean_runs_bf"})
@@ -97,11 +102,15 @@ def build_profiles() -> pd.DataFrame:
 
     ppb = inn.groupby("batting_team", as_index=False)["pp_runs"].mean()
     ppb = ppb.rename(columns={"batting_team": "team_raw", "pp_runs": "mean_pp_bat"})
+    dbat = inn.groupby("batting_team", as_index=False)["death_runs"].mean()
+    dbat = dbat.rename(columns={"batting_team": "team_raw", "death_runs": "mean_death_bat"})
 
     bowl1 = inn[inn["innings"] == 1].groupby("bowling_team", as_index=False)["runs"].mean()
     bowl1 = bowl1.rename(columns={"bowling_team": "team_raw", "runs": "mean_runs_conc_bf"})
     bowl2 = inn[inn["innings"] == 2].groupby("bowling_team", as_index=False)["runs"].mean()
     bowl2 = bowl2.rename(columns={"bowling_team": "team_raw", "runs": "mean_runs_conc_chase"})
+    bowl_death = inn.groupby("bowling_team", as_index=False)["death_runs"].mean()
+    bowl_death = bowl_death.rename(columns={"bowling_team": "team_raw", "death_runs": "mean_death_conc"})
 
     wk1 = inn[inn["innings"] == 1].groupby("bowling_team", as_index=False).agg(
         wk=("wickets", "mean"), ro=("run_outs", "mean")
@@ -117,6 +126,8 @@ def build_profiles() -> pd.DataFrame:
         | set(bat2["team_raw"])
         | set(bowl1["team_raw"])
         | set(bowl2["team_raw"])
+        | set(dbat["team_raw"])
+        | set(bowl_death["team_raw"])
     )
     rows = []
     for t in sorted(teams):
@@ -134,6 +145,10 @@ def build_profiles() -> pd.DataFrame:
         mbf = float(r1.iloc[0]) if len(r1) else float("nan")
         mch = float(r2.iloc[0]) if len(r2) else float("nan")
         mpp = float(pp.iloc[0]) if len(pp) else float("nan")
+        md_b = dbat.loc[dbat["team_raw"] == t, "mean_death_bat"]
+        mdeath_bat = float(md_b.iloc[0]) if len(md_b) else float("nan")
+        md_c = bowl_death.loc[bowl_death["team_raw"] == t, "mean_death_conc"]
+        mdeath_conc = float(md_c.iloc[0]) if len(md_c) else float("nan")
         mcb1 = float(c1.iloc[0]) if len(c1) else float("nan")
         mcb2 = float(c2.iloc[0]) if len(c2) else float("nan")
         w_a = float(wkf["wk"].iloc[0]) if len(wkf) else float("nan")
@@ -150,6 +165,10 @@ def build_profiles() -> pd.DataFrame:
                 "bat_first_ratio": mbf / league_1 if mbf == mbf else 1.0,
                 "chase_ratio": mch / league_2 if mch == mch else 1.0,
                 "pp_bat_ratio": mpp / league_pp if mpp == mpp else 1.0,
+                "death_bat_ratio": mdeath_bat / league_death if mdeath_bat == mdeath_bat else 1.0,
+                "death_bowl_stingy": league_death / mdeath_conc
+                if mdeath_conc == mdeath_conc and mdeath_conc > 0
+                else 1.0,
                 "bowl_first_stingy": league_1 / mcb1 if mcb1 == mcb1 and mcb1 > 0 else 1.0,
                 "bowl_second_stingy": league_2 / mcb2 if mcb2 == mcb2 and mcb2 > 0 else 1.0,
                 "bat_dom_raw": (mbf + mch) / 2.0 if mbf == mbf and mch == mch else np.nan,
@@ -182,6 +201,8 @@ def build_profiles() -> pd.DataFrame:
         "bat_first_ratio",
         "chase_ratio",
         "pp_bat_ratio",
+        "death_bat_ratio",
+        "death_bowl_stingy",
         "bowl_first_stingy",
         "bowl_second_stingy",
     ):
@@ -202,6 +223,8 @@ def build_profiles() -> pd.DataFrame:
             "bat_first_ratio",
             "chase_ratio",
             "pp_bat_ratio",
+            "death_bat_ratio",
+            "death_bowl_stingy",
             "bowl_first_stingy",
             "bowl_second_stingy",
             "bat_dom",
@@ -227,6 +250,8 @@ def main() -> None:
                 "bat_first_ratio",
                 "chase_ratio",
                 "pp_bat_ratio",
+                "death_bat_ratio",
+                "death_bowl_stingy",
                 "bowl_first_stingy",
                 "bowl_second_stingy",
                 "bat_dom",

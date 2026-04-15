@@ -1,0 +1,74 @@
+{
+  "match_key": "match23-rcb-lsg-2026-04-15",
+  "match_date": "2026-04-15",
+  "venue": "M.Chinnaswamy Stadium, Bengaluru",
+  "team1_name": "Lucknow Super Giants",
+  "team2_name": "Royal Challengers Bengaluru",
+  "team1_bats_first": true,
+  "pred_winner": "Royal Challengers Bengaluru",
+  "pred_p_team1_win": 1e-06,
+  "pred_best_bat": "V Kohli",
+  "pred_best_bowl": "R Shepherd",
+  "pred_top5_bats": [
+    "V Kohli",
+    "RM Patidar",
+    "TH David",
+    "PD Salt",
+    "RR Pant"
+  ],
+  "pred_top3_bowls": [
+    "R Shepherd",
+    "KH Pandya",
+    "B Kumar"
+  ],
+  "pred_potm": "V Kohli",
+  "pred_extra": {
+    "sims": 3000,
+    "win_probability_basis": "hybrid_ensemble",
+    "ensemble_p_team1": 1e-06,
+    "sim_win_probability_team1": 0.0033333333333333335,
+    "leader_model_p_team1": 0.5089653406309016,
+    "batting_order_swapped": false,
+    "impact_trim_lowest": false,
+    "impact_dropped_team1": null,
+    "impact_dropped_team2": null,
+    "pitch_multipliers": {
+      "first_innings_runs": 1.1608119999999997,
+      "second_innings_runs": 1.1747417439999996,
+      "first_innings_wickets": 0.9947,
+      "second_innings_wickets": 0.9887318
+    },
+    "venue_spin_harshness": 0.92,
+    "process_variant": "1B",
+    "full_playing_twelve": true,
+    "pred_first_innings_team_runs": 171.26869891905935,
+    "pred_second_innings_team_runs": 254.99999999999997,
+    "pred_first_innings_team_wickets": 2.776376215850848,
+    "pred_second_innings_team_wickets": 1.7539030276145886,
+    "pred_first_innings_team_wickets_raw_sum": 2.776376215850848,
+    "pred_second_innings_team_wickets_raw_sum": 1.7539030276145886,
+    "ml_team_total_runs_team1": 114.22752798664696,
+    "ml_team_total_runs_team2": 132.6568452082006,
+    "team_run_calibration": {
+      "method": "ml_team_total",
+      "scale_team1": 1.8495101801873444,
+      "scale_team2": 2.705472520173625,
+      "sum_player_runs_before_team1": 92.60219313943482,
+      "sum_player_runs_before_team2": 94.25340604961504
+    },
+    "dynamic_batting_par_mult": {
+      "team1": 1.0156197478991595,
+      "team2": 1.12
+    },
+    "headline_execution_noise": {
+      "enabled": true,
+      "runs_scale": 0.18,
+      "wickets_scale": 0.2,
+      "seed": 42
+    },
+    "player_process1": {
+      "heuristic": "role_aware_v1",
+      "summary": "Best bat / top 5 runs exclude pure bowlers when enough batters exist; best bowl / top 3 wickets prefer bowlers and allrounders; POTM uses a role-weighted composite (not the official match award)."
+    }
+  }
+}

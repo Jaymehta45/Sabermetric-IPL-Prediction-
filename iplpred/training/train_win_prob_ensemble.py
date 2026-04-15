@@ -6,7 +6,7 @@ at inference the real Monte Carlo sim_p replaces that proxy. Weights are chosen 
 time-series CV on the training block, then isotonic(s) are fit on the full train set.
 
 Usage:
-  python train_win_prob_ensemble.py
+  python -m iplpred.training.train_win_prob_ensemble
 """
 
 from __future__ import annotations
@@ -188,6 +188,8 @@ def main() -> None:
         "isotonic_underdog": None,
         "mc_shared_log_sigma": 0.025,
         "het_noise_gamma": 0.45,
+        "divergence_thresh": 0.18,
+        "divergence_sim_boost": 0.35,
     }
 
     ll_raw_te = log_loss(y_test, calib_te)

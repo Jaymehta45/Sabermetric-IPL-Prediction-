@@ -2,7 +2,7 @@
 Train Ridge regressors for team innings totals from match-level features (no leakage).
 
 Requires match_training_dataset.csv with team1_total_runs, team2_total_runs from
-build_training_dataset.py after full player_features build.
+``python -m iplpred.pipeline.build_training_dataset`` after full player_features build.
 """
 
 from __future__ import annotations

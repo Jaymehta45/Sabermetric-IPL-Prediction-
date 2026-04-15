@@ -1,0 +1,11 @@
+{
+  "match_key": "match22-csk-kkr-2026-04-14",
+  "actual_winner": "Chennai Super Kings",
+  "actual_top_scorer": "SV Samson",
+  "actual_top_scorer_runs": 47,
+  "actual_top_wicket_bowler": "Noor Ahmad",
+  "actual_top_wickets": 3,
+  "official_potm": "SV Samson",
+  "bbb_match_file": "matches/match22_csk_vs_kkr.csv",
+  "post_notes": "Process 2 from BBB matches/match22_csk_vs_kkr.csv. CSK 192/5 (1st), KKR 160/7. Pre hybrid P(CSK) 98% — winner correct. Top runs: SV Samson 47; Brevis 41 (KKR). Top wickets: Noor Ahmad 3 (Kamboj, Tyagi 2 each)."
+}

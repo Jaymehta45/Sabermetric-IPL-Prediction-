@@ -10,7 +10,7 @@ Vercel: root ``app.py`` re-exports this app (Fluid / zero-config). Install ``pip
 For a public URL via Cloudflare Try, use ``make tunnel`` (see ``scripts/cloudflared_tunnel.sh``)
 after the app responds on the same host/port (``127.0.0.1`` avoids some localhost DNS issues).
 
-Pre-match predictions: use predict_match_outcomes.py and scripts/log_prediction.py;
+Pre-match predictions: use ``python3 -m iplpred.cli.predict_match_outcomes`` and ``scripts/log_prediction.py``;
 this app does not accept XI or match parameters.
 """
 
@@ -121,7 +121,7 @@ def page_history(request: Request):
 
 
 def _process_step_flags(row: pd.Series) -> tuple[bool, bool, bool]:
-    """P1 pre logged, P2 post/actuals logged, P3 review logged (see DAILY_WORKFLOW)."""
+    """P1 pre logged, P2 post/actuals logged, P3 review logged (see docs/DAILY_WORKFLOW.txt)."""
     p1 = bool(_safe_str(row.get("logged_at_pre")))
     p2 = bool(_safe_str(row.get("logged_at_post"))) and bool(
         _safe_str(row.get("actual_winner"))

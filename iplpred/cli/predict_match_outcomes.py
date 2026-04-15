@@ -10,8 +10,10 @@ Pre-match prediction for six outcomes when both playing XIs are known (11 vs 11)
 
 Uses the same models and rules as match_simulator. For a plain 11 vs 11, all 11
 count. With ``--team1-impact`` / ``--team2-impact`` (12 per side), the default
-is to trim the lowest predicted-impact row from each 12 for team totals; use
-``--impact-add-only`` to count all 12.
+is **Process 1B**: all 12 count toward team totals. Use ``--process-variant 1a``
+to drop the lowest predicted-impact row per 12 (legacy IPL trim heuristic).
+Headline six outcomes apply **per-player execution noise** (human / day variance)
+on RF outputs; Monte Carlo uses the same heteroskedastic family with bundle-tuned scales.
 
 Optional match context (toss, pitch) via ``MatchContext``: after reordering,
 **team1 is always the side batting first** (first innings). Supply
@@ -19,13 +21,13 @@ Optional match context (toss, pitch) via ``MatchContext``: after reordering,
 and ``--elected-to``.
 
 **Process 1A vs 1B (impact substitutes only):**
-  * **1A** (default): XI + impact sub = 12 names per side; **lowest predicted-impact**
-    row is **dropped from team totals** (``--process-variant 1a``; same as omitting).
-  * **1B** (experimental): **all 12** count toward team totals (``--process-variant 1b``
-    or ``--impact-add-only``). Same RF models and features; only scoring changes.
+  * **1B** (default): **all 12** count toward team totals (``--process-variant 1b`` or omit).
+  * **1A**: XI + impact sub = 12 names per side; **lowest predicted-impact** row is
+    **dropped from team totals** (``--process-variant 1a``). Same RF models and features;
+    only scoring changes.
 
 Example:
-  python predict_match_outcomes.py \\
+  python -m iplpred.cli.predict_match_outcomes \\
     --team1-name "Mumbai Indians" --team2-name "Chennai Super Kings" \\
     --xi1 "RG Sharma,Q de Kock,SA Yadav,..." \\
     --xi2 "RD Gaikwad,MS Dhoni,..." \\
@@ -133,7 +135,7 @@ def predict_match_outcomes(
     shrink_team_prior_weight: float = 0.45,
     team1_impact: str | None = None,
     team2_impact: str | None = None,
-    impact_trim_lowest: bool = True,
+    impact_trim_lowest: bool = False,
     match_date: str | None = None,
 ) -> dict:
     """
@@ -142,9 +144,9 @@ def predict_match_outcomes(
 
     If ``team1_impact`` / ``team2_impact`` is set, that side's XI must be **11**
     names; the impact sub is **appended** (12th player). By default
-    (``impact_trim_lowest=True``) one row per 12-player side is **dropped** from
-    team-total scoring (lowest ``runs + 25×wickets`` heuristic). Set
-    ``impact_trim_lowest=False`` so **all 12** count (XI + sub, no trim).
+    (``impact_trim_lowest=False``, Process 1B) **all 12** count toward team totals.
+    Set ``impact_trim_lowest=True`` (Process 1A) to drop the lowest
+    ``runs + 25×wickets`` row per 12-player side from team-total scoring.
 
     If ``match_context.batting_first`` is set, teams are reordered so **team1
     always bats first** in the model (first innings multipliers apply to team1).
@@ -159,6 +161,8 @@ def predict_match_outcomes(
     else:
         name_resolutions = None
 
+    team1_impact_id: str | None = None
+    team2_impact_id: str | None = None
     if team1_impact:
         imp_r = resolve_player_name(team1_impact.strip(), allow_fuzzy=True)
         imp_id = str(imp_r.stats_player_id).strip()
@@ -166,6 +170,7 @@ def predict_match_outcomes(
         if imp_id in {str(p).strip() for p in team1_xi}:
             raise ValueError("team1_impact player is already in team1 XI")
         team1_xi = [*team1_xi, imp_id]
+        team1_impact_id = imp_id
         if name_resolutions is None:
             name_resolutions = {}
         name_resolutions["team1_impact"] = [imp_r]
@@ -177,6 +182,7 @@ def predict_match_outcomes(
         if imp_id in {str(p).strip() for p in team2_xi}:
             raise ValueError("team2_impact player is already in team2 XI")
         team2_xi = [*team2_xi, imp_id]
+        team2_impact_id = imp_id
         if name_resolutions is None:
             name_resolutions = {}
         name_resolutions["team2_impact"] = [imp_r]
@@ -191,6 +197,9 @@ def predict_match_outcomes(
     t1_xi, t2_xi, n1, n2, swapped = normalize_teams_for_batting_first(
         team1_xi, team2_xi, team1_name, team2_name, bf
     )
+    sim_imp1, sim_imp2 = team1_impact_id, team2_impact_id
+    if swapped:
+        sim_imp1, sim_imp2 = team2_impact_id, team1_impact_id
 
     pitch: PitchMultipliers = (
         resolve_pitch_multipliers(match_context) if match_context else PitchMultipliers()
@@ -214,6 +223,8 @@ def predict_match_outcomes(
         shrink_team_prior_weight=shrink_team_prior_weight,
         venue=venue,
         match_date=match_date,
+        team1_impact_player_id=sim_imp1,
+        team2_impact_player_id=sim_imp2,
     )
     six = six_match_outcomes(sim, team1_name=n1, team2_name=n2)
     return {
@@ -264,21 +275,21 @@ def print_six(six: dict, meta: dict | None = None) -> None:
         basis_lbl = basis or "deterministic totals"
     if p1 is not None and n1 and n2 and six.get("winning_team") == "tie":
         print(
-            f"1. Essentially tied ({basis_lbl}) — P({n1})={float(p1):.1%}, "
-            f"P({n2})={1.0 - float(p1):.1%}"
+            f"1. Essentially tied ({basis_lbl}) — P({n1})={float(p1):.4%}, "
+            f"P({n2})={1.0 - float(p1):.4%}"
         )
     elif p1 is not None and n1 and n2:
         ppw = six.get("p_predicted_winner")
-        pp_s = f"{float(ppw):.1%}" if ppw is not None else "—"
+        pp_s = f"{float(ppw):.4%}" if ppw is not None else "—"
         print(
             f"1. Predicted winner: {six['winning_team']} — "
             f"P({six['winning_team']} wins) = {pp_s} "
-            f"({basis_lbl}; P({n1})={float(p1):.1%}, P({n2})={1.0 - float(p1):.1%})"
+            f"({basis_lbl}; P({n1})={float(p1):.4%}, P({n2})={1.0 - float(p1):.4%})"
         )
     elif p1 is not None:
         print(
             f"1. Predicted winner: {six['winning_team']} — "
-            f"P(win) = {float(six.get('p_predicted_winner') or 0):.1%} ({basis_lbl})"
+            f"P(win) = {float(six.get('p_predicted_winner') or 0):.4%} ({basis_lbl})"
         )
     else:
         print(f"1. Predicted winner: {six['winning_team']} (mean team totals; use --sims > 0 for win %)")
@@ -344,13 +355,13 @@ def print_win_probability_breakdown(
     print("Win probability breakdown (P for team1 = first innings):")
     if n_sims > 0:
         if mc is not None:
-            print(f"  Monte Carlo:      P({team1_name}) = {float(mc):.2%}")
+            print(f"  Monte Carlo:      P({team1_name}) = {float(mc):.4%}")
         else:
             print("  Monte Carlo:      —")
     else:
         print("  Monte Carlo:      —  (--sims 0; no stochastic win draw)")
     if ml is not None:
-        print(f"  Roster ML model:  P({team1_name}) = {float(ml):.2%}")
+        print(f"  Roster ML model:  P({team1_name}) = {float(ml):.4%}")
     else:
         print("  Roster ML model:  —  (match_winner_classifier missing or failed)")
     if headline is not None:
@@ -360,7 +371,7 @@ def print_win_probability_breakdown(
             hnote = "Monte Carlo (headline)"
         else:
             hnote = "Headline"
-        print(f"  {hnote:18} P({team1_name}) = {float(headline):.2%}")
+        print(f"  {hnote:18} P({team1_name}) = {float(headline):.4%}")
     if (
         basis == "hybrid_ensemble"
         and mc is not None
@@ -507,6 +518,14 @@ def build_prediction_log_payload(
             "team2": float(db2),
         }
 
+    hn = sim.get("headline_execution_noise")
+    if isinstance(hn, dict):
+        pred_extra["headline_execution_noise"] = dict(hn)
+
+    chase = sim.get("chase_innings_coherence")
+    if isinstance(chase, dict):
+        pred_extra["chase_innings_coherence"] = dict(chase)
+
     pred_extra["player_process1"] = {
         "heuristic": "role_aware_v1",
         "summary": (
@@ -635,11 +654,10 @@ def main() -> None:
         "--process-variant",
         type=str,
         choices=("1a", "1b"),
-        default="1a",
+        default="1b",
         help=(
-            "Process 1A (default): impact subs present → trim lowest predicted-impact "
-            "from each 12 for team totals (main pipeline). "
-            "Process 1B (experimental): full playing 12 — all XI+impact count. "
+            "Process 1B (default): full playing 12 — all XI+impact count toward team totals. "
+            "Process 1A: trim lowest predicted-impact from each 12 for team totals. "
             "Same models; only team-total scoring differs. "
             "Overridden by --impact-add-only (equivalent to 1b)."
         ),
@@ -740,9 +758,10 @@ def main() -> None:
     t1_imp = args.team1_impact.strip() or None
     t2_imp = args.team2_impact.strip() or None
 
-    impact_trim_lowest = not args.impact_add_only
-    if args.process_variant == "1b":
+    if args.process_variant == "1b" or args.impact_add_only:
         impact_trim_lowest = False
+    else:
+        impact_trim_lowest = True
 
     match_date_for_sim = (args.match_date or "").strip() or None
     if not match_date_for_sim and payload is not None:

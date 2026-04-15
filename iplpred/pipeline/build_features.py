@@ -28,6 +28,16 @@ def load_match_stats() -> pd.DataFrame:
 def build_base_columns(pms: pd.DataFrame) -> pd.DataFrame:
     """Form / SR / economy (pre-match rolling)."""
     pms = pms.copy()
+    for c in (
+        "balls_pp",
+        "runs_pp",
+        "balls_mid",
+        "runs_mid",
+        "balls_death",
+        "runs_death",
+    ):
+        if c not in pms.columns:
+            pms[c] = 0.0
     pms["team"] = pms["batting_team"].fillna("").astype(str).str.strip()
     mask = pms["team"].eq("") | pms["team"].str.lower().eq("unknown")
     pms.loc[mask, "team"] = (
@@ -59,6 +69,30 @@ def build_base_columns(pms: pd.DataFrame) -> pd.DataFrame:
     )
     pms["economy"] = (
         pms.groupby("player_id")["match_econ"]
+        .transform(lambda s: s.shift(1).rolling(5, min_periods=1).mean())
+        .fillna(0.0)
+    )
+    bpp = pd.to_numeric(pms.get("balls_pp"), errors="coerce").fillna(0.0)
+    bmid = pd.to_numeric(pms.get("balls_mid"), errors="coerce").fillna(0.0)
+    bd = pd.to_numeric(pms.get("balls_death"), errors="coerce").fillna(0.0)
+    rpp = pd.to_numeric(pms.get("runs_pp"), errors="coerce").fillna(0.0)
+    rmid = pd.to_numeric(pms.get("runs_mid"), errors="coerce").fillna(0.0)
+    rd = pd.to_numeric(pms.get("runs_death"), errors="coerce").fillna(0.0)
+    pms["match_pp_sr"] = np.where(bpp > 0, rpp / bpp * 100.0, np.nan)
+    pms["match_mid_sr"] = np.where(bmid > 0, rmid / bmid * 100.0, np.nan)
+    pms["match_death_sr"] = np.where(bd > 0, rd / bd * 100.0, np.nan)
+    pms["form_pp_sr"] = (
+        pms.groupby("player_id")["match_pp_sr"]
+        .transform(lambda s: s.shift(1).rolling(5, min_periods=1).mean())
+        .fillna(0.0)
+    )
+    pms["form_mid_sr"] = (
+        pms.groupby("player_id")["match_mid_sr"]
+        .transform(lambda s: s.shift(1).rolling(5, min_periods=1).mean())
+        .fillna(0.0)
+    )
+    pms["form_death_sr"] = (
+        pms.groupby("player_id")["match_death_sr"]
         .transform(lambda s: s.shift(1).rolling(5, min_periods=1).mean())
         .fillna(0.0)
     )
@@ -600,6 +634,9 @@ def main() -> None:
             "is_franchise_match",
             "strike_rate",
             "economy",
+            "form_pp_sr",
+            "form_mid_sr",
+            "form_death_sr",
             "venue_avg_runs",
             "venue_avg_wickets",
             "venue_strike_rate",

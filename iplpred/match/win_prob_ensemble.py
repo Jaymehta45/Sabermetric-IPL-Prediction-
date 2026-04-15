@@ -4,6 +4,9 @@ and optional isotonic calibration.
 
 Trained by iplpred/training/train_win_prob_ensemble.py → models/win_prob_ensemble.pkl.
 If missing, falls back to fixed 0.6/0.4 blend with no extra calibration.
+
+Reported hybrid probabilities are not artificially capped away from 0%/100%
+(beyond a tiny epsilon clip so values stay in (0, 1) for numerics).
 """
 
 from __future__ import annotations
@@ -21,18 +24,14 @@ ENSEMBLE_BUNDLE_PATH = MODELS_DIR / "win_prob_ensemble.pkl"
 _DEFAULT_ML = 0.6
 _DEFAULT_SIM = 0.4
 
-# Reported win probabilities are floored/ceiled so isotonic tails never read as 0%/100%.
-_REPORT_PROB_MIN = 0.02
-_REPORT_PROB_MAX = 0.98
-
 
 def _clip_p(p: float, eps: float = 1e-6) -> float:
     return float(np.clip(p, eps, 1.0 - eps))
 
 
-def _clip_report_p(p: float) -> float:
-    """Clamp final *reported* ensemble probability to a sensible band."""
-    return float(np.clip(p, _REPORT_PROB_MIN, _REPORT_PROB_MAX))
+def _finalize_report_p(p: float) -> float:
+    """Return the blended/calibrated probability for display — only epsilon clip for logit stability."""
+    return _clip_p(float(p))
 
 
 def load_ensemble_bundle() -> dict[str, Any] | None:
@@ -80,14 +79,21 @@ def apply_ensemble_and_calibrate(
     elif sim_p is None:
         raw = float(ml_p)
     else:
-        raw = w_ml * float(ml_p) + w_sim * float(sim_p)
+        w_m, w_s = w_ml, w_sim
+        if b and (stack is None or stack.get("coef") is None):
+            gap = abs(float(ml_p) - float(sim_p))
+            th = float(b.get("divergence_thresh", 0.18))
+            boost = float(b.get("divergence_sim_boost", 0.35))
+            if gap >= th:
+                w_s = float(np.clip(w_s + boost * gap, 0.15, 0.85))
+                w_m = 1.0 - w_s
+        raw = w_m * float(ml_p) + w_s * float(sim_p)
         raw = _clip_p(raw)
 
     raw = _clip_p(raw)
 
     if not b:
-
-        return _clip_report_p(raw)
+        return _finalize_report_p(raw)
 
     iso_f = b.get("isotonic_favorite")
     iso_u = b.get("isotonic_underdog")
@@ -101,17 +107,17 @@ def apply_ensemble_and_calibrate(
             out = float(iso.predict([lo])[0])
         except Exception:
             out = float(iso.predict([raw])[0])
-        return _clip_report_p(_clip_p(out))
+        return _finalize_report_p(out)
 
     iso = b.get("isotonic")
     if iso is None:
-        return _clip_report_p(raw)
+        return _finalize_report_p(raw)
     try:
         lo = float(logit(raw))
         out = float(iso.predict([lo])[0])
     except Exception:
         out = float(iso.predict([raw])[0])
-    return _clip_report_p(_clip_p(out))
+    return _finalize_report_p(out)
 
 
 def sim_proxy_from_run_diff(
@@ -125,11 +131,37 @@ def sim_proxy_from_run_diff(
 
 
 def get_mc_noise_params() -> dict[str, float]:
-    """Shared MC log-variance shock + heteroskedastic noise scale for player preds."""
+    """
+    Shared MC log-variance shock + heteroskedastic noise for player preds.
+
+    MC loops use ``mc_runs_noise_scale`` / ``mc_wk_noise_scale`` (per-player Gaussian
+    on RF outputs). The headline (six outcomes) path uses ``headline_*`` scales —
+    slightly wider by default to reflect execution / human error on top of model risk.
+    """
+    defaults: dict[str, float] = {
+        "mc_shared_log_sigma": 0.025,
+        "het_noise_gamma": 0.45,
+        "mc_runs_noise_scale": 0.15,
+        "mc_wk_noise_scale": 0.15,
+        "headline_runs_noise_scale": 0.18,
+        "headline_wk_noise_scale": 0.20,
+    }
     b = load_ensemble_bundle()
     if not b:
-        return {"mc_shared_log_sigma": 0.025, "het_noise_gamma": 0.45}
-    return {
-        "mc_shared_log_sigma": float(b.get("mc_shared_log_sigma", 0.025)),
-        "het_noise_gamma": float(b.get("het_noise_gamma", 0.45)),
-    }
+        return defaults
+    out = {**defaults}
+    out["mc_shared_log_sigma"] = float(b.get("mc_shared_log_sigma", 0.025))
+    out["het_noise_gamma"] = float(b.get("het_noise_gamma", 0.45))
+    out["mc_runs_noise_scale"] = float(
+        b.get("mc_runs_noise_scale", b.get("player_runs_noise_scale", 0.15))
+    )
+    out["mc_wk_noise_scale"] = float(
+        b.get("mc_wk_noise_scale", b.get("player_wk_noise_scale", 0.15))
+    )
+    out["headline_runs_noise_scale"] = float(
+        b.get("headline_runs_noise_scale", out["headline_runs_noise_scale"])
+    )
+    out["headline_wk_noise_scale"] = float(
+        b.get("headline_wk_noise_scale", out["headline_wk_noise_scale"])
+    )
+    return out

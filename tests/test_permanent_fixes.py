@@ -17,6 +17,7 @@ from iplpred.core.match_context import (
 from iplpred.match.inference_feature_rows import franchise_match, venue_matches
 from iplpred.match.match_simulator import (
     _calibrated_innings_targets,
+    _coerce_second_innings_chase_coherent,
     _dynamic_batting_par_multiplier,
     _impact_base,
     _team_calibration_scales,
@@ -209,6 +210,24 @@ class TestImpactBase(unittest.TestCase):
         ib = _impact_base(runs, wk, role)
         # Bowler (row 0) should have higher impact than raw 2+75=77
         self.assertGreater(float(ib.iloc[0]), 77.0)
+
+
+class TestChaseCoherence(unittest.TestCase):
+    def test_second_innings_capped_above_first(self) -> None:
+        """Independent ML targets must not imply an absurd chase margin."""
+        pm = PitchMultipliers(
+            first_innings_runs=1.16,
+            second_innings_runs=1.17,
+            first_innings_wickets=1.0,
+            second_innings_wickets=1.0,
+        )
+        t2, meta = _coerce_second_innings_chase_coherent(
+            171.0, 255.0, "M.Chinnaswamy Stadium, Bengaluru", pm
+        )
+        self.assertTrue(meta.get("applied"))
+        self.assertLessEqual(t2, 171.0 + 65.0)
+        self.assertGreater(t2, 171.0)
+        self.assertLess(t2, 255.0)
 
 
 class TestProtectedImpactDrop(unittest.TestCase):

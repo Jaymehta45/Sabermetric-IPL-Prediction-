@@ -25,7 +25,9 @@ SEED_PATH = PROCESSED_DIR / "player_aliases_seed.csv"
 
 def main() -> None:
     if not FEATURES_PATH.is_file():
-        raise SystemExit(f"Missing {FEATURES_PATH}; run build_features.py first.")
+        raise SystemExit(
+            f"Missing {FEATURES_PATH}; run: python3 -m iplpred.pipeline.build_features"
+        )
 
     feat = pd.read_csv(FEATURES_PATH, low_memory=False)
     if "player_id" not in feat.columns:

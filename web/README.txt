@@ -15,7 +15,7 @@ Pages (read-only — no match input):
   /           Dashboard: stats + recent pred vs actual rows from prediction_log.csv
   /history    Full prediction log table, filters, charts
 
-Pre-match predictions: use predict_match_outcomes.py and scripts/log_prediction.py.
+Pre-match predictions: use python3 -m iplpred.cli.predict_match_outcomes and scripts/log_prediction.py.
 
 API:
   GET /api/prediction-log — JSON rows (GitHub raw on Vercel when configured, else local CSV)

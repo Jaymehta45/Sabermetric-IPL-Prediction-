@@ -71,6 +71,19 @@ def _is_high_scoring_par_track(t: str) -> bool:
         return True
     if "runs on the board" in t and ("average" in t or "216" in t or "200" in t):
         return True
+    # Prior SRH–RR-style shootouts: ~500+ runs combined in a T20 — treat as belter read
+    if any(
+        phrase in t
+        for phrase in (
+            "500 runs",
+            "over 500 runs",
+            "500+ runs",
+            "more than 500 runs",
+            "over 500",
+            "500 plus runs",
+        )
+    ):
+        return True
     return False
 
 
@@ -111,6 +124,19 @@ def _high_par_target_lift(t: str) -> float:
         lift += 0.06
     if "economy" in t and ("10." in t or "10.2" in t or " 10" in t):
         lift += 0.05
+    # Aggregate ~500 in a T20 — strong hint both innings can go deep (cap still applies below)
+    if any(
+        phrase in t
+        for phrase in (
+            "500 runs",
+            "over 500 runs",
+            "500+ runs",
+            "more than 500 runs",
+            "over 500",
+            "500 plus runs",
+        )
+    ):
+        lift += 0.22
     return min(1.85, lift)
 
 
@@ -274,3 +300,21 @@ def parse_toss_elected(
     if winner_t1:
         return "team1" if bats_first_is_winner else "team2"
     return "team2" if bats_first_is_winner else "team1"
+
+
+def dew_prior_from_pitch_multipliers(pm: PitchMultipliers | None) -> float:
+    """
+    Scalar prior in [0, ~0.45] for ``second_innings_dew_prior`` in the match-winner RF.
+    Historical training rows use 0; at inference, when pitch text pushes second-innings
+    runs above first-innings (dew / chase language), this mirrors that tilt for the ML head.
+    """
+    if pm is None:
+        return 0.0
+    a = float(pm.first_innings_runs)
+    b = float(pm.second_innings_runs)
+    if a < 1e-9:
+        return 0.0
+    excess = b / a - 1.0
+    if excess <= 0.015:
+        return 0.0
+    return float(max(0.0, min(0.45, excess)))

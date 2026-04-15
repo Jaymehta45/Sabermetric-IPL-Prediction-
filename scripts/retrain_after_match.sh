@@ -6,32 +6,32 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-echo "==> build_unified_dataset.py"
-python3 build_unified_dataset.py
+echo "==> iplpred.pipeline.build_unified_dataset"
+python3 -m iplpred.pipeline.build_unified_dataset
 
-echo "==> build_team_franchise_profiles.py"
-python3 build_team_franchise_profiles.py
+echo "==> iplpred.pipeline.build_team_franchise_profiles"
+python3 -m iplpred.pipeline.build_team_franchise_profiles
 
-echo "==> build_player_match_stats.py"
-python3 build_player_match_stats.py
+echo "==> iplpred.pipeline.build_player_match_stats"
+python3 -m iplpred.pipeline.build_player_match_stats
 
-echo "==> build_features.py"
-python3 build_features.py
+echo "==> iplpred.pipeline.build_features"
+python3 -m iplpred.pipeline.build_features
 
-echo "==> build_training_dataset.py"
-python3 build_training_dataset.py
+echo "==> iplpred.pipeline.build_training_dataset"
+python3 -m iplpred.pipeline.build_training_dataset
 
-echo "==> train_player_model.py"
-python3 train_player_model.py
+echo "==> iplpred.training.train_player_model"
+python3 -m iplpred.training.train_player_model
 
-echo "==> train_match_winner_model.py"
-python3 train_match_winner_model.py
+echo "==> iplpred.training.train_match_winner_model"
+python3 -m iplpred.training.train_match_winner_model
 
-echo "==> train_win_prob_ensemble (hybrid ML + MC stack / calibration; requires match winner model)"
+echo "==> iplpred.training.train_win_prob_ensemble (hybrid ML + MC stack / calibration; requires match winner model)"
 python3 -m iplpred.training.train_win_prob_ensemble
 
-echo "==> train_team_total_model.py"
-python3 train_team_total_model.py
+echo "==> iplpred.training.train_team_total_model"
+python3 -m iplpred.training.train_team_total_model
 
 echo "==> scripts/build_player_registry.py"
 python3 scripts/build_player_registry.py

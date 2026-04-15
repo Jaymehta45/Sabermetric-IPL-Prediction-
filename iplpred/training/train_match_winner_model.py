@@ -1,21 +1,24 @@
 """
 Train a team-level classifier: P(team1 wins) from pre-match aggregate team features.
 
-Labels come from match_training_dataset.csv (winner column). That file is built with
-build_training_dataset.match_winner_proxy — i.e. higher total team runs in the match.
-For true official results, regenerate labels from ball-by-ball or matches CSV later.
+Labels come from match_training_dataset.csv (winner column): **official** IPL results
+when ``data/ipl/matches_updated_mens_ipl.csv`` matches ``match_id``, else **proxy**
+from higher total team runs (see ``resolve_winner_label``). Ties are excluded from
+training rows. Sample weights down-weight proxy vs official labels.
 
 Usage:
-  python train_match_winner_model.py
+  python -m iplpred.training.train_match_winner_model [--official-only] [--model rf|logistic|gbm]
 """
 
 from __future__ import annotations
 
+import argparse
 import joblib
 import numpy as np
 import pandas as pd
 from sklearn.calibration import CalibratedClassifierCV
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import HistGradientBoostingClassifier, RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, brier_score_loss, log_loss, roc_auc_score
 
 from iplpred.match.match_winner_model import (
@@ -79,8 +82,57 @@ def time_based_split(
     return train, test
 
 
+def _make_base_estimator(model_name: str):
+    m = model_name.lower().strip()
+    if m == "logistic":
+        return LogisticRegression(
+            max_iter=2000,
+            C=0.15,
+            random_state=42,
+            class_weight="balanced",
+        )
+    if m == "gbm":
+        return HistGradientBoostingClassifier(
+            max_depth=5,
+            max_iter=180,
+            learning_rate=0.06,
+            min_samples_leaf=8,
+            l2_regularization=0.2,
+            random_state=42,
+        )
+    return RandomForestClassifier(
+        n_estimators=300,
+        max_depth=12,
+        min_samples_leaf=5,
+        random_state=42,
+        n_jobs=-1,
+        class_weight="balanced_subsample",
+    )
+
+
 def main() -> None:
+    ap = argparse.ArgumentParser(description="Train match winner classifier.")
+    ap.add_argument(
+        "--official-only",
+        action="store_true",
+        help="Train only on rows with official IPL winner labels.",
+    )
+    ap.add_argument(
+        "--model",
+        choices=("rf", "logistic", "gbm"),
+        default="rf",
+        help="Base estimator before isotonic calibration (default: rf).",
+    )
+    args = ap.parse_args()
+
     df = load_match_training_with_dates()
+    if args.official_only and "winner_source" in df.columns:
+        df = df[df["winner_source"].astype(str).str.strip().str.lower() == "official"].copy()
+        if len(df) < 30:
+            raise SystemExit(
+                f"--official-only left only {len(df)} rows; need at least 30 for a stable split."
+            )
+
     train, test = time_based_split(df, test_frac=0.2)
 
     y_train = (train["winner"] == "team1").astype(int).values
@@ -89,18 +141,11 @@ def main() -> None:
     X_train = build_winner_feature_matrix(train)
     X_test = build_winner_feature_matrix(test)
 
-    sw_train = (
-        recency_sample_weights(train["date"]) * label_weight_from_source(train)
-    )
+    sw_train = recency_sample_weights(train["date"]) * label_weight_from_source(train)
+    if args.official_only:
+        sw_train = recency_sample_weights(train["date"])
 
-    base = RandomForestClassifier(
-        n_estimators=300,
-        max_depth=12,
-        min_samples_leaf=5,
-        random_state=42,
-        n_jobs=-1,
-        class_weight="balanced_subsample",
-    )
+    base = _make_base_estimator(args.model)
     cv = min(5, max(2, len(y_train) // 150))
     clf = CalibratedClassifierCV(base, method="isotonic", cv=cv)
     clf.fit(X_train, y_train, sample_weight=sw_train)
@@ -139,6 +184,8 @@ def main() -> None:
         "model": clf,
         "calibration": "isotonic",
         "feature_names": WINNER_FEATURE_COLS,
+        "base_model_type": args.model,
+        "official_only": bool(args.official_only),
         "train_rows": len(train),
         "test_rows": len(test),
         "test_accuracy": acc,

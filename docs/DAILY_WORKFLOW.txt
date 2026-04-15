@@ -1,0 +1,291 @@
+
+================================================================================
+IPLPRED — DAILY WORKFLOW (PROCESS 1 → 2 → 3)
+================================================================================
+For **each match**, run **Process 1**, then **Process 2**, then **Process 3** in that
+order.
+
+**Push after every process (required)** — Do not stop at “logged locally.” After **each**
+of P1, P2, and P3, commit and push so **GitHub `main`** updates and **Vercel** sees
+`data/processed/prediction_log.csv`.
+
+  • **Process 1 (pre):**  `python3 scripts/log_prediction.py pre  <json> --push`
+  • **Process 2 (post):** `python3 scripts/log_prediction.py post <json> --push`
+  • **Process 3:**       `python3 scripts/log_prediction.py process3 <json> --push`
+
+Or set **`export IPLPRED_LOG_AUTO_PUSH=1`** once in your shell so every
+`log_prediction.py` run pushes without typing `--push` each time.
+
+Refresh the web app (/) after each push to see P1·P2·P3 move forward.
+
+**Assistants / automation:** If you generate a pre/post/process3 JSON or update
+``prediction_log.csv``, run the matching ``log_prediction.py … --push`` in the
+same session unless the user explicitly opts out. The live site reads the CSV
+from GitHub ``main``; local-only writes are invisible on Vercel. After a push,
+``GET /api/build-info`` on the deployed app should show an updated ``row_count``
+(may take a short cache window; hard-refresh the browser).
+
+**Process 1 prerequisites (one-time per machine / after clone):** build ``data/processed/player_features.csv`` and trained models under ``models/``.
+Quick check from repo root:
+  ``python3 scripts/check_prediction_ready.py``
+Pre-match **pred_p_team1_win** is the **hybrid** (ML roster model + Monte Carlo +
+learned stack / calibration in ``models/win_prob_ensemble.pkl``) when that bundle
+exists; ``pred_extra`` still records MC and leader-model components.
+
+Repeatable flow: what you send in, what we predict, how we retrain after the
+game, how we compare to reality, and how we improve the model.
+
+--------------------------------------------------------------------------------
+PROCESS 1 — PRE-MATCH: YOU GIVE A → WE COMPUTE B USING C
+--------------------------------------------------------------------------------
+Naming:
+  A  = everything you provide before first ball (inputs).
+  B  = the prediction bundle we return (outputs).
+  C  = parameters / signals the models and simulator actually use (features,
+       CLI flags, and inference-time adjustments).
+
+A — WHAT YOU PROVIDE (inputs)
+  • Toss: who won and bat or field (so we know batting first).
+  • Venue (ground name / city aligned with fixtures where possible).
+  • Playing XI for both teams (11 each) — names or stats player_ids.
+  • Optional: pitch / conditions text; impact substitute per side.
+  • Optional: fixtures reference — data/processed/ipl_2026_fixtures.csv;
+      helpers: scripts/show_fixture.py, iplpred.core.fixtures.
+
+B — WHAT WE PRODUCE (outputs)
+  • Predicted winner + P(team1 win) and P(team2 win) (Monte Carlo; team1 =
+    first innings after toss reorder).
+  • Best batsman and best bowler (highest predicted runs / wickets in the sim).
+  • Top 5 batsmen and top 3 bowlers (ordered lists of player_id strings; same
+    ordering as pred_top5_bats / pred_top3_bowls in the export JSON).
+  • Player of the match (composite score: runs + 25×wickets + bonuses).
+  • On-disk: --export-json file + `log_prediction.py pre` row in
+    data/processed/prediction_log.csv, then **--push** (see top of this file).
+
+B′ — STANDARD FORMAT FOR “RUN PROCESS 1” (assistant / human reply)
+  When someone says “run Process 1” (or pre-match prediction), report outputs
+  in this order so they match the CLI, the JSON, and prediction_log.csv:
+
+  ─────────────────────────────────────────────────────────────────────────────
+  PROCESS 1 — PRE-MATCH · <match_key or match label>
+  ─────────────────────────────────────────────────────────────────────────────
+  Fixture:     <match_date> · <venue>
+  Teams:       team1 (1st inn) = <name>  |  team2 (chase) = <name>
+  Toss:        <who won> chose to <bat|bowl> → batting first = <team>
+
+  Pitch / venue (if given): <one line or “—”>
+  Pitch multipliers (1st / 2nd inn): runs×… wk×… | runs×… wk×…
+  Venue spin harshness (0–1): …
+
+  1. Winner:              <team> — P(<team>) = …%  (P(team1)=…%, P(team2)=…%)
+  2. Best batsman:        <player_id> (<side>) — predicted runs ≈ …
+  3. Best bowler:         <player_id> (<side>) — predicted wickets ≈ …
+  4. Top 5 batsmen:       (ordered, highest predicted runs first)
+     1. …
+     2. …
+     3. …
+     4. …
+     5. …
+  5. Top 3 bowlers:       (ordered, highest predicted wickets first)
+     1. …
+     2. …
+     3. …
+  6. Player of the match: <player_id> (<side>) — score=… (runs, wickets noted)
+
+  Artifacts:
+    • JSON:  predictions/<file>_pre.json  (--export-json)
+    • Log + push:  python3 scripts/log_prediction.py pre <that-json> --push
+             → row in data/processed/prediction_log.csv; **git commit + push** so
+               Vercel/history update (pred_top5_bats / pred_top3_bowls as JSON in CSV)
+    • Cloudflare share (read-only dashboard): there is **no** stable bookmark URL.
+      Start uvicorn on port 8000, then in another terminal run `make tunnel`
+      (scripts/cloudflared_tunnel.sh). **Copy the https://….trycloudflare.com URL
+      from that tunnel’s terminal output** — it works only while **both** uvicorn
+      and cloudflared stay running. Stopping either process breaks the link; the
+      next tunnel prints a **new** URL.
+
+  Optional footnotes (when relevant):
+    • Registry: name resolutions or passthrough ids.
+    • Impact subs: team1 / team2 impact player; if 12-a-side trim: who was
+      dropped from team totals (lowest runs + 25×wickets).
+    • Live scores: Process 1 is pre-first-ball only. If you restate outputs
+      after play starts, say explicitly that win probability and “favorite”
+      labels are stale unless you run Process 2/3 (or BBB-driven in-play).
+      A mid-innings collapse (e.g. 4/4 chasing a high target) is not described
+      by pre-match P(team1)/P(team2).
+  ─────────────────────────────────────────────────────────────────────────────
+
+PROCESS 1A vs 1B — impact substitutes (same models; different team-total rule)
+  • **Process 1B** (default): omit `--process-variant` or pass `--process-variant 1b`
+    (or `--impact-add-only`). When `--team1-impact` / `--team2-impact` are set,
+    **all 12** players count toward team totals — “full playing twelve.”
+  • **Process 1A** (legacy trim): `--process-variant 1a`. Each side with 12 names
+    **drops** the lowest predicted-impact row (runs + 25×wickets) from **team
+    totals** only.
+  • **Per-player execution noise:** After RF outputs (and shrinkage), the headline
+    six outcomes apply one Gaussian draw per player (heteroskedastic; uses
+    `std_runs` / `std_wickets` when present). Scales come from `get_mc_noise_params()`
+    (`headline_runs_noise_scale` / `headline_wk_noise_scale`, overridable via env
+    `IPLPRED_HEADLINE_RUNS_NOISE`, `IPLPRED_HEADLINE_WK_NOISE`; disable with
+    `IPLPRED_NO_HEADLINE_EXECUTION_NOISE=1`). Seed: `IPLPRED_HEADLINE_NOISE_SEED`
+    (default 42). Monte Carlo loops use `mc_runs_noise_scale` / `mc_wk_noise_scale`.
+    Logged as `pred_extra.headline_execution_noise` when present.
+  • **Exports:** `pred_extra.process_variant` is `"1A"` or `"1B"`;
+    `pred_extra.full_playing_twelve` is true only for 1B when impact subs are used.
+
+C — PARAMETERS / SIGNALS (what B actually depends on)
+  Player-level (from player_features.csv, built from history + priors):
+    form_runs, form_wickets, IPL windows, momentum, SR/economy, venue and
+    matchup columns, opponent_strength, volatility, role_encoded, and compact
+    play-style tags (e.g. aggressive vs anchor batting; economical vs
+    expensive wicket-taking bowlers — see iplpred.pipeline.build_features).
+  Team-level winner model + Ridge team-total heads: roster aggregates and diffs
+    (strength, form, SR, economy) **plus** franchise profile features from
+    data/processed/team_franchise_profiles.csv when that file exists (built by
+    iplpred.pipeline.build_team_franchise_profiles): batting-first vs chasing run productivity
+    vs league, powerplay batting ratio, bowling “stinginess” in innings 1 vs 2,
+    and batting / bowling / fielding dominance z-scores. Diff columns include
+    bat_dom_diff, bowl_dom_diff, field_dom_diff.
+  Unified ball-by-ball (data/processed/unified_ball_by_ball.csv) carries
+    innings, over, ball_in_over, and competition when the source CSV/JSON
+    provides them; franchise profiles use IPL-labelled rows (or legacy rows
+    with blank competition) for those aggregates.
+  Inference-time: toss order, pitch keywords (match_context), shrinkage for
+    low-data players, playing probability, Monte Carlo sims + ensemble with
+    calibrated P(team1). Second-innings **display** totals are capped vs the
+    first-innings calibrated target (chase coherence; avoids e.g. 171 vs 255 from
+    independent ML lifts) — ``_coerce_second_innings_chase_coherent``;
+    ``pred_extra.chase_innings_coherence``. Expected innings totals are also nudged by
+    apply_franchise_innings_profile (first innings vs chase, opposite bowling,
+    dominance) after Ridge/anchor calibration — see iplpred/core/team_franchise_profile.py.
+  CLI knobs: --sims, --use-registry, --no-squad-check, impact subs,
+    --process-variant 1a|1b, pitch file.
+
+HOW TO RUN B (recommended)
+  From repo root — predictions are run via CLI (not the web app):
+    python3 -m iplpred.cli.predict_match_outcomes \
+      --team1-name "..." --team2-name "..." \
+      --xi1 "id1,id2,..." --xi2 "id1,id2,..." \
+      --batting-first team1 \
+      --pitch-file examples/pitch_rcb_srh_2026.txt \
+      --use-registry --sims 200
+  Use --team1-impact / --team2-impact when needed (sub appended → 12 per side).
+  **Process 1A (default):** `--process-variant 1a` — lowest predicted-impact row
+    dropped from each 12 for team totals.
+  **Process 1B (experimental):** `--process-variant 1b` or `--impact-add-only` —
+    full playing 12; all count toward team totals.
+  Log + push pre-match row: `python3 scripts/log_prediction.py pre <json> --push`
+  (JSON from --export-json).
+
+PROBLEMS WE HAVE SEEN WITH “B” (running predictions)
+  • Squad validation fails when every XI name does not resolve to the same
+    universe as data/processed/ipl_2026_squads.csv via squad_stats_bridge /
+    player_identity. Symptom: error or hard stop during validate_squad.
+  • Workaround used: --no-squad-check (skips strict squad alignment). Use only
+    when you trust the XI strings and registry; fix bridge/aliases for a durable fix.
+  • Name drift: display names vs stats ids (e.g. initials vs full names). Fix:
+    player_aliases.csv, build_player_registry.py, build_player_identity.py.
+  • Missing or prior-filled features for debut / low-history players — preds
+    are noisier; fill_player_feature_priors.py + rebuild features/registry.
+
+PROBLEMS WE HAVE SEEN WITH “C” (parameters / features)
+  • Wrong or missing player → wrong feature row → wrong runs/wickets and team
+    aggregates. Root cause is often identity (A not mapped cleanly), not the RF
+    math itself.
+  • squad_stats_bridge gaps: stats player_id not linked to 2026 squad display
+    name → validation noise even when features exist.
+  • Calibration drift: win probs can look overconfident in small samples;
+    review prediction_log + scripts/evaluate_official_results.py periodically.
+
+--------------------------------------------------------------------------------
+PROCESS 2 — AFTER THE MATCH: E THEN F
+--------------------------------------------------------------------------------
+E — POST-MATCH DATA + REBUILD / TRAIN
+  What you provide:
+    • Ball-by-ball CSV for that match (schema aligned with unified pipeline);
+      save as matches/<match_id>_....csv
+    • Stable match_id in the file for iplpred.pipeline.build_unified_dataset
+  What we run (batch retrain on full history):
+    bash scripts/retrain_after_match.sh
+    (or: ``make retrain-after-match``)
+    This chain includes ``iplpred.pipeline.build_team_franchise_profiles`` immediately after
+    ``iplpred.pipeline.build_unified_dataset``, then ``iplpred.training.train_match_winner_model`` and
+    ``python3 -m iplpred.training.train_win_prob_ensemble`` so **Process 1**
+    hybrid win probabilities stay aligned with the updated match-level model.
+  Or manually (each as ``python3 -m <module>`` except ``scripts/`` helpers): unified_dataset →
+    team_franchise_profiles → player_match_stats → features → training_dataset →
+    train_player_model → train_match_winner_model → train_win_prob_ensemble →
+    train_team_total_model → ``scripts/build_player_registry.py`` (see Makefile ``build-data``).
+  Artifact: data/processed/team_franchise_profiles.csv (one row per canonical
+    franchise). Without innings/competition in the BBB feed, profiles may be empty
+    or neutral — keep match CSVs innings-aware and competition=IPL where possible.
+
+F — PREDICTION VS ACTUAL + ERROR REVIEW
+  • Append post row: `python3 scripts/log_prediction.py post <json> --push`
+    (JSON with actual winner, POTM, top scorer, top wicket, bbb path, notes).
+    **Always use --push** (or IPLPRED_LOG_AUTO_PUSH=1) so the post row reaches GitHub/Vercel.
+  • Storage: data/processed/prediction_log.csv
+  • Review winner_correct, potm_correct; optional BBB-backed top 5/3 checks when
+    bbb_match_file is set.
+
+--------------------------------------------------------------------------------
+PROCESS 3 — AFTER EVERY PROCESS 2: MODEL IMPROVEMENT REVIEW
+--------------------------------------------------------------------------------
+After each completed Process 2, do the review checklist below, then **log
+Process 3** so the web app shows step 3 complete for that match — **with push**:
+
+    python3 scripts/log_prediction.py process3 examples/prediction_log_process3.example.json --push
+
+  JSON: `match_key` (required), `process3_notes` (optional — short improvement
+  notes; shown on the history page).
+
+  Same rule as P1/P2: never skip **`--push`** (unless IPLPRED_LOG_AUTO_PUSH=1 is set).
+
+Review checklist:
+
+  1. Data & identity — Any new players or name collisions? Update aliases,
+     re-run build_player_registry / build_player_identity as needed.
+  2. BBB quality — Duplicate balls, wrong wicket rows, over numbering; fix
+     source CSV before the next retrain. Innings and competition columns feed
+     franchise profiles; omitting them weakens first-innings vs chase signals.
+  3. Where the model missed — data issue vs calibration vs T20 variance?
+     Note in post_notes or process3_notes in the log.
+  4. Calibration — Bin pred_p_team1_win vs outcome frequency when N is large
+     enough; adjust ensemble / calibration if systematically off.
+  5. Features — Low-data priors still sensible? New venues or roles?
+     Franchise profiles refreshed (team_franchise_profiles.csv after unified)?
+  6. Process — Anything to automate (validate_bbb_csv, Makefile targets)?
+
+(This replaces the old “G. IDEAS” list as the standing post-match checklist.)
+
+--------------------------------------------------------------------------------
+WEB APP (READ-ONLY)
+--------------------------------------------------------------------------------
+The web UI does not accept match inputs. It only reads data/processed/
+prediction_log.csv (and optional BBB paths referenced there) to show:
+  • Dashboard (/) — counts for Process 1/2/3 completion + latest rows with P1·P2·P3
+  • History (/history) — per-match cards with steps 1·2·3 and process3_notes
+
+Run: pip install -r requirements-web.txt
+     uvicorn web.dashboard:app --reload --host 0.0.0.0 --port 8000
+
+Pre-match predictions and logging: always use CLI + log_prediction.py as above, with
+**`--push` after every Process 1 / 2 / 3** (see top of file). **Refresh the browser**
+after each successful push to see updates.
+
+**Vercel (iplpred.vercel.app):** the live site loads ``prediction_log.csv`` from GitHub.
+Using ``log_prediction.py … --push`` commits and pushes that file (and syncs ``main`` when
+not already on ``main``). If you logged without ``--push``, run
+``bash scripts/push_prediction_log.sh`` or push manually. No redeploy is required. Check
+``GET /api/build-info`` for ``source`` and ``row_count``.
+
+--------------------------------------------------------------------------------
+TEMPLATE FILES
+--------------------------------------------------------------------------------
+  examples/prediction_log_pre.example.json      — pre row for log_prediction.py
+  examples/prediction_log_post.example.json       — post row for log_prediction.py
+  examples/prediction_log_process3.example.json   — Process 3 complete for log_prediction.py
+
+================================================================================
+End of DAILY_WORKFLOW.txt — update when the pipeline or outputs change.
+================================================================================

@@ -41,7 +41,12 @@ from iplpred.training.train_team_total_model import load_with_dates, time_based_
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Evaluate match-level models on time holdout.")
+    ap = argparse.ArgumentParser(
+        description=(
+            "Evaluate match-level models on time holdout. "
+            "Prefer Brier / log loss over raw accuracy for probabilistic forecasts."
+        )
+    )
     ap.add_argument("--test-frac", type=float, default=0.2, help="Fraction most recent for test")
     args = ap.parse_args()
 
