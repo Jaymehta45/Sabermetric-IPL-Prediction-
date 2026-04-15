@@ -13,8 +13,8 @@
     "V Kohli",
     "RM Patidar",
     "TH David",
-    "PD Salt",
-    "RR Pant"
+    "RR Pant",
+    "PD Salt"
   ],
   "pred_top3_bowls": [
     "R Shepherd",
@@ -26,7 +26,7 @@
     "sims": 3000,
     "win_probability_basis": "hybrid_ensemble",
     "ensemble_p_team1": 1e-06,
-    "sim_win_probability_team1": 0.0033333333333333335,
+    "sim_win_probability_team1": 0.20566666666666666,
     "leader_model_p_team1": 0.5089653406309016,
     "batting_order_swapped": false,
     "impact_trim_lowest": false,
@@ -42,7 +42,7 @@
     "process_variant": "1B",
     "full_playing_twelve": true,
     "pred_first_innings_team_runs": 171.26869891905935,
-    "pred_second_innings_team_runs": 254.99999999999997,
+    "pred_second_innings_team_runs": 216.68512729970445,
     "pred_first_innings_team_wickets": 2.776376215850848,
     "pred_second_innings_team_wickets": 1.7539030276145886,
     "pred_first_innings_team_wickets_raw_sum": 2.776376215850848,
@@ -52,7 +52,7 @@
     "team_run_calibration": {
       "method": "ml_team_total",
       "scale_team1": 1.8495101801873444,
-      "scale_team2": 2.705472520173625,
+      "scale_team2": 2.2989633625085264,
       "sum_player_runs_before_team1": 92.60219313943482,
       "sum_player_runs_before_team2": 94.25340604961504
     },
@@ -65,6 +65,14 @@
       "runs_scale": 0.18,
       "wickets_scale": 0.2,
       "seed": 42
+    },
+    "chase_innings_coherence": {
+      "applied": true,
+      "first_innings_target": 171.26869891905935,
+      "second_before": 255.0,
+      "second_after": 216.68512729970448,
+      "max_excess_runs": 45.41642838064514,
+      "cap_ceiling": 216.68512729970448
     },
     "player_process1": {
       "heuristic": "role_aware_v1",
