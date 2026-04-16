@@ -1,0 +1,11 @@
+{
+  "match_key": "match23-rcb-lsg-2026-04-15",
+  "actual_winner": "Royal Challengers Bengaluru",
+  "actual_top_scorer": "V Kohli",
+  "actual_top_scorer_runs": 47,
+  "actual_top_wicket_bowler": "Rasikh Salam",
+  "actual_top_wickets": 4,
+  "official_potm": "V Kohli",
+  "bbb_match_file": "matches/match23_lsg_vs_rcb.csv",
+  "post_notes": "Process 2 from BBB matches/match23_lsg_vs_rcb.csv. LSG 146/10; RCB 147/5 (5 wkts). Pre hybrid P(LSG)~0% — pred_winner RCB correct. Top runs: V Kohli 47; Marsh 40; Mukul Choudhary 39; Badoni 38. Wickets: Rasikh Salam Dar 4; B Kumar & Prince Yadav 3 each."
+}
