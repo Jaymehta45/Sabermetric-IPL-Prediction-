@@ -16,6 +16,7 @@ from iplpred.core.match_context import (
 )
 from iplpred.match.inference_feature_rows import franchise_match, venue_matches
 from iplpred.match.match_simulator import (
+    _apply_match_psychology_mc,
     _calibrated_innings_targets,
     _coerce_second_innings_chase_coherent,
     _dynamic_batting_par_multiplier,
@@ -23,7 +24,10 @@ from iplpred.match.match_simulator import (
     _team_calibration_scales,
     apply_playing_prob_and_drop,
 )
-from iplpred.match.win_prob_ensemble import apply_ensemble_and_calibrate
+from iplpred.match.win_prob_ensemble import (
+    _moderate_display_win_p_upper,
+    apply_ensemble_and_calibrate,
+)
 
 
 class TestSquadBridge(unittest.TestCase):
@@ -33,9 +37,21 @@ class TestSquadBridge(unittest.TestCase):
         self.assertEqual(r, "Finn Allen")
 
 
+class TestMatchPsychologyMC(unittest.TestCase):
+    def test_desperation_skews_totals_symmetric_when_chaos_zero(self) -> None:
+        rng = np.random.default_rng(0)
+        r1, r2 = _apply_match_psychology_mc(
+            100.0, 100.0, 1.0, 0.0, rng, match_chaos=0.0
+        )
+        self.assertGreater(r1, r2)
+        k = 0.004
+        self.assertAlmostEqual(r1, 100.0 * (1.0 + k * 1.0), places=6)
+        self.assertAlmostEqual(r2, 100.0 * (1.0 + k * -1.0), places=6)
+
+
 class TestWinProbBounds(unittest.TestCase):
     def test_ensemble_no_display_floor_ceiling(self) -> None:
-        """Blended prob is not forced into [2%, 98%]; only epsilon clip for stability."""
+        """Heavy underdog stays near 0; extreme favorite isotonic output is moderated (not 99.99%)."""
         p = apply_ensemble_and_calibrate(0.001, 0.001)
         self.assertIsNotNone(p)
         assert p is not None
@@ -44,8 +60,22 @@ class TestWinProbBounds(unittest.TestCase):
         p_hi = apply_ensemble_and_calibrate(0.999, 0.999)
         self.assertIsNotNone(p_hi)
         assert p_hi is not None
-        self.assertGreater(p_hi, 0.99)
+        self.assertGreater(p_hi, 0.5)
+        self.assertLessEqual(p_hi, 0.96)
         self.assertLess(p_hi, 1.0)
+
+    def test_display_moderation_preserves_midrange(self) -> None:
+        """Favorites in the plausible band must not all collapse to ~0.80 (regression)."""
+        a = _moderate_display_win_p_upper(0.63, None)
+        b = _moderate_display_win_p_upper(0.78, None)
+        c = _moderate_display_win_p_upper(0.86, None)
+        self.assertAlmostEqual(a, 0.63, places=6)
+        self.assertAlmostEqual(b, 0.78, places=6)
+        self.assertAlmostEqual(c, 0.86, places=6)
+        self.assertGreater(b - a, 0.12)
+        hi = _moderate_display_win_p_upper(0.985, None)
+        self.assertGreater(hi, 0.90)
+        self.assertLessEqual(hi, 0.95)
 
 
 class TestInferenceVenueFranchise(unittest.TestCase):
@@ -112,6 +142,16 @@ class TestPitchHighPar(unittest.TestCase):
         )
         self.assertGreater(with_500.first_innings_runs, base.first_innings_runs)
         self.assertGreater(with_500.second_innings_runs, base.second_innings_runs)
+
+    def test_afternoon_slower_day_dampens_200_par_hype(self) -> None:
+        """Day game + sluggish deck + ~200 par should not stack to belter-level mults."""
+        text = (
+            "Afternoon game at Chinnaswamy. Sixes galore. Day game expect a bit slower; "
+            "ball not coming on as quickly; 200 is still a par score; 200-ish and more."
+        )
+        pm = parse_pitch_report(text)
+        self.assertLess(pm.first_innings_runs, 1.12)
+        self.assertGreater(pm.first_innings_runs, 0.88)
 
 
 class TestTeamRunCalibration(unittest.TestCase):

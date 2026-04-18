@@ -7,6 +7,7 @@ Used to (1) order teams so team1 = first innings / team2 = second, and
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import Literal
 
@@ -31,12 +32,20 @@ class MatchContext:
     - pitch_text: free-text commentary; use parse_pitch_report() or pass explicit mults.
     - Explicit mults override parsed pitch when not None.
     - venue: optional stadium/city string; used for spin-vs-pace wicket nudges (e.g. small grounds).
+    - team1_desperation / team2_desperation: 0–1 “must-win” intensity for each **declared**
+      franchise (same team1/team2 order as XIs / JSON). Mapped onto first-innings vs chase sides
+      inside predict_match_outcomes when toss order is swapped. Light touch on win sims only.
+    - match_chaos: 0–2+ scale for extra stochasticity — wider execution shocks plus rare
+      “hero innings” / “devastating spell” tail events in Monte Carlo (1 = default).
     """
 
     batting_first: BattingFirst | None = None
     pitch_text: str | None = None
     pitch: PitchMultipliers | None = None
     venue: str | None = None
+    team1_desperation: float = 0.0
+    team2_desperation: float = 0.0
+    match_chaos: float = 1.0
 
 
 def _is_high_scoring_par_track(t: str) -> bool:
@@ -87,6 +96,30 @@ def _is_high_scoring_par_track(t: str) -> bool:
     return False
 
 
+def _slower_day_batting_track(t: str) -> bool:
+    """
+    Afternoon / day game plus explicit sluggish-batting cues — par may still be ~200 but
+    totals should not get the full belter stack (avoids ~240 when comms say 200-ish par).
+    """
+    t = t.lower()
+    dayish = any(p in t for p in ("afternoon", "day game", "day-game"))
+    sluggish = any(
+        p in t
+        for p in (
+            "slower",
+            "a bit slower",
+            "bit slower",
+            "slow on",
+            "slow on the bat",
+            "not coming on",
+            "little bit slow",
+            "bounce is a little bit less",
+            "not coming on as quickly",
+        )
+    )
+    return dayish and sluggish
+
+
 def _high_par_target_lift(t: str) -> float:
     """
     Extra multiplier on innings run *targets* when broadcast cites par scores (~199–200) or belters.
@@ -102,8 +135,17 @@ def _high_par_target_lift(t: str) -> float:
         lift += 0.22
     if "216" in t and "average" in t:
         lift += 0.26
-    if "200" in t:
-        lift += 0.16
+    # Cited ~200 par / band — avoid substring noise; on slower day tracks use a mild bump only.
+    if (
+        re.search(r"\b200\b", t)
+        or "200s" in t
+        or "200-ish" in t
+        or "200 is" in t
+    ):
+        if _slower_day_batting_track(t):
+            lift += 0.06
+        else:
+            lift += 0.16
     if "200-run" in t or "200 run ground" in t:
         lift += 0.10
     if "more than 200" in t:
@@ -137,6 +179,9 @@ def _high_par_target_lift(t: str) -> float:
         )
     ):
         lift += 0.22
+    lift = min(1.85, lift)
+    if _slower_day_batting_track(t):
+        lift = 1.0 + (lift - 1.0) * 0.42
     return min(1.85, lift)
 
 
@@ -203,6 +248,9 @@ def parse_pitch_report(text: str) -> PitchMultipliers:
     # Broadcast-cited par totals (e.g. 199 avg, 200 chase) — strong lift toward ~190–210 innings
     par_lift = _high_par_target_lift(t)
     runs_m = min(1.85, runs_m * par_lift)
+    if _slower_day_batting_track(t):
+        runs_m *= 0.94
+        runs_m = min(1.85, runs_m)
     wk_m = max(0.82, wk_m - 0.03 * max(0.0, par_lift - 1.0))
 
     # Second innings / chase / dew (T20 chase advantage — mild)

@@ -33,28 +33,28 @@
     "impact_dropped_team1": null,
     "impact_dropped_team2": null,
     "pitch_multipliers": {
-      "first_innings_runs": 1.1803,
-      "second_innings_runs": 1.1803,
-      "first_innings_wickets": 0.9827,
-      "second_innings_wickets": 0.9827
+      "first_innings_runs": 0.98055254,
+      "second_innings_runs": 0.98055254,
+      "first_innings_wickets": 0.9867440000000001,
+      "second_innings_wickets": 0.9867440000000001
     },
     "venue_spin_harshness": 0.92,
     "process_variant": "1B",
     "full_playing_twelve": true,
-    "pred_first_innings_team_runs": 241.27372506368164,
-    "pred_second_innings_team_runs": 194.3696068081275,
-    "pred_first_innings_team_wickets": 3.501268826144835,
-    "pred_second_innings_team_wickets": 3.064124110061886,
-    "pred_first_innings_team_wickets_raw_sum": 3.501268826144835,
-    "pred_second_innings_team_wickets_raw_sum": 3.064124110061886,
+    "pred_first_innings_team_runs": 219.49814037876564,
+    "pred_second_innings_team_runs": 176.8272414630942,
+    "pred_first_innings_team_wickets": 3.5156772225353206,
+    "pred_second_innings_team_wickets": 3.076733571648423,
+    "pred_first_innings_team_wickets_raw_sum": 3.5156772225353206,
+    "pred_second_innings_team_wickets_raw_sum": 3.076733571648423,
     "ml_team_total_runs_team1": 123.46669995732087,
     "ml_team_total_runs_team2": 120.94326080372714,
     "team_run_calibration": {
       "method": "ml_team_total",
-      "scale_team1": 1.392006664051033,
-      "scale_team2": 1.6728278601387827,
-      "sum_player_runs_before_team1": 173.32799568755243,
-      "sum_player_runs_before_team2": 116.19223438328078
+      "scale_team1": 1.5243463960093178,
+      "scale_team2": 1.831865597773494,
+      "sum_player_runs_before_team1": 143.99492198978106,
+      "sum_player_runs_before_team2": 96.52850169685784
     },
     "dynamic_batting_par_mult": {
       "team1": 1.112925265650952,
@@ -74,9 +74,9 @@
     },
     "chase_innings_coherence": {
       "applied": false,
-      "first_innings_target": 241.2737250636817,
-      "second_before": 194.3696068081275,
-      "second_after": 194.3696068081275,
+      "first_innings_target": 219.4981403787656,
+      "second_before": 176.82724146309423,
+      "second_after": 176.82724146309423,
       "max_excess_runs": null,
       "cap_ceiling": null
     },
@@ -85,9 +85,9 @@
       "summary": "Best bat / top 5 runs exclude pure bowlers when enough batters exist; best bowl / top 3 wickets prefer bowlers and allrounders; POTM uses a role-weighted composite (not the official match award)."
     },
     "pitch_report_file": "predictions/_pitch_match26_rcb_dc.txt",
-    "process1_input_notes": "DC won toss, elected to bowl → RCB bats first (team1). Impacts: RCB Rasikh Salam, DC KK Nair (stats id; announced Karun Nair). CLI: --use-registry --no-squad-check; XI uses feature-aligned ids (e.g. D Padikkal, PD Salt, pathum-nissanka, AR Patel, auqib-nabi). Chinnaswamy afternoon pitch from Pommie / Faf commentary.",
+    "process1_input_notes": "DC bowl first → RCB team1. Impacts Rasikh Salam / KK Nair. Pitch: afternoon Chinnaswamy, slower day deck + ~200 par — parse_pitch_report applies slower-day dampening (iplpred/core/match_context._slower_day_batting_track) so innings totals track 200–220-ish not ~240.",
     "win_prob_ensemble": {
-      "note": "Headline ~94% RCB vs roster ML ~50% RCB — large MC vs ML gap at high-scoring Chinnaswamy bat-first; see IPLPRED_WIN_P_SKIP_ISOTONIC / IPLPRED_WIN_P_HIGH_GAP_ML_SHARE if you want a flatter hybrid."
+      "note": "Headline ~94% RCB vs roster ML ~50%; optional IPLPRED_WIN_P_SKIP_ISOTONIC for flatter hybrid."
     }
   }
 }
