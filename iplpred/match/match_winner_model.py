@@ -6,12 +6,14 @@ Trained by ``python -m iplpred.training.train_match_winner_model``; saved to mod
 
 from __future__ import annotations
 
+import os
 from typing import Any
 
 import joblib
 import numpy as np
 import pandas as pd
 
+from iplpred.core.franchise_normalize import canonical_franchise
 from iplpred.paths import MODELS_DIR
 
 WINNER_MODEL_PATH = MODELS_DIR / "match_winner_classifier.pkl"
@@ -368,7 +370,7 @@ def learned_team1_win_proba_from_rosters(
     tw = 0.5 if toss_team1_won is None else float(toss_team1_won)
     bf = 0.5 if team1_bats_first_signal is None else float(team1_bats_first_signal)
     try:
-        return predict_team1_win_proba_single(
+        p = predict_team1_win_proba_single(
             team1_strength=m1["team_strength"],
             team2_strength=m2["team_strength"],
             team1_form_runs=m1["team_avg_form_runs"],
@@ -406,6 +408,20 @@ def learned_team1_win_proba_from_rosters(
             team1_injury_availability=float(team1_injury_availability),
             team2_injury_availability=float(team2_injury_availability),
         )
+        if (
+            p is not None
+            and venue
+            and team1_name
+            and team2_name
+            and os.environ.get("IPLPRED_NO_GT_AHMEDABAD_ROSTER_NUDGE", "").strip() != "1"
+        ):
+            vlow = str(venue).lower()
+            t1c = canonical_franchise(str(team1_name).strip())
+            t2c = canonical_franchise(str(team2_name).strip())
+            gtc = canonical_franchise("Gujarat Titans")
+            if "ahmedabad" in vlow and t2c == gtc and t1c != gtc:
+                p = float(np.clip(p - 0.024, 1e-6, 1.0 - 1e-6))
+        return p
     except FileNotFoundError:
         return None
 

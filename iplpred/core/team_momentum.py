@@ -3,6 +3,11 @@ Franchise win-rate prior over the last N completed matches (chronological).
 
 Used by the match-winner and team-total heads. Training rows get momentum from
 build_training_dataset; at inference we replay history from match_training_dataset.csv.
+
+Venue momentum uses ``_canonical_venue_key`` so e.g. "Narendra Modi Stadium,
+Ahmedabad" and "Ahmedabad" share one bucket (``ipl_ahmedabad``). For Gujarat Titans
+at that bucket, thin or contradictory rows are shrunk toward ``GT_AHMEDABAD_VENUE_PRIOR``
+(see ``_franchise_venue_momentum_prior``).
 """
 
 from __future__ import annotations
@@ -16,6 +21,15 @@ from iplpred.paths import PROCESSED_DIR
 MATCH_TRAINING_PATH = PROCESSED_DIR / "match_training_dataset.csv"
 DEFAULT_PRIOR = 0.5
 WINDOW = 5
+
+# IPL Ahmedabad: training rows sometimes use "Ahmedabad" only; fixtures use
+# "Narendra Modi Stadium, Ahmedabad". Map to one key so venue history matches.
+IPL_AHMEDABAD_KEY = "ipl_ahmedabad"
+# When sample size at this ground is tiny, shrink GT's rate toward a strong home
+# prior (sparse proxy rows should not erase real home dominance).
+# IPL home record at Narendra Modi Stadium — shrink sparse/noisy rows here toward this.
+GT_AHMEDABAD_VENUE_PRIOR = 0.82
+GT_AHMEDABAD_PRIOR_WEIGHT = 8.0
 
 
 def _rate_from_hist(hist: dict[str, list[float]], team: str) -> float:
@@ -126,15 +140,47 @@ def _norm_venue(venue: str) -> str:
     return v[:120] if v else ""
 
 
-def _rate_from_venue_hist(
-    hist: dict[tuple[str, str], list[float]],
+def _canonical_venue_key(venue: str) -> str:
+    """Normalize venue labels so the same ground shares one momentum bucket."""
+    v = _norm_venue(venue)
+    if not v:
+        return ""
+    if "ahmedabad" in v:
+        return IPL_AHMEDABAD_KEY
+    return v
+
+
+def _franchise_venue_momentum_prior(
+    team_canon: str, venue_key: str, raw_rate: float, n_games: int
+) -> float:
+    """Blend empirical venue win-rate with a franchise–ground prior when data are thin."""
+    if (
+        venue_key == IPL_AHMEDABAD_KEY
+        and team_canon == canonical_franchise("Gujarat Titans")
+    ):
+        if n_games == 0:
+            return float(GT_AHMEDABAD_VENUE_PRIOR)
+        return float(
+            (GT_AHMEDABAD_PRIOR_WEIGHT * GT_AHMEDABAD_VENUE_PRIOR + raw_rate * n_games)
+            / (GT_AHMEDABAD_PRIOR_WEIGHT + n_games)
+        )
+    if n_games == 0:
+        return DEFAULT_PRIOR
+    return float(raw_rate)
+
+
+def _venue_rate_adjusted(
+    vhist: dict[tuple[str, str], list[float]],
     team: str,
     venue_key: str,
 ) -> float:
-    h = hist.get((team, venue_key), [])
+    ct = canonical_franchise(team)
+    h = vhist.get((ct, venue_key), [])
     if not h:
-        return DEFAULT_PRIOR
-    return float(np.mean(h[-WINDOW:]))
+        return _franchise_venue_momentum_prior(ct, venue_key, DEFAULT_PRIOR, 0)
+    n_games = len(h)
+    raw = float(np.mean(h[-WINDOW:]))
+    return _franchise_venue_momentum_prior(ct, venue_key, raw, n_games)
 
 
 def _append_venue_result(
@@ -181,11 +227,12 @@ def attach_venue_momentum_chronological(df: pd.DataFrame) -> pd.DataFrame:
     for _, row in out.iterrows():
         a = canonical_franchise(str(row["team1_name"]))
         b = canonical_franchise(str(row["team2_name"]))
-        vk = _norm_venue(str(row.get("venue", "")))
+        raw_v = str(row.get("venue", ""))
+        vk = _canonical_venue_key(raw_v) or _norm_venue(raw_v)
         if not vk:
             vk = "__unknown__"
-        t1v.append(_rate_from_venue_hist(vhist, a, vk))
-        t2v.append(_rate_from_venue_hist(vhist, b, vk))
+        t1v.append(_venue_rate_adjusted(vhist, a, vk))
+        t2v.append(_venue_rate_adjusted(vhist, b, vk))
         w = str(row.get("winner", "")).strip()
         if w in ("team1", "team2", "tie"):
             _append_venue_result(vhist, a, b, vk, w)
@@ -222,7 +269,7 @@ def venue_momentum_row_from_history(
     if as_of is not None and pd.notna(as_of):
         hdf = hdf[hdf["match_date"] < as_of]
 
-    vk = _norm_venue(str(venue or ""))
+    vk = _canonical_venue_key(str(venue or "")) or _norm_venue(str(venue or ""))
     if not vk:
         return DEFAULT_PRIOR, DEFAULT_PRIOR
 
@@ -230,16 +277,15 @@ def venue_momentum_row_from_history(
     for _, row in hdf.iterrows():
         t1 = canonical_franchise(str(row["team1_name"]))
         t2 = canonical_franchise(str(row["team2_name"]))
-        row_vk = _norm_venue(str(row.get("venue", "")))
+        raw_venue = str(row.get("venue", ""))
+        row_vk = _canonical_venue_key(raw_venue) or _norm_venue(raw_venue)
         if not row_vk:
             row_vk = "__unknown__"
         w = str(row["winner"]).strip()
         _append_venue_result(vhist, t1, t2, row_vk, w)
 
-    m1 = _rate_from_venue_hist(
-        vhist, canonical_franchise(str(team1_name)), vk
-    )
-    m2 = _rate_from_venue_hist(
-        vhist, canonical_franchise(str(team2_name)), vk
-    )
+    t1n = canonical_franchise(str(team1_name))
+    t2n = canonical_franchise(str(team2_name))
+    m1 = _venue_rate_adjusted(vhist, t1n, vk)
+    m2 = _venue_rate_adjusted(vhist, t2n, vk)
     return m1, m2

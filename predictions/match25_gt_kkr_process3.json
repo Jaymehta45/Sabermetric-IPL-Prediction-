@@ -1,0 +1,4 @@
+{
+  "match_key": "match25-gt-kkr-2026-04-17",
+  "process3_notes": "BBB ingested via retrain_after_match; innings/competition IPL. Pre pick GT aligned with result (hybrid ~51% GT). Identity: slugs tim-seifert, shubman-gill, etc. in unified pipeline. Review calibration on tight chases vs bat-first MC bias."
+}

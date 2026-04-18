@@ -5,12 +5,25 @@ and optional isotonic calibration.
 Trained by iplpred/training/train_win_prob_ensemble.py → models/win_prob_ensemble.pkl.
 If missing, falls back to fixed 0.6/0.4 blend with no extra calibration.
 
-Reported hybrid probabilities are not artificially capped away from 0%/100%
-(beyond a tiny epsilon clip so values stay in (0, 1) for numerics).
+Isotonic calibration can push favorites to 99.9%+ while Monte Carlo often sits ~55–80%.
+For **reported** headline probabilities we apply **upper-tail-only** moderation: the
+50–90% band is left intact so matchups stay distinguishable; only mass above ~90% is
+soft-compressed toward a cap ~94% so blowouts do not print as 99.9%. Disable with
+``IPLPRED_WIN_P_NO_MODERATE=1``. Set ``IPLPRED_WIN_P_SKIP_ISOTONIC=1`` to skip learned
+isotonic and keep only stack/linear blend plus moderation (useful when ML vs MC diverge
+and isotonic inflates the headline). Set ``IPLPRED_WIN_P_ML_SHARE`` to a float in ``[0,1]``
+to **replace** the blended probability with ``share * ml_p + (1-share) * sim_p`` (skips
+logit stack for that run; applied before isotonic/moderation).
+With ``IPLPRED_WIN_P_SKIP_ISOTONIC=1``, if ``|ml_p - sim_p| >= 0.25`` and
+``IPLPRED_WIN_P_HIGH_GAP_ML_SHARE`` is not ``0``, the stack output is replaced by a
+high ML-weight blend (default share **0.97**) so bat-first Monte Carlo does not
+single-handedly swamp a toss-up roster model. Optional bundle keys (also written by retraining):
+``report_win_p_upper_thr``, ``report_win_p_upper_scale``, ``report_win_p_upper_cap``.
 """
 
 from __future__ import annotations
 
+import os
 from typing import Any
 
 import joblib
@@ -32,6 +45,30 @@ def _clip_p(p: float, eps: float = 1e-6) -> float:
 def _finalize_report_p(p: float) -> float:
     """Return the blended/calibrated probability for display — only epsilon clip for logit stability."""
     return _clip_p(float(p))
+
+
+def _moderate_display_win_p_upper(p: float, b: dict[str, Any] | None) -> float:
+    """
+    Compress only the extreme upper tail (default: above ~90%).
+
+    Probabilities at or below ``report_win_p_upper_thr`` pass through unchanged so
+    plausible favorites (e.g. 62% vs 78%) are not collapsed toward a single ~80%.
+    """
+    if os.environ.get("IPLPRED_WIN_P_NO_MODERATE", "").strip() == "1":
+        return float(p)
+    # Defaults tuned so the 0.50–0.90 range is preserved; only isotonic-saturated
+    # tails get nudged down from ~99% toward the mid-90s.
+    thr = float(b.get("report_win_p_upper_thr", 0.90)) if b else 0.90
+    scale = float(b.get("report_win_p_upper_scale", 0.45)) if b else 0.45
+    cap = float(b.get("report_win_p_upper_cap", 0.94)) if b else 0.94
+    thr = float(np.clip(thr, 0.55, 0.95))
+    scale = float(np.clip(scale, 0.15, 1.0))
+    cap = float(np.clip(cap, thr + 0.02, 0.97))
+    p = float(p)
+    if p <= thr:
+        return p
+    q = thr + (p - thr) * scale
+    return float(min(q, cap))
 
 
 def load_ensemble_bundle() -> dict[str, Any] | None:
@@ -57,6 +94,42 @@ def apply_ensemble_and_calibrate(
 
     if ml_p is None and sim_p is None:
         return None
+
+    ml_share_override = os.environ.get("IPLPRED_WIN_P_ML_SHARE", "").strip()
+    if ml_share_override and ml_p is not None and sim_p is not None:
+        sh = float(np.clip(float(ml_share_override), 0.0, 1.0))
+        raw = _clip_p(sh * float(ml_p) + (1.0 - sh) * float(sim_p))
+        raw = _clip_p(raw)
+        if os.environ.get("IPLPRED_WIN_P_SKIP_ISOTONIC", "").strip() == "1":
+            out = _moderate_display_win_p_upper(raw, b)
+            return _finalize_report_p(out)
+        if not b:
+            out = _moderate_display_win_p_upper(raw, None)
+            return _finalize_report_p(out)
+        iso_f = b.get("isotonic_favorite")
+        iso_u = b.get("isotonic_underdog")
+        use_split = iso_f is not None and iso_u is not None
+        if use_split:
+            fav = float(ml_p) >= 0.5 if ml_p is not None else raw >= 0.5
+            iso = iso_f if fav else iso_u
+            try:
+                lo = float(logit(raw))
+                out = float(iso.predict([lo])[0])
+            except Exception:
+                out = float(iso.predict([raw])[0])
+            out = _moderate_display_win_p_upper(out, b)
+            return _finalize_report_p(out)
+        iso = b.get("isotonic")
+        if iso is None:
+            out = _moderate_display_win_p_upper(raw, b)
+            return _finalize_report_p(out)
+        try:
+            lo = float(logit(raw))
+            out = float(iso.predict([lo])[0])
+        except Exception:
+            out = float(iso.predict([raw])[0])
+        out = _moderate_display_win_p_upper(out, b)
+        return _finalize_report_p(out)
 
     stack = b.get("stack_logit") if b else None
     if (
@@ -92,8 +165,26 @@ def apply_ensemble_and_calibrate(
 
     raw = _clip_p(raw)
 
+    if (
+        os.environ.get("IPLPRED_WIN_P_SKIP_ISOTONIC", "").strip() == "1"
+        and ml_p is not None
+        and sim_p is not None
+    ):
+        gap = abs(float(ml_p) - float(sim_p))
+        if gap >= 0.25:
+            hg = os.environ.get("IPLPRED_WIN_P_HIGH_GAP_ML_SHARE", "").strip()
+            if hg != "0":
+                sh = float(hg) if hg else 0.97
+                sh = float(np.clip(sh, 0.5, 0.995))
+                raw = _clip_p(sh * float(ml_p) + (1.0 - sh) * float(sim_p))
+
+    if os.environ.get("IPLPRED_WIN_P_SKIP_ISOTONIC", "").strip() == "1":
+        out = _moderate_display_win_p_upper(raw, b)
+        return _finalize_report_p(out)
+
     if not b:
-        return _finalize_report_p(raw)
+        out = _moderate_display_win_p_upper(raw, None)
+        return _finalize_report_p(out)
 
     iso_f = b.get("isotonic_favorite")
     iso_u = b.get("isotonic_underdog")
@@ -107,16 +198,19 @@ def apply_ensemble_and_calibrate(
             out = float(iso.predict([lo])[0])
         except Exception:
             out = float(iso.predict([raw])[0])
+        out = _moderate_display_win_p_upper(out, b)
         return _finalize_report_p(out)
 
     iso = b.get("isotonic")
     if iso is None:
-        return _finalize_report_p(raw)
+        out = _moderate_display_win_p_upper(raw, b)
+        return _finalize_report_p(out)
     try:
         lo = float(logit(raw))
         out = float(iso.predict([lo])[0])
     except Exception:
         out = float(iso.predict([raw])[0])
+    out = _moderate_display_win_p_upper(out, b)
     return _finalize_report_p(out)
 
 

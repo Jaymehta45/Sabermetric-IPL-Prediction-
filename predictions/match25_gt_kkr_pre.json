@@ -1,0 +1,105 @@
+{
+  "match_key": "match25-gt-kkr-2026-04-17",
+  "match_date": "2026-04-17",
+  "venue": "Narendra Modi Stadium, Ahmedabad",
+  "team1_name": "Kolkata Knight Riders",
+  "team2_name": "Gujarat Titans",
+  "team1_bats_first": true,
+  "pred_winner": "Gujarat Titans",
+  "pred_p_team1_win": 0.4887422214696543,
+  "pred_best_bat": "M Shahrukh Khan",
+  "pred_best_bowl": "SP Narine",
+  "pred_top5_bats": [
+    "M Shahrukh Khan",
+    "C Green",
+    "RK Singh",
+    "AM Rahane",
+    "Shubman Gill"
+  ],
+  "pred_top3_bowls": [
+    "SP Narine",
+    "CV Varun",
+    "AS Roy"
+  ],
+  "pred_potm": "M Shahrukh Khan",
+  "pred_extra": {
+    "sims": 400,
+    "win_probability_basis": "hybrid_ensemble",
+    "ensemble_p_team1": 0.4887422214696543,
+    "sim_win_probability_team1": 0.8575,
+    "leader_model_p_team1": 0.47733734172129305,
+    "batting_order_swapped": false,
+    "impact_trim_lowest": false,
+    "impact_dropped_team1": null,
+    "impact_dropped_team2": null,
+    "pitch_multipliers": {
+      "first_innings_runs": 1.0539056,
+      "second_innings_runs": 1.0791993344,
+      "first_innings_wickets": 0.982,
+      "second_innings_wickets": 0.970216
+    },
+    "venue_spin_harshness": 0.4,
+    "process_variant": "1B",
+    "full_playing_twelve": true,
+    "pred_first_innings_team_runs": 179.96419976065394,
+    "pred_second_innings_team_runs": 175.89057464437442,
+    "pred_first_innings_team_wickets": 2.1365749936844827,
+    "pred_second_innings_team_wickets": 3.613084155921412,
+    "pred_first_innings_team_wickets_raw_sum": 2.1365749936844827,
+    "pred_second_innings_team_wickets_raw_sum": 3.613084155921412,
+    "ml_team_total_runs_team1": 127.03506221455932,
+    "ml_team_total_runs_team2": 125.52705031825224,
+    "team_run_calibration": {
+      "method": "ml_team_total",
+      "scale_team1": 1.3013304468100426,
+      "scale_team2": 1.5898915539112701,
+      "sum_player_runs_before_team1": 138.29246845165346,
+      "sum_player_runs_before_team2": 110.63054848720243
+    },
+    "dynamic_batting_par_mult": {
+      "team1": 1.0477738831838097,
+      "team2": 1.044672243783497
+    },
+    "headline_execution_noise": {
+      "enabled": true,
+      "runs_scale": 0.18,
+      "wickets_scale": 0.2,
+      "seed": 42
+    },
+    "match_psychology": {
+      "team1_desperation": 0.3,
+      "team2_desperation": 0.42,
+      "match_chaos": 1.0,
+      "desp_run_k": 0.004
+    },
+    "chase_innings_coherence": {
+      "applied": false,
+      "first_innings_target": 179.9641997606539,
+      "second_before": 175.8905746443744,
+      "second_after": 175.8905746443744,
+      "max_excess_runs": null,
+      "cap_ceiling": null
+    },
+    "player_process1": {
+      "heuristic": "role_aware_v1",
+      "summary": "Best bat / top 5 runs exclude pure bowlers when enough batters exist; best bowl / top 3 wickets prefer bowlers and allrounders; POTM uses a role-weighted composite (not the official match award)."
+    },
+    "franchise_momentum_last5": {
+      "Kolkata Knight Riders": 0.4,
+      "Gujarat Titans": 0.6
+    },
+    "venue_momentum_at_fixture": {
+      "venue_key": "ipl_ahmedabad",
+      "Kolkata Knight Riders": 0.5,
+      "Gujarat Titans": 0.7288888888888889
+    },
+    "win_prob_ensemble": {
+      "isotonic_skipped": true,
+      "high_gap_ml_share_applied": 0.97,
+      "gt_ahmedabad_roster_nudge_on_team1_p": -0.024,
+      "note": "IPLPRED_WIN_P_SKIP_ISOTONIC=1 + |ML−MC|≥0.25 → 0.97·ML+0.03·MC. Opponent-of-GT at Ahmedabad: roster P(team1) nudged −0.024 before blend (disable: IPLPRED_NO_GT_AHMEDABAD_ROSTER_NUDGE=1). High-gap share off: IPLPRED_WIN_P_HIGH_GAP_ML_SHARE=0."
+    },
+    "pitch_report_file": "predictions/_pitch_match25_gt_kkr.txt",
+    "process1_notes": "Headline tips GT: roster ML ~47.7% KKR after Ahmedabad/GT nudge; MC still ~85.8% KKR bat-first; hybrid ~48.9% KKR / ~51.1% GT."
+  }
+}
