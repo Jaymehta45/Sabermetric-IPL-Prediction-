@@ -1,0 +1,93 @@
+{
+  "match_key": "match26-rcb-dc-2026-04-18",
+  "match_date": "2026-04-18",
+  "venue": "M Chinnaswamy Stadium, Bengaluru",
+  "team1_name": "Royal Challengers Bengaluru",
+  "team2_name": "Delhi Capitals",
+  "team1_bats_first": true,
+  "pred_winner": "Royal Challengers Bengaluru",
+  "pred_p_team1_win": 0.94,
+  "pred_best_bat": "RM Patidar",
+  "pred_best_bowl": "Mukesh Kumar",
+  "pred_top5_bats": [
+    "RM Patidar",
+    "AR Patel",
+    "V Kohli",
+    "KK Nair",
+    "KL Rahul"
+  ],
+  "pred_top3_bowls": [
+    "Mukesh Kumar",
+    "T Natarajan",
+    "JR Hazlewood"
+  ],
+  "pred_potm": "RM Patidar",
+  "pred_extra": {
+    "sims": 400,
+    "win_probability_basis": "hybrid_ensemble",
+    "ensemble_p_team1": 0.94,
+    "sim_win_probability_team1": 0.9975,
+    "leader_model_p_team1": 0.5012728443424961,
+    "batting_order_swapped": false,
+    "impact_trim_lowest": false,
+    "impact_dropped_team1": null,
+    "impact_dropped_team2": null,
+    "pitch_multipliers": {
+      "first_innings_runs": 1.1803,
+      "second_innings_runs": 1.1803,
+      "first_innings_wickets": 0.9827,
+      "second_innings_wickets": 0.9827
+    },
+    "venue_spin_harshness": 0.92,
+    "process_variant": "1B",
+    "full_playing_twelve": true,
+    "pred_first_innings_team_runs": 241.27372506368164,
+    "pred_second_innings_team_runs": 194.3696068081275,
+    "pred_first_innings_team_wickets": 3.501268826144835,
+    "pred_second_innings_team_wickets": 3.064124110061886,
+    "pred_first_innings_team_wickets_raw_sum": 3.501268826144835,
+    "pred_second_innings_team_wickets_raw_sum": 3.064124110061886,
+    "ml_team_total_runs_team1": 123.46669995732087,
+    "ml_team_total_runs_team2": 120.94326080372714,
+    "team_run_calibration": {
+      "method": "ml_team_total",
+      "scale_team1": 1.392006664051033,
+      "scale_team2": 1.6728278601387827,
+      "sum_player_runs_before_team1": 173.32799568755243,
+      "sum_player_runs_before_team2": 116.19223438328078
+    },
+    "dynamic_batting_par_mult": {
+      "team1": 1.112925265650952,
+      "team2": 1.0
+    },
+    "headline_execution_noise": {
+      "enabled": true,
+      "runs_scale": 0.18,
+      "wickets_scale": 0.2,
+      "seed": 42
+    },
+    "match_psychology": {
+      "team1_desperation": 0.0,
+      "team2_desperation": 0.0,
+      "match_chaos": 1.0,
+      "desp_run_k": 0.004
+    },
+    "chase_innings_coherence": {
+      "applied": false,
+      "first_innings_target": 241.2737250636817,
+      "second_before": 194.3696068081275,
+      "second_after": 194.3696068081275,
+      "max_excess_runs": null,
+      "cap_ceiling": null
+    },
+    "player_process1": {
+      "heuristic": "role_aware_v1",
+      "summary": "Best bat / top 5 runs exclude pure bowlers when enough batters exist; best bowl / top 3 wickets prefer bowlers and allrounders; POTM uses a role-weighted composite (not the official match award)."
+    },
+    "pitch_report_file": "predictions/_pitch_match26_rcb_dc.txt",
+    "process1_input_notes": "DC won toss, elected to bowl → RCB bats first (team1). Impacts: RCB Rasikh Salam, DC KK Nair (stats id; announced Karun Nair). CLI: --use-registry --no-squad-check; XI uses feature-aligned ids (e.g. D Padikkal, PD Salt, pathum-nissanka, AR Patel, auqib-nabi). Chinnaswamy afternoon pitch from Pommie / Faf commentary.",
+    "win_prob_ensemble": {
+      "note": "Headline ~94% RCB vs roster ML ~50% RCB — large MC vs ML gap at high-scoring Chinnaswamy bat-first; see IPLPRED_WIN_P_SKIP_ISOTONIC / IPLPRED_WIN_P_HIGH_GAP_ML_SHARE if you want a flatter hybrid."
+    }
+  }
+}
