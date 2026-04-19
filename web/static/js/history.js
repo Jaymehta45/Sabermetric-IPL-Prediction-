@@ -72,13 +72,13 @@
     chartsDone = true;
 
     const css = getComputedStyle(document.documentElement);
-    const accent = css.getPropertyValue("--accent").trim() || "#34d399";
-    const danger = css.getPropertyValue("--danger").trim() || "#f87171";
-    const muted = "#64748b";
+    const accent = css.getPropertyValue("--accent").trim() || "#15803d";
+    const danger = css.getPropertyValue("--danger").trim() || "#b91c1c";
+    const muted = css.getPropertyValue("--text-muted").trim() || "#71717a";
 
-    Chart.defaults.color = "#94a3b8";
-    Chart.defaults.borderColor = "rgba(148, 163, 184, 0.15)";
-    Chart.defaults.font.family = '"DM Sans", system-ui, sans-serif';
+    Chart.defaults.color = "#71717a";
+    Chart.defaults.borderColor = "rgba(24, 24, 27, 0.08)";
+    Chart.defaults.font.family = 'Inter, system-ui, sans-serif';
 
     const commonLegend = {
       position: "bottom",
@@ -97,7 +97,7 @@
           datasets: [
             {
               data: wData,
-              backgroundColor: [accent, danger, "rgba(100, 116, 139, 0.45)"],
+              backgroundColor: [accent, danger, "rgba(113, 113, 122, 0.35)"],
               borderWidth: 0,
             },
           ],
@@ -134,7 +134,7 @@
           datasets: [
             {
               data: pData,
-              backgroundColor: [accent, danger, "rgba(100, 116, 139, 0.45)"],
+              backgroundColor: [accent, danger, "rgba(113, 113, 122, 0.35)"],
               borderWidth: 0,
             },
           ],
@@ -195,7 +195,7 @@
               min: 0,
               max: 100,
               title: { display: true, text: "Probability (%)" },
-              grid: { color: "rgba(148, 163, 184, 0.08)" },
+              grid: { color: "rgba(24, 24, 27, 0.06)" },
             },
           },
           plugins: {
@@ -230,7 +230,7 @@
               label: "% correct in bucket",
               data: rates,
               backgroundColor: rates.map((r, i) =>
-                graded[i] === 0 ? "rgba(100, 116, 139, 0.35)" : accent
+                graded[i] === 0 ? "rgba(113, 113, 122, 0.35)" : accent
               ),
               borderRadius: 6,
             },
@@ -245,7 +245,7 @@
               min: 0,
               max: 100,
               title: { display: true, text: "Accuracy (%)" },
-              grid: { color: "rgba(148, 163, 184, 0.08)" },
+              grid: { color: "rgba(24, 24, 27, 0.06)" },
             },
           },
           plugins: {
