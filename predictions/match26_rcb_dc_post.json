@@ -1,0 +1,11 @@
+{
+  "match_key": "match26-rcb-dc-2026-04-18",
+  "actual_winner": "Delhi Capitals",
+  "actual_top_scorer": "PD Salt",
+  "actual_top_scorer_runs": 63,
+  "actual_top_wicket_bowler": "Lungi Ngidi",
+  "actual_top_wickets": 3,
+  "official_potm": "Tristan Stubbs",
+  "bbb_match_file": "matches/match26_rcb_vs_dc.csv",
+  "post_notes": "Process 2: BBB matches/match26_rcb_vs_dc.csv. RCB 175/8 vs DC 179/4 (chase, DC win). Pre hybrid ~94% RCB — winner miss. Top runs PD Salt 63; Tristan Stubbs 60. Top wickets tied at 3 (Bhuvneshwar Kumar RCB, Lungi Ngidi DC); logged Ngidi. POTM set to Stubbs — correct in log if official differed."
+}

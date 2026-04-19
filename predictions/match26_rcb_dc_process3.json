@@ -1,0 +1,4 @@
+{
+  "match_key": "match26-rcb-dc-2026-04-18",
+  "process3_notes": "BBB ingested via retrain_after_match; innings totals auto-filled. Favourite miss (94% RCB): review hybrid vs tight chase at Chinnaswamy; recent-innings blend in pred_extra may need tuning for DC chase profile. Identity: ball-by-ball slugs aligned with unified pipeline. Check calibration on high-confidence home favourites when chase ~180."
+}
