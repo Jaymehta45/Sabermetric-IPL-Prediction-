@@ -1,0 +1,13 @@
+{
+  "match_key": "match27-srh-csk-2026-04-19",
+  "actual_winner": "Sunrisers Hyderabad",
+  "actual_top_scorer": "Abhishek Sharma",
+  "actual_top_scorer_runs": 63,
+  "actual_top_wicket_bowler": "Jamie Overton",
+  "actual_top_wickets": 3,
+  "official_potm": "Abhishek Sharma",
+  "bbb_match_file": "matches/match27_srh_vs_csk.csv",
+  "actual_first_innings_team_runs": 195,
+  "actual_second_innings_team_runs": 183,
+  "post_notes": "Process 2: BBB matches/match27_srh_vs_csk.csv. SRH 195/9 vs CSK 183 (chase, SRH defend). Pre hybrid ~94% SRH — winner hit. Top runs Abhishek Sharma 63; H Klaasen 59. Top wickets tied at 3 (Jamie Overton SRH, Anshul Kamboj SRH, Eshan Malinga CSK); logged Overton. POTM set to Abhishek Sharma — correct in log if official differed."
+}

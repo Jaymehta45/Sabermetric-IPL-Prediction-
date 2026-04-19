@@ -1,0 +1,4 @@
+{
+  "match_key": "match27-srh-csk-2026-04-19",
+  "process3_notes": "BBB ingested via retrain_after_match; innings totals 195 vs 183. Hybrid favourite SRH ~94% — outcome aligned; spot-check calibration on similar home-first defend at Hyderabad. Identity: ball-by-ball slugs aligned with unified pipeline. Review chase model vs CSK middle-order when target ~195."
+}
