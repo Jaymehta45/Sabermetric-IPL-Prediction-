@@ -1,0 +1,118 @@
+{
+  "match_key": "match28-rr-kkr-2026-04-20",
+  "match_date": "2026-04-20",
+  "venue": "Eden Gardens, Kolkata",
+  "team1_name": "Rajasthan Royals",
+  "team2_name": "Kolkata Knight Riders",
+  "team1_bats_first": true,
+  "pred_winner": "Rajasthan Royals",
+  "pred_p_team1_win": 0.94,
+  "pred_best_bat": "RA Jadeja",
+  "pred_best_bowl": "CV Varun",
+  "pred_top5_bats": [
+    "RA Jadeja",
+    "YBK Jaiswal",
+    "C Green",
+    "Dhruv Jurel",
+    "RK Singh"
+  ],
+  "pred_top3_bowls": [
+    "CV Varun",
+    "JC Archer",
+    "Ravi Bishnoi"
+  ],
+  "pred_potm": "YBK Jaiswal",
+  "pred_extra": {
+    "sims": 400,
+    "win_probability_basis": "hybrid_ensemble",
+    "ensemble_p_team1": 0.94,
+    "sim_win_probability_team1": 0.9625,
+    "leader_model_p_team1": 0.5457622721626306,
+    "batting_order_swapped": false,
+    "impact_trim_lowest": false,
+    "impact_dropped_team1": null,
+    "impact_dropped_team2": null,
+    "pitch_multipliers": {
+      "first_innings_runs": 0.9902,
+      "second_innings_runs": 0.9902,
+      "first_innings_wickets": 1.007,
+      "second_innings_wickets": 1.007
+    },
+    "venue_spin_harshness": 0.55,
+    "process_variant": "1B",
+    "full_playing_twelve": true,
+    "pred_first_innings_team_runs": 169.68174780664742,
+    "pred_second_innings_team_runs": 167.35811948294128,
+    "pred_first_innings_team_wickets": 3.74868877057881,
+    "pred_second_innings_team_wickets": 3.175402980597254,
+    "pred_first_innings_team_wickets_raw_sum": 3.74868877057881,
+    "pred_second_innings_team_wickets_raw_sum": 3.175402980597254,
+    "ml_team_total_runs_team1": 118.66912061867261,
+    "ml_team_total_runs_team2": 128.78351350814074,
+    "team_run_calibration": {
+      "method": "ml_team_total",
+      "scale_team1": 2.1650169288601475,
+      "scale_team2": 1.2847312072984767,
+      "sum_player_runs_before_team1": 78.3743284150589,
+      "sum_player_runs_before_team2": 130.26703059145007
+    },
+    "dynamic_batting_par_mult": {
+      "team1": 1.0667953484424073,
+      "team2": 1.0917144557896636
+    },
+    "headline_execution_noise": {
+      "enabled": true,
+      "runs_scale": 0.18,
+      "wickets_scale": 0.2,
+      "seed": 42
+    },
+    "match_psychology": {
+      "team1_desperation": 0.0,
+      "team2_desperation": 0.0,
+      "match_chaos": 1.0,
+      "desp_run_k": 0.004
+    },
+    "chase_innings_coherence": {
+      "applied": false,
+      "first_innings_target": 169.6817478066474,
+      "second_before": 167.35811948294125,
+      "second_after": 167.35811948294125,
+      "max_excess_runs": null,
+      "cap_ceiling": null
+    },
+    "recent_innings_context": {
+      "weight": 0.38,
+      "last_n": 3,
+      "team1_recent": {
+        "n_role": 31,
+        "n_venue_role": 0,
+        "n_venue_any": 0,
+        "n_form": 92,
+        "mean_role": 116.0,
+        "mean_venue": null,
+        "mean_form": 130.33333333333334,
+        "blend": "role"
+      },
+      "team2_recent": {
+        "n_role": 31,
+        "n_venue_role": 0,
+        "n_venue_any": 2,
+        "n_form": 91,
+        "mean_role": 107.33333333333333,
+        "mean_venue": 110.0,
+        "mean_form": 127.33333333333333,
+        "blend": "role+venue"
+      },
+      "prior_first_innings": 116.0,
+      "prior_chase": 108.53333333333333,
+      "venue_player_lift_team1": 1.0,
+      "venue_player_lift_team2": 0.9993178716337773
+    },
+    "player_process1": {
+      "heuristic": "role_aware_v1",
+      "summary": "Best bat / top 5 runs exclude pure bowlers when enough batters exist; best bowl / top 3 wickets prefer bowlers and allrounders; POTM uses a role-weighted composite (not the official match award)."
+    },
+    "pitch_report_file": "predictions/_pitch_match28_rr_kkr.txt",
+    "process1_input_notes": "RR bat first (toss). Process 1B: impacts Sandeep Sharma + angkrish-raghuvanshi (use stats slug for KKR impact; display name may not resolve). Eden: green tinge, pace/bounce, high-scoring; Bishop/Martin. Team news block in pitch file."
+  }
+}

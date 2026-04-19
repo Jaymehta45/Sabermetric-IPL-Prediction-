@@ -1,0 +1,118 @@
+{
+  "match_key": "match27-srh-csk-2026-04-19",
+  "match_date": "2026-04-19",
+  "venue": "Rajiv Gandhi International Stadium, Hyderabad",
+  "team1_name": "Sunrisers Hyderabad",
+  "team2_name": "Chennai Super Kings",
+  "team1_bats_first": true,
+  "pred_winner": "Sunrisers Hyderabad",
+  "pred_p_team1_win": 0.94,
+  "pred_best_bat": "SV Samson",
+  "pred_best_bowl": "anshul-kamboj",
+  "pred_top5_bats": [
+    "SV Samson",
+    "H Klaasen",
+    "Ishan Kishan",
+    "Abhishek Sharma",
+    "RD Gaikwad"
+  ],
+  "pred_top3_bowls": [
+    "anshul-kamboj",
+    "Noor Ahmad",
+    "Abhishek Sharma"
+  ],
+  "pred_potm": "SV Samson",
+  "pred_extra": {
+    "sims": 400,
+    "win_probability_basis": "hybrid_ensemble",
+    "ensemble_p_team1": 0.94,
+    "sim_win_probability_team1": 0.9425,
+    "leader_model_p_team1": 0.5012728443424961,
+    "batting_order_swapped": false,
+    "impact_trim_lowest": false,
+    "impact_dropped_team1": null,
+    "impact_dropped_team2": null,
+    "pitch_multipliers": {
+      "first_innings_runs": 1.1892319999999998,
+      "second_innings_runs": 1.217773568,
+      "first_innings_wickets": 0.9772,
+      "second_innings_wickets": 0.9654735999999999
+    },
+    "venue_spin_harshness": 0.38,
+    "process_variant": "1A",
+    "full_playing_twelve": false,
+    "pred_first_innings_team_runs": 161.48465850742784,
+    "pred_second_innings_team_runs": 142.72274125714054,
+    "pred_first_innings_team_wickets": 2.019838566051587,
+    "pred_second_innings_team_wickets": 1.6689569178901684,
+    "pred_first_innings_team_wickets_raw_sum": 2.019838566051587,
+    "pred_second_innings_team_wickets_raw_sum": 1.6689569178901684,
+    "ml_team_total_runs_team1": 110.68170899524961,
+    "ml_team_total_runs_team2": 112.5496923086578,
+    "team_run_calibration": {
+      "method": "ml_team_total",
+      "scale_team1": 1.1212471068618945,
+      "scale_team2": 1.3876762104701665,
+      "sum_player_runs_before_team1": 144.02236359778468,
+      "sum_player_runs_before_team2": 102.85017512030696
+    },
+    "dynamic_batting_par_mult": {
+      "team1": 1.0599589438339438,
+      "team2": 1.0
+    },
+    "headline_execution_noise": {
+      "enabled": true,
+      "runs_scale": 0.18,
+      "wickets_scale": 0.2,
+      "seed": 42
+    },
+    "match_psychology": {
+      "team1_desperation": 0.0,
+      "team2_desperation": 0.0,
+      "match_chaos": 1.0,
+      "desp_run_k": 0.004
+    },
+    "chase_innings_coherence": {
+      "applied": false,
+      "first_innings_target": 161.4846585074279,
+      "second_before": 142.72274125714057,
+      "second_after": 142.72274125714057,
+      "max_excess_runs": null,
+      "cap_ceiling": null
+    },
+    "recent_innings_context": {
+      "weight": 0.38,
+      "last_n": 3,
+      "team1_recent": {
+        "n_role": 21,
+        "n_venue_role": 0,
+        "n_venue_any": 2,
+        "n_form": 92,
+        "mean_role": 125.66666666666667,
+        "mean_venue": 121.5,
+        "mean_form": 130.33333333333334,
+        "blend": "role+venue"
+      },
+      "team2_recent": {
+        "n_role": 26,
+        "n_venue_role": 0,
+        "n_venue_any": 0,
+        "n_form": 92,
+        "mean_role": 108.0,
+        "mean_venue": null,
+        "mean_form": 131.66666666666666,
+        "blend": "role"
+      },
+      "prior_first_innings": 123.79166666666669,
+      "prior_chase": 108.0,
+      "venue_player_lift_team1": 1.0406072348710338,
+      "venue_player_lift_team2": 1.0
+    },
+    "player_process1": {
+      "heuristic": "role_aware_v1",
+      "summary": "Best bat / top 5 runs exclude pure bowlers when enough batters exist; best bowl / top 3 wickets prefer bowlers and allrounders; POTM uses a role-weighted composite (not the official match award)."
+    },
+    "pitch_report_file": "predictions/_pitch_match27_srh_csk.txt",
+    "process1_input_notes": "CSK won toss, elected to field → SRH bat first. 11v11 (impact pools in match27_srh_csk_match.json; not modeled as 12th). Pitch: Hyderabad pitch 3, ~205 avg 1st inn, hard red soil, short boundaries, high runs; commentators lean chase. Registry slugs: sarfaraz-khan, jamie-overton, etc."
+  }
+}

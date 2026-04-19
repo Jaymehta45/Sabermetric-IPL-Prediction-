@@ -1,0 +1,13 @@
+{
+  "match_key": "match24-mi-pbks-2026-04-16",
+  "actual_winner": "Punjab Kings",
+  "actual_top_scorer": "Quinton de Kock",
+  "actual_top_scorer_runs": 112,
+  "actual_top_wicket_bowler": "Arshdeep Singh",
+  "actual_top_wickets": 3,
+  "official_potm": "Prabhsimran Singh",
+  "bbb_match_file": "matches/match24_mi_vs_pbks.csv",
+  "actual_first_innings_team_runs": 195,
+  "actual_second_innings_team_runs": 198,
+  "post_notes": "BBB: MI 195/6, PBKS 198/3 (chase). Top runs de Kock 112 (MI); top wickets Arshdeep 3. Pred favoured MI (81% headline) — upset. POTM not in CSV; logged Prabhsimran Singh (80, winning chase) — correct if official award differs."
+}

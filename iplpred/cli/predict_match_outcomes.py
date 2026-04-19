@@ -49,6 +49,12 @@ T20 anchor (~165) while preserving relative strength. Wickets fallen use the
 fielding XI ``predicted_wickets`` sum (capped at 10). Logged in ``pred_extra`` as
 ``pred_first_innings_team_runs`` / ``pred_second_innings_team_runs`` and wicket
 keys; ``team_run_calibration`` records scales and pre-scale sums.
+
+**Match psychology (optional):** ``--team1-desperation`` / ``--team2-desperation`` (0–1)
+or the same keys in ``--match-json`` feed light **Monte Carlo** nudges from
+relative “must-win” intensity; ``--match-chaos`` scales execution variance and
+rare **hero innings / big-spell** tail draws (default 1). Does not change the
+deterministic headline team totals; hybrid win % blends MC with roster ML as before.
 """
 
 from __future__ import annotations
@@ -210,6 +216,26 @@ def predict_match_outcomes(
         v = getattr(match_context, "venue", None)
         venue = str(v).strip() if v else None
 
+    d_u1 = (
+        float(getattr(match_context, "team1_desperation", 0.0) or 0.0)
+        if match_context
+        else 0.0
+    )
+    d_u2 = (
+        float(getattr(match_context, "team2_desperation", 0.0) or 0.0)
+        if match_context
+        else 0.0
+    )
+    chaos = float(
+        getattr(match_context, "match_chaos", 1.0)
+        if match_context is not None
+        else 1.0
+    )
+    if swapped:
+        d1_sim, d2_sim = d_u2, d_u1
+    else:
+        d1_sim, d2_sim = d_u1, d_u2
+
     sim = run_simulation(
         t1_xi,
         t2_xi,
@@ -225,6 +251,9 @@ def predict_match_outcomes(
         match_date=match_date,
         team1_impact_player_id=sim_imp1,
         team2_impact_player_id=sim_imp2,
+        team1_desperation=d1_sim,
+        team2_desperation=d2_sim,
+        match_chaos=chaos,
     )
     six = six_match_outcomes(sim, team1_name=n1, team2_name=n2)
     return {
@@ -263,6 +292,19 @@ def print_six(six: dict, meta: dict | None = None) -> None:
                 "scaled down at batting-friendly / small grounds; pace slightly up."
             )
             print()
+        psy = meta.get("match_psychology") if meta else None
+        if isinstance(psy, dict):
+            d1p = float(psy.get("team1_desperation") or 0.0)
+            d2p = float(psy.get("team2_desperation") or 0.0)
+            ch = float(psy.get("match_chaos") or 1.0)
+            if d1p > 0.0 or d2p > 0.0 or abs(ch - 1.0) > 1e-9:
+                n1m = meta.get("team1_name") or "team1 (1st)"
+                n2m = meta.get("team2_name") or "team2 (chase)"
+                print(
+                    f"Match psychology (MC): desperation {n1m}={d1p:.2f}, {n2m}={d2p:.2f}; "
+                    f"chaos={ch:.2f} (execution variance + rare hero innings / big-spell tails)."
+                )
+                print()
     p1 = six.get("p_team1_win")
     basis = six.get("win_probability_basis") or ""
     n1 = meta.get("team1_name") if meta else None
@@ -522,9 +564,17 @@ def build_prediction_log_payload(
     if isinstance(hn, dict):
         pred_extra["headline_execution_noise"] = dict(hn)
 
+    psy = sim.get("match_psychology")
+    if isinstance(psy, dict):
+        pred_extra["match_psychology"] = dict(psy)
+
     chase = sim.get("chase_innings_coherence")
     if isinstance(chase, dict):
         pred_extra["chase_innings_coherence"] = dict(chase)
+
+    ric = sim.get("recent_innings_context")
+    if isinstance(ric, dict) and ric:
+        pred_extra["recent_innings_context"] = dict(ric)
 
     pred_extra["player_process1"] = {
         "heuristic": "role_aware_v1",
@@ -687,6 +737,27 @@ def main() -> None:
         help="Venue string for export-json (or use venue in --match-json)",
     )
     parser.add_argument(
+        "--team1-desperation",
+        type=float,
+        default=0.0,
+        help="0–1 must-win intensity for --team1-name (Monte Carlo nudge; same order as xi1).",
+    )
+    parser.add_argument(
+        "--team2-desperation",
+        type=float,
+        default=0.0,
+        help="0–1 must-win intensity for --team2-name.",
+    )
+    parser.add_argument(
+        "--match-chaos",
+        type=float,
+        default=1.0,
+        help=(
+            "0–3 stochasticity scale for MC: widens shared innings shock when >1, softens when "
+            "<1; rare hero innings / big spell tails scale with this (1=default). 0=desperation only."
+        ),
+    )
+    parser.add_argument(
         "--show-ensemble-details",
         action="store_true",
         help="No-op: MC / roster ML / hybrid lines are always printed after the six outcomes.",
@@ -747,12 +818,23 @@ def main() -> None:
                 )
 
         venue_cli = (args.venue or "").strip() or None
+        d1 = max(0.0, min(1.0, float(args.team1_desperation)))
+        d2 = max(0.0, min(1.0, float(args.team2_desperation)))
+        chaos_cli = max(0.0, min(3.0, float(args.match_chaos)))
         mc = None
-        if batting_first is not None or pitch_text or venue_cli:
+        psych_cli = (
+            d1 > 0.0
+            or d2 > 0.0
+            or abs(chaos_cli - 1.0) > 1e-9
+        )
+        if batting_first is not None or pitch_text or venue_cli or psych_cli:
             mc = MatchContext(
                 batting_first=batting_first,
                 pitch_text=pitch_text or None,
                 venue=venue_cli,
+                team1_desperation=d1,
+                team2_desperation=d2,
+                match_chaos=chaos_cli,
             )
 
     t1_imp = args.team1_impact.strip() or None
@@ -806,6 +888,7 @@ def main() -> None:
             "team2_name": t2_name_eff,
             "pitch_multipliers": sim.get("pitch_multipliers"),
             "venue_spin_harshness": sim.get("venue_spin_harshness"),
+            "match_psychology": sim.get("match_psychology"),
         },
     )
     print_win_probability_breakdown(

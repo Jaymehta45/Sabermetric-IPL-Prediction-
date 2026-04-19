@@ -190,6 +190,10 @@ def main() -> None:
         "het_noise_gamma": 0.45,
         "divergence_thresh": 0.18,
         "divergence_sim_boost": 0.35,
+        # Headline display moderation (see win_prob_ensemble._moderate_display_win_p_upper)
+        "report_win_p_upper_thr": 0.90,
+        "report_win_p_upper_scale": 0.45,
+        "report_win_p_upper_cap": 0.94,
     }
 
     ll_raw_te = log_loss(y_test, calib_te)

@@ -1,0 +1,83 @@
+{
+  "match_key": "match24-mi-pbks-2026-04-16",
+  "match_date": "2026-04-16",
+  "venue": "Wankhede Stadium, Mumbai",
+  "team1_name": "Mumbai Indians",
+  "team2_name": "Punjab Kings",
+  "team1_bats_first": true,
+  "pred_winner": "Mumbai Indians",
+  "pred_p_team1_win": 0.8096,
+  "pred_best_bat": "Tilak Varma",
+  "pred_best_bowl": "JJ Bumrah",
+  "pred_top5_bats": [
+    "Tilak Varma",
+    "N Wadhera",
+    "Naman Dhir",
+    "MP Stoinis",
+    "SS Iyer"
+  ],
+  "pred_top3_bowls": [
+    "JJ Bumrah",
+    "Arshdeep Singh",
+    "SN Thakur"
+  ],
+  "pred_potm": "Tilak Varma",
+  "pred_extra": {
+    "sims": 3000,
+    "win_probability_basis": "hybrid_ensemble",
+    "ensemble_p_team1": 0.8096,
+    "sim_win_probability_team1": 0.8003333333333333,
+    "leader_model_p_team1": 0.5365445101103602,
+    "batting_order_swapped": false,
+    "impact_trim_lowest": false,
+    "impact_dropped_team1": null,
+    "impact_dropped_team2": null,
+    "pitch_multipliers": {
+      "first_innings_runs": 1.0315,
+      "second_innings_runs": 1.043878,
+      "first_innings_wickets": 0.9775,
+      "second_innings_wickets": 0.971635
+    },
+    "venue_spin_harshness": 0.78,
+    "process_variant": "1B",
+    "full_playing_twelve": true,
+    "prepared_data_substitutions": "Announced MI XI includes Mayank Rawat and impact AM Ghazanfar; PBKS XI includes Cooper Connolly. Those names have no rows in player_features.csv. RF inputs use Ashwani Kumar (XI), C Bosch (impact), and Suryansh Shedge (Connolly slot). Impact Nehal Wadhera resolves as N Wadhera.",
+    "pred_first_innings_team_runs": 206.84253410780633,
+    "pred_second_innings_team_runs": 212.53188493571272,
+    "pred_first_innings_team_wickets": 3.0409169215190737,
+    "pred_second_innings_team_wickets": 2.8226210338047024,
+    "pred_first_innings_team_wickets_raw_sum": 3.0409169215190737,
+    "pred_second_innings_team_wickets_raw_sum": 2.8226210338047024,
+    "ml_team_total_runs_team1": 123.92078033600745,
+    "ml_team_total_runs_team2": 124.35756014734326,
+    "team_run_calibration": {
+      "method": "ml_team_total",
+      "scale_team1": 1.9897616988085651,
+      "scale_team2": 1.388415876620996,
+      "sum_player_runs_before_team1": 103.95342026719084,
+      "sum_player_runs_before_team2": 153.07508975837564
+    },
+    "dynamic_batting_par_mult": {
+      "team1": 1.12,
+      "team2": 1.0872390845458217
+    },
+    "headline_execution_noise": {
+      "enabled": true,
+      "runs_scale": 0.18,
+      "wickets_scale": 0.2,
+      "seed": 42
+    },
+    "chase_innings_coherence": {
+      "applied": false,
+      "first_innings_target": 206.84253410780636,
+      "second_before": 212.53188493571275,
+      "second_after": 212.53188493571275,
+      "max_excess_runs": 48.93429415102224,
+      "cap_ceiling": 255.0
+    },
+    "player_process1": {
+      "heuristic": "role_aware_v1",
+      "summary": "Best bat / top 5 runs exclude pure bowlers when enough batters exist; best bowl / top 3 wickets prefer bowlers and allrounders; POTM uses a role-weighted composite (not the official match award)."
+    }
+  }
+}

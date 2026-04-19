@@ -1,0 +1,13 @@
+{
+  "match_key": "match17-srh-pk-2026-04-11",
+  "actual_winner": "Punjab Kings",
+  "actual_top_scorer": "Abhishek Sharma",
+  "actual_top_scorer_runs": 74,
+  "actual_top_wicket_bowler": "Shivang Kumar",
+  "actual_top_wickets": 3,
+  "official_potm": "Shreyas Iyer",
+  "bbb_match_file": "matches/match17_pbks_vs_srh.csv",
+  "actual_first_innings_team_runs": 223,
+  "actual_second_innings_team_runs": 223,
+  "post_notes": "Corrected from Tie: Punjab Kings won the match (user/official result). BBB aggregates show 223 v 223 in main innings — if resolution was super over or card shows different chase total, amend runs here."
+}

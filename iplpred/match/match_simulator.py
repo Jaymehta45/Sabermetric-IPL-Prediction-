@@ -3,10 +3,15 @@ Simulate match outcomes using trained player runs/wickets models.
 
 Per-player run predictions are **scaled** after pitch/venue so each team's sum
 matches the Ridge team-innings model when ``team_total_regressor.pkl`` exists,
-otherwise a T20 anchor while preserving relative team strength. After RF outputs
+otherwise a T20 anchor while preserving relative team strength. Targets are then
+nudged using **recent real innings scores** (last few games, same ground when
+available) and a small **venue affinity** lift from batters in the XI. After RF outputs
 (and optional shrinkage), the headline path applies **one draw of heteroskedastic
 execution noise per player** (``_apply_headline_execution_noise``); Monte Carlo
-re-draws that noise each iteration. Default impact rule is **no trim** (all 12
+re-draws that noise each iteration. Optional **match psychology** (declared in
+``MatchContext``): mild **desperation** nudges per-innings totals in MC, plus
+``match_chaos`` for extra execution variance and rare **hero innings / spell**
+tails (human error and upside outcomes). Default impact rule is **no trim** (all 12
 count when a sub is listed). Monte Carlo win draws use the same team scales. Second-innings calibration is
 **capped** relative to the first so independent ML + venue lifts cannot imply an
 implausible chase (e.g. 171 vs 255); see ``_coerce_second_innings_chase_coherent``.
@@ -23,6 +28,10 @@ import numpy as np
 import pandas as pd
 
 from iplpred.core.match_context import PitchMultipliers, dew_prior_from_pitch_multipliers
+from iplpred.core.recent_innings_context import (
+    batting_xi_venue_run_lift,
+    blend_innings_targets_with_recent_scores,
+)
 from iplpred.core.team_franchise_profile import apply_franchise_innings_profile
 from iplpred.core.venue_bowling_adjust import apply_venue_bowling_style_to_team_df
 from iplpred.match.win_prob_ensemble import (
@@ -801,6 +810,54 @@ def pick_winner(raw1: float, raw2: float) -> str:
     return "tie"
 
 
+def _apply_match_psychology_mc(
+    r1: float,
+    r2: float,
+    team1_desperation: float,
+    team2_desperation: float,
+    rng: np.random.Generator,
+    *,
+    match_chaos: float = 1.0,
+) -> tuple[float, float]:
+    """
+    Monte Carlo–only adjustments after scaled innings totals and shared log shock:
+
+    - **Desperation** (0–1 each): small symmetric run multipliers from relative
+      intensity (default gain ~0.4% per full step of (d1−d2); tune with
+      ``IPLPRED_DESP_RUN_K``).
+    - **match_chaos**: scales rare **hero innings** (extra runs to one side) and
+      **devastating spell** (soft cap on an innings), and adds mild extra log-normal
+      volatility when chaos > 1. ``match_chaos=0`` keeps only desperation (no tails).
+    """
+    k_desp = float(os.environ.get("IPLPRED_DESP_RUN_K", "0.004"))
+    d1 = float(np.clip(team1_desperation, 0.0, 1.0))
+    d2 = float(np.clip(team2_desperation, 0.0, 1.0))
+    chaos = float(np.clip(match_chaos, 0.0, 3.0))
+
+    r1 = float(r1 * (1.0 + k_desp * (d1 - d2)))
+    r2 = float(r2 * (1.0 + k_desp * (d2 - d1)))
+
+    if chaos <= 0.0:
+        return r1, r2
+
+    c = min(chaos, 1.85)
+    if rng.random() < 0.055 * c:
+        bonus = float(np.clip(rng.lognormal(2.85, 0.28), 8.0, 55.0))
+        if rng.random() < 0.5:
+            r1 += bonus
+        else:
+            r2 += bonus
+
+    if rng.random() < 0.048 * c:
+        factor = float(rng.uniform(0.935, 0.992))
+        if rng.random() < 0.5:
+            r1 *= factor
+        else:
+            r2 *= factor
+
+    return r1, r2
+
+
 def run_simulation(
     team1: list[str],
     team2: list[str],
@@ -817,6 +874,9 @@ def run_simulation(
     match_date: str | None = None,
     team1_impact_player_id: str | None = None,
     team2_impact_player_id: str | None = None,
+    team1_desperation: float = 0.0,
+    team2_desperation: float = 0.0,
+    match_chaos: float = 1.0,
 ) -> dict:
     if validate_squad and team1_name and team2_name:
         validate_team_playing_xi(team1_name, team1)
@@ -905,6 +965,26 @@ def run_simulation(
         raw1, raw2, pm, ml_team_totals, venue
     )
     tgt1, tgt2 = apply_franchise_innings_profile(team1_name, team2_name, tgt1, tgt2)
+    recent_innings_meta: dict = {}
+    if str(os.environ.get("IPLPRED_SKIP_RECENT_INNINGS", "")).strip().lower() not in (
+        "1",
+        "true",
+        "yes",
+    ):
+        tgt1, tgt2, recent_innings_meta = blend_innings_targets_with_recent_scores(
+            team1_name,
+            team2_name,
+            venue,
+            match_date,
+            tgt1,
+            tgt2,
+        )
+        v1 = batting_xi_venue_run_lift(t1_act, venue, match_date)
+        v2 = batting_xi_venue_run_lift(t2_act, venue, match_date)
+        tgt1 = float(np.clip(tgt1 * v1, MIN_INNINGS_DISPLAY, MAX_INNINGS_DISPLAY))
+        tgt2 = float(np.clip(tgt2 * v2, MIN_INNINGS_DISPLAY, MAX_INNINGS_DISPLAY))
+        recent_innings_meta["venue_player_lift_team1"] = v1
+        recent_innings_meta["venue_player_lift_team2"] = v2
     dyn1 = _dynamic_batting_par_multiplier(t1_act)
     dyn2 = _dynamic_batting_par_multiplier(t2_act)
     tgt1 = float(np.clip(tgt1 * dyn1, MIN_INNINGS_DISPLAY, MAX_INNINGS_DISPLAY))
@@ -943,6 +1023,10 @@ def run_simulation(
         cols3.append("economy")
     top3_bowl = role_aware_top3_bowlers(combined, cols3)
     pom = combined.loc[combined["pom_score"].idxmax()]
+
+    d1 = float(np.clip(team1_desperation, 0.0, 1.0))
+    d2 = float(np.clip(team2_desperation, 0.0, 1.0))
+    chaos = float(np.clip(match_chaos, 0.0, 3.0))
 
     win_prob_team1 = None
     if n_monte_carlo > 0:
@@ -993,10 +1077,19 @@ def run_simulation(
             r1 = team_total_runs(t1_mc) * s1
             r2 = team_total_runs(t2_mc) * s2
             sig = float(get_mc_noise_params().get("mc_shared_log_sigma", 0.025))
-            if sig > 0:
-                z = rng.normal(0.0, sig)
+            if chaos <= 0.0:
+                sig_eff = float(sig)
+            elif chaos < 1.0:
+                sig_eff = float(sig * (0.76 + 0.24 * chaos))
+            else:
+                sig_eff = float(sig * (1.0 + 0.22 * (chaos - 1.0)))
+            if sig_eff > 0:
+                z = rng.normal(0.0, sig_eff)
                 r1 = float(r1 * np.exp(z))
                 r2 = float(r2 * np.exp(z))
+            r1, r2 = _apply_match_psychology_mc(
+                r1, r2, d1, d2, rng, match_chaos=chaos
+            )
             if pick_winner(r1, r2) == "team1":
                 wins1 += 1
         win_prob_team1 = wins1 / n_monte_carlo
@@ -1060,6 +1153,13 @@ def run_simulation(
         "pred_wickets_second_innings_raw_sum": w_second_raw,
         "headline_execution_noise": headline_noise_meta,
         "chase_innings_coherence": chase_coherence_meta,
+        "recent_innings_context": recent_innings_meta,
+        "match_psychology": {
+            "team1_desperation": d1,
+            "team2_desperation": d2,
+            "match_chaos": chaos,
+            "desp_run_k": float(os.environ.get("IPLPRED_DESP_RUN_K", "0.004")),
+        },
     }
 
 
