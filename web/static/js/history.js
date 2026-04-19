@@ -72,17 +72,18 @@
     chartsDone = true;
 
     const css = getComputedStyle(document.documentElement);
-    const accent = css.getPropertyValue("--accent").trim() || "#15803d";
-    const danger = css.getPropertyValue("--danger").trim() || "#b91c1c";
-    const muted = css.getPropertyValue("--text-muted").trim() || "#71717a";
+    const accent = css.getPropertyValue("--accent").trim() || "#4ade80";
+    const danger = css.getPropertyValue("--danger").trim() || "#f87171";
+    const muted = css.getPropertyValue("--text-muted").trim() || "#a8a8b3";
 
-    Chart.defaults.color = "#71717a";
-    Chart.defaults.borderColor = "rgba(24, 24, 27, 0.08)";
+    Chart.defaults.color = "#a8a8b3";
+    Chart.defaults.borderColor = "rgba(255, 255, 255, 0.06)";
     Chart.defaults.font.family = 'Inter, system-ui, sans-serif';
+    Chart.defaults.font.size = 13;
 
     const commonLegend = {
       position: "bottom",
-      labels: { boxWidth: 12, padding: 16 },
+      labels: { boxWidth: 14, padding: 18, font: { size: 13 } },
     };
 
     const w = summary.winner || {};
@@ -97,7 +98,7 @@
           datasets: [
             {
               data: wData,
-              backgroundColor: [accent, danger, "rgba(113, 113, 122, 0.35)"],
+              backgroundColor: [accent, danger, "rgba(168, 168, 179, 0.35)"],
               borderWidth: 0,
             },
           ],
@@ -134,7 +135,7 @@
           datasets: [
             {
               data: pData,
-              backgroundColor: [accent, danger, "rgba(113, 113, 122, 0.35)"],
+              backgroundColor: [accent, danger, "rgba(168, 168, 179, 0.35)"],
               borderWidth: 0,
             },
           ],
@@ -188,14 +189,19 @@
           maintainAspectRatio: false,
           scales: {
             x: {
-              ticks: { maxRotation: 45, minRotation: 0, font: { size: 10 } },
+              ticks: { maxRotation: 45, minRotation: 0, font: { size: 12 } },
               grid: { display: false },
             },
             y: {
               min: 0,
               max: 100,
-              title: { display: true, text: "Probability (%)" },
-              grid: { color: "rgba(24, 24, 27, 0.06)" },
+              title: {
+                display: true,
+                text: "Probability (%)",
+                font: { size: 13 },
+              },
+              ticks: { font: { size: 12 } },
+              grid: { color: "rgba(255, 255, 255, 0.06)" },
             },
           },
           plugins: {
@@ -230,7 +236,7 @@
               label: "% correct in bucket",
               data: rates,
               backgroundColor: rates.map((r, i) =>
-                graded[i] === 0 ? "rgba(113, 113, 122, 0.35)" : accent
+                graded[i] === 0 ? "rgba(168, 168, 179, 0.35)" : accent
               ),
               borderRadius: 6,
             },
@@ -240,12 +246,17 @@
           responsive: true,
           maintainAspectRatio: false,
           scales: {
-            x: { grid: { display: false } },
+            x: { ticks: { font: { size: 12 } }, grid: { display: false } },
             y: {
               min: 0,
               max: 100,
-              title: { display: true, text: "Accuracy (%)" },
-              grid: { color: "rgba(24, 24, 27, 0.06)" },
+              title: {
+                display: true,
+                text: "Accuracy (%)",
+                font: { size: 13 },
+              },
+              ticks: { font: { size: 12 } },
+              grid: { color: "rgba(255, 255, 255, 0.06)" },
             },
           },
           plugins: {
