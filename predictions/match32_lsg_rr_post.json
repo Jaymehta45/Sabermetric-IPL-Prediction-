@@ -1,0 +1,13 @@
+{
+  "match_key": "match32-lsg-rr-2026-04-23",
+  "actual_winner": "RR",
+  "actual_top_scorer": "mitchell-marsh",
+  "actual_top_scorer_runs": 55,
+  "actual_top_wicket_bowler": "jofra-archer",
+  "actual_top_wickets": 3,
+  "official_potm": "mitchell-marsh",
+  "bbb_match_file": "matches/match32_lsg_vs_rr.csv",
+  "actual_first_innings_team_runs": 159,
+  "actual_second_innings_team_runs": 118,
+  "post_notes": "Process 2 from BBB matches/match32_lsg_vs_rr.csv. RR 159 vs LSG 118. Winner: RR. Top scorer mitchell-marsh (55), top wickets jofra-archer (3)."
+}

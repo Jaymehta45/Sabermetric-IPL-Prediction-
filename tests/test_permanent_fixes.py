@@ -30,6 +30,73 @@ from iplpred.match.win_prob_ensemble import (
 )
 
 
+class TestMatchWinnerInferencePath(unittest.TestCase):
+    def test_predict_team1_win_proba_matches_foldwise_base_rf_average(self) -> None:
+        """Inference uses base RF scores; isotonic layer is skipped (can plateau)."""
+        from sklearn.calibration import CalibratedClassifierCV
+
+        from iplpred.core.team_franchise_profile import franchise_profile_feature_row
+        from iplpred.match.match_winner_model import (
+            WINNER_MODEL_PATH,
+            build_winner_feature_matrix,
+            load_winner_model,
+            predict_team1_win_proba,
+        )
+
+        if not WINNER_MODEL_PATH.exists():
+            self.skipTest("match_winner_classifier.pkl not present")
+        bundle = load_winner_model()
+        clf = bundle["model"]
+        if not isinstance(clf, CalibratedClassifierCV):
+            self.skipTest("expected CalibratedClassifierCV bundle")
+
+        fr = 25.0
+        row = {
+            "team1_strength": 50.0,
+            "team2_strength": 45.0,
+            "team1_form_runs": fr,
+            "team2_form_runs": fr,
+            "team1_form_runs_ipl": fr,
+            "team2_form_runs_ipl": fr,
+            "team1_momentum": 0.5,
+            "team2_momentum": 0.5,
+            "team1_venue_momentum": 0.5,
+            "team2_venue_momentum": 0.5,
+            "second_innings_dew_prior": 0.0,
+            "team1_strike_rate": 130.0,
+            "team2_strike_rate": 130.0,
+            "team1_economy": 8.0,
+            "team2_economy": 8.0,
+            "h2h_team1_win_prior": 0.5,
+            "toss_team1_won": 0.5,
+            "team1_bats_first_signal": 0.5,
+            "team1_season_win_pct_prior": 0.5,
+            "team2_season_win_pct_prior": 0.5,
+            "team1_season_run_margin_prior": 0.0,
+            "team2_season_run_margin_prior": 0.0,
+            "team1_lineup_bowler_share": 0.35,
+            "team2_lineup_bowler_share": 0.35,
+            "team1_avg_form_pp_sr": 120.0,
+            "team2_avg_form_pp_sr": 120.0,
+            "team1_avg_form_mid_sr": 120.0,
+            "team2_avg_form_mid_sr": 120.0,
+            "team1_avg_form_death_sr": 120.0,
+            "team2_avg_form_death_sr": 120.0,
+            "match_humidity_prior": 0.0,
+            "match_rain_risk": 0.0,
+            "team1_injury_availability": 1.0,
+            "team2_injury_availability": 1.0,
+        }
+        row.update(franchise_profile_feature_row("Rajasthan Royals", "Kolkata Knight Riders"))
+        df = pd.DataFrame([row])
+        X = build_winner_feature_matrix(df)
+        manual = float(
+            np.mean([sub.estimator.predict_proba(X)[:, 1] for sub in clf.calibrated_classifiers_])
+        )
+        auto = float(predict_team1_win_proba(df)[0])
+        self.assertAlmostEqual(manual, auto, places=10)
+
+
 class TestSquadBridge(unittest.TestCase):
     def test_fin_allen_kkr(self) -> None:
         clear_resolve_cache()
@@ -61,7 +128,7 @@ class TestWinProbBounds(unittest.TestCase):
         self.assertIsNotNone(p_hi)
         assert p_hi is not None
         self.assertGreater(p_hi, 0.5)
-        self.assertLessEqual(p_hi, 0.96)
+        self.assertLessEqual(p_hi, 0.995)
         self.assertLess(p_hi, 1.0)
 
     def test_display_moderation_preserves_midrange(self) -> None:
@@ -75,7 +142,8 @@ class TestWinProbBounds(unittest.TestCase):
         self.assertGreater(b - a, 0.12)
         hi = _moderate_display_win_p_upper(0.985, None)
         self.assertGreater(hi, 0.90)
-        self.assertLessEqual(hi, 0.95)
+        self.assertLessEqual(hi, 0.995)
+        self.assertGreater(hi, 0.93)
 
 
 class TestInferenceVenueFranchise(unittest.TestCase):

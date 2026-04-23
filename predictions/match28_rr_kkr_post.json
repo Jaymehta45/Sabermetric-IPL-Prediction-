@@ -1,0 +1,13 @@
+{
+  "match_key": "match28-rr-kkr-2026-04-20",
+  "actual_winner": "KKR",
+  "actual_top_scorer": "rinku-singh",
+  "actual_top_scorer_runs": 53,
+  "actual_top_wicket_bowler": "kartik-tyagi",
+  "actual_top_wickets": 3,
+  "official_potm": "rinku-singh",
+  "bbb_match_file": "matches/match28_kkr_vs_rr.csv",
+  "actual_first_innings_team_runs": 155,
+  "actual_second_innings_team_runs": 161,
+  "post_notes": "Process 2 from BBB matches/match28_kkr_vs_rr.csv. RR 155 vs KKR 161. Winner: KKR. Top scorer rinku-singh (53), top wickets kartik-tyagi (3)."
+}

@@ -1,0 +1,4 @@
+{
+  "match_key": "match30-gt-mi-2026-04-21",
+  "process3_notes": "BBB ingested from matches/match30_gt_vs_mi.csv; retrain completed. Review calibration on this result and verify identity aliases for any new slugs."
+}

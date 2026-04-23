@@ -7,7 +7,7 @@ from higher total team runs (see ``resolve_winner_label``). Ties are excluded fr
 training rows. Sample weights down-weight proxy vs official labels.
 
 Usage:
-  python -m iplpred.training.train_match_winner_model [--official-only] [--model rf|logistic|gbm]
+  python -m iplpred.training.train_match_winner_model [--official-only] [--model rf|logistic|gbm] [--calibration-method sigmoid|isotonic]
 """
 
 from __future__ import annotations
@@ -121,7 +121,17 @@ def main() -> None:
         "--model",
         choices=("rf", "logistic", "gbm"),
         default="rf",
-        help="Base estimator before isotonic calibration (default: rf).",
+        help="Base estimator before probability calibration (default: rf).",
+    )
+    ap.add_argument(
+        "--calibration-method",
+        choices=("sigmoid", "isotonic"),
+        default="sigmoid",
+        help=(
+            "Post-hoc calibration on CV OOF scores. "
+            "Default sigmoid: smoother than isotonic and less prone to probability plateaus "
+            "that make every fixture look like ~55%% vs ~45%%."
+        ),
     )
     args = ap.parse_args()
 
@@ -147,7 +157,7 @@ def main() -> None:
 
     base = _make_base_estimator(args.model)
     cv = min(5, max(2, len(y_train) // 150))
-    clf = CalibratedClassifierCV(base, method="isotonic", cv=cv)
+    clf = CalibratedClassifierCV(base, method=args.calibration_method, cv=cv)
     clf.fit(X_train, y_train, sample_weight=sw_train)
 
     proba_test = clf.predict_proba(X_test)[:, 1]
@@ -182,7 +192,7 @@ def main() -> None:
     MODELS_DIR.mkdir(parents=True, exist_ok=True)
     bundle = {
         "model": clf,
-        "calibration": "isotonic",
+        "calibration": args.calibration_method,
         "feature_names": WINNER_FEATURE_COLS,
         "base_model_type": args.model,
         "official_only": bool(args.official_only),

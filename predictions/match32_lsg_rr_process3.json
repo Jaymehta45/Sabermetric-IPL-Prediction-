@@ -1,0 +1,4 @@
+{
+  "match_key": "match32-lsg-rr-2026-04-23",
+  "process3_notes": "BBB ingested from matches/match32_lsg_vs_rr.csv; retrain completed. Review calibration on this result and verify identity aliases for any new slugs."
+}

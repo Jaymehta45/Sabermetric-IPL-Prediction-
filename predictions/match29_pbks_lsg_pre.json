@@ -1,0 +1,116 @@
+{
+  "match_key": "match29-pbks-lsg-2026-04-19",
+  "match_date": "2026-04-19",
+  "venue": "Maharaja Yadavindra Singh International Cricket Stadium, Mullanpur, New Chandigarh",
+  "team1_name": "Punjab Kings",
+  "team2_name": "Lucknow Super Giants",
+  "team1_bats_first": true,
+  "pred_winner": "Punjab Kings",
+  "pred_p_team1_win": 0.9846,
+  "pred_best_bat": "shreyas-iyer",
+  "pred_best_bowl": "prince-yadav",
+  "pred_top5_bats": [
+    "shreyas-iyer",
+    "cooper-connolly",
+    "prabhsimran-singh",
+    "mukul-choudhary",
+    "ayush-badoni"
+  ],
+  "pred_top3_bowls": [
+    "prince-yadav",
+    "mohammed-shami",
+    "avesh-khan"
+  ],
+  "pred_potm": "shreyas-iyer",
+  "pred_extra": {
+    "sims": 400,
+    "win_probability_basis": "hybrid_ensemble",
+    "ensemble_p_team1": 0.9846,
+    "sim_win_probability_team1": 0.9375,
+    "leader_model_p_team1": 0.48372705350634093,
+    "batting_order_swapped": false,
+    "impact_trim_lowest": false,
+    "impact_dropped_team1": null,
+    "impact_dropped_team2": null,
+    "pitch_multipliers": {
+      "first_innings_runs": 1.1803,
+      "second_innings_runs": 1.1944636,
+      "first_innings_wickets": 0.9827,
+      "second_innings_wickets": 0.9768038
+    },
+    "venue_spin_harshness": 0.55,
+    "process_variant": "1B",
+    "full_playing_twelve": true,
+    "pred_first_innings_team_runs": 172.41589875879734,
+    "pred_second_innings_team_runs": 153.2406638474066,
+    "pred_first_innings_team_wickets": 2.453610782475488,
+    "pred_second_innings_team_wickets": 1.9425347227474041,
+    "pred_first_innings_team_wickets_raw_sum": 2.453610782475488,
+    "pred_second_innings_team_wickets_raw_sum": 1.9425347227474041,
+    "ml_team_total_runs_team1": 136.88171351810925,
+    "ml_team_total_runs_team2": 134.24745119415587,
+    "team_run_calibration": {
+      "method": "ml_team_total",
+      "scale_team1": 2.7741898665347966,
+      "scale_team2": 1.470745909652657,
+      "sum_player_runs_before_team1": 62.149999478644105,
+      "sum_player_runs_before_team2": 104.19248004816627
+    },
+    "dynamic_batting_par_mult": {
+      "team1": 1.0556159547152193,
+      "team2": 1.0358733607079194
+    },
+    "headline_execution_noise": {
+      "enabled": true,
+      "runs_scale": 0.18,
+      "wickets_scale": 0.2,
+      "seed": 42
+    },
+    "match_psychology": {
+      "team1_desperation": 0.18,
+      "team2_desperation": 0.48,
+      "match_chaos": 1.0,
+      "desp_run_k": 0.004
+    },
+    "chase_innings_coherence": {
+      "applied": false,
+      "first_innings_target": 172.41589875879737,
+      "second_before": 153.2406638474066,
+      "second_after": 153.2406638474066,
+      "max_excess_runs": null,
+      "cap_ceiling": null
+    },
+    "recent_innings_context": {
+      "weight": 0.38,
+      "last_n": 3,
+      "team1_recent": {
+        "n_role": 33,
+        "n_venue_role": 0,
+        "n_venue_any": 2,
+        "n_form": 91,
+        "mean_role": 120.33333333333333,
+        "mean_venue": 141.5,
+        "mean_form": 139.33333333333334,
+        "blend": "role+venue"
+      },
+      "team2_recent": {
+        "n_role": 15,
+        "n_venue_role": 0,
+        "n_venue_any": 0,
+        "n_form": 62,
+        "mean_role": 104.66666666666667,
+        "mean_venue": null,
+        "mean_form": 117.66666666666667,
+        "blend": "role"
+      },
+      "prior_first_innings": 129.85833333333335,
+      "prior_chase": 104.66666666666667,
+      "venue_player_lift_team1": 0.9900305806060085,
+      "venue_player_lift_team2": 1.0
+    },
+    "player_process1": {
+      "heuristic": "role_aware_v1",
+      "summary": "Best bat / top 5 runs exclude pure bowlers when enough batters exist; best bowl / top 3 wickets prefer bowlers and allrounders; POTM uses a role-weighted composite (not the official match award)."
+    }
+  }
+}

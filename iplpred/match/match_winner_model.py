@@ -12,6 +12,7 @@ from typing import Any
 import joblib
 import numpy as np
 import pandas as pd
+from sklearn.calibration import CalibratedClassifierCV
 
 from iplpred.core.franchise_normalize import canonical_franchise
 from iplpred.paths import MODELS_DIR
@@ -222,6 +223,26 @@ def load_winner_model() -> dict[str, Any]:
     return bundle
 
 
+def _positive_class_proba_discriminative(clf: Any, X: np.ndarray) -> np.ndarray:
+    """
+    P(class=1) from the match-winner classifier.
+
+    ``CalibratedClassifierCV`` with isotonic calibration can map very different
+    base scores onto the same calibrated probability (wide plateaus on small
+    validation folds). For inference we average each CV fold's *base* estimator
+    ``predict_proba`` for class 1, which tracks roster and feature changes.
+    """
+    if isinstance(clf, CalibratedClassifierCV):
+        subs = getattr(clf, "calibrated_classifiers_", None) or []
+        if subs:
+            parts: list[np.ndarray] = []
+            for sub in subs:
+                est = sub.estimator
+                parts.append(est.predict_proba(X)[:, 1])
+            return np.mean(np.vstack(parts), axis=0)
+    return clf.predict_proba(X)[:, 1]
+
+
 def predict_team1_win_proba(df: pd.DataFrame) -> np.ndarray:
     """
     Probability that team1 wins (one score per row).
@@ -230,7 +251,7 @@ def predict_team1_win_proba(df: pd.DataFrame) -> np.ndarray:
     bundle = load_winner_model()
     clf = bundle["model"]
     X = build_winner_feature_matrix(df)
-    return clf.predict_proba(X)[:, 1]
+    return _positive_class_proba_discriminative(clf, X)
 
 
 def team_pre_match_metrics_from_latest(latest_df: pd.DataFrame) -> dict[str, float]:

@@ -6,7 +6,7 @@
   "team2_name": "Kolkata Knight Riders",
   "team1_bats_first": true,
   "pred_winner": "Rajasthan Royals",
-  "pred_p_team1_win": 0.94,
+  "pred_p_team1_win": 0.9846,
   "pred_best_bat": "RA Jadeja",
   "pred_best_bowl": "CV Varun",
   "pred_top5_bats": [
@@ -19,15 +19,15 @@
   "pred_top3_bowls": [
     "CV Varun",
     "JC Archer",
-    "Ravi Bishnoi"
+    "SP Narine"
   ],
   "pred_potm": "YBK Jaiswal",
   "pred_extra": {
     "sims": 400,
     "win_probability_basis": "hybrid_ensemble",
-    "ensemble_p_team1": 0.94,
-    "sim_win_probability_team1": 0.9625,
-    "leader_model_p_team1": 0.5457622721626306,
+    "ensemble_p_team1": 0.9846,
+    "sim_win_probability_team1": 0.965,
+    "leader_model_p_team1": 0.5508958945645511,
     "batting_order_swapped": false,
     "impact_trim_lowest": false,
     "impact_dropped_team1": null,
@@ -41,20 +41,20 @@
     "venue_spin_harshness": 0.55,
     "process_variant": "1B",
     "full_playing_twelve": true,
-    "pred_first_innings_team_runs": 169.68174780664742,
-    "pred_second_innings_team_runs": 167.35811948294128,
-    "pred_first_innings_team_wickets": 3.74868877057881,
-    "pred_second_innings_team_wickets": 3.175402980597254,
-    "pred_first_innings_team_wickets_raw_sum": 3.74868877057881,
-    "pred_second_innings_team_wickets_raw_sum": 3.175402980597254,
-    "ml_team_total_runs_team1": 118.66912061867261,
-    "ml_team_total_runs_team2": 128.78351350814074,
+    "pred_first_innings_team_runs": 170.60349367205896,
+    "pred_second_innings_team_runs": 167.02911075352614,
+    "pred_first_innings_team_wickets": 3.7771555994540424,
+    "pred_second_innings_team_wickets": 2.936652378011682,
+    "pred_first_innings_team_wickets_raw_sum": 3.7771555994540424,
+    "pred_second_innings_team_wickets_raw_sum": 2.936652378011682,
+    "ml_team_total_runs_team1": 119.34884503815547,
+    "ml_team_total_runs_team2": 128.92515797621007,
     "team_run_calibration": {
       "method": "ml_team_total",
-      "scale_team1": 2.1650169288601475,
-      "scale_team2": 1.2847312072984767,
-      "sum_player_runs_before_team1": 78.3743284150589,
-      "sum_player_runs_before_team2": 130.26703059145007
+      "scale_team1": 2.153659633333194,
+      "scale_team2": 1.251615506565756,
+      "sum_player_runs_before_team1": 79.21562489798721,
+      "sum_player_runs_before_team2": 133.45081606717133
     },
     "dynamic_batting_par_mult": {
       "team1": 1.0667953484424073,
@@ -67,16 +67,16 @@
       "seed": 42
     },
     "match_psychology": {
-      "team1_desperation": 0.0,
-      "team2_desperation": 0.0,
-      "match_chaos": 1.0,
+      "team1_desperation": 0.12,
+      "team2_desperation": 0.58,
+      "match_chaos": 1.05,
       "desp_run_k": 0.004
     },
     "chase_innings_coherence": {
       "applied": false,
-      "first_innings_target": 169.6817478066474,
-      "second_before": 167.35811948294125,
-      "second_after": 167.35811948294125,
+      "first_innings_target": 170.603493672059,
+      "second_before": 167.02911075352617,
+      "second_after": 167.02911075352617,
       "max_excess_runs": null,
       "cap_ceiling": null
     },
@@ -106,13 +106,13 @@
       "prior_first_innings": 116.0,
       "prior_chase": 108.53333333333333,
       "venue_player_lift_team1": 1.0,
-      "venue_player_lift_team2": 0.9993178716337773
+      "venue_player_lift_team2": 0.9981822995706968
     },
     "player_process1": {
       "heuristic": "role_aware_v1",
       "summary": "Best bat / top 5 runs exclude pure bowlers when enough batters exist; best bowl / top 3 wickets prefer bowlers and allrounders; POTM uses a role-weighted composite (not the official match award)."
     },
     "pitch_report_file": "predictions/_pitch_match28_rr_kkr.txt",
-    "process1_input_notes": "RR bat first (toss). Process 1B: impacts Sandeep Sharma + angkrish-raghuvanshi (use stats slug for KKR impact; display name may not resolve). Eden: green tinge, pace/bounce, high-scoring; Bishop/Martin. Team news block in pitch file."
+    "process1_input_notes": "Reconsidered match28: KKR at Eden; team2_desperation 0.58 vs RR 0.12. Hybrid win P updated after display-moderation fix (no flat 94% cap). Bishop/Martin pitch in pitch file."
   }
 }

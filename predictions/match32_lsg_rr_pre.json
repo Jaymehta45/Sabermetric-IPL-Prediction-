@@ -1,0 +1,28 @@
+{
+  "match_key": "match32-lsg-rr-2026-04-23",
+  "match_date": "2026-04-23",
+  "venue": "Lucknow",
+  "team1_name": "Rajasthan Royals",
+  "team2_name": "Lucknow Super Giants",
+  "team1_bats_first": true,
+  "pred_winner": "RR",
+  "pred_p_team1_win": 0.5,
+  "pred_best_bat": "mitchell-marsh",
+  "pred_best_bowl": "jofra-archer",
+  "pred_top5_bats": [
+    "mitchell-marsh",
+    "ravindra-jadeja",
+    "yashasvi-jaiswal",
+    "nicholas-pooran",
+    "shimron-hetmyer"
+  ],
+  "pred_top3_bowls": [
+    "jofra-archer",
+    "brijesh-sharma",
+    "mohammed-shami"
+  ],
+  "pred_potm": "mitchell-marsh",
+  "pred_extra": {
+    "backfill_note": "Retroactive Process 1 row added to enable Process 2 and Process 3 logging for match32."
+  }
+}

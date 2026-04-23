@@ -7,9 +7,9 @@ If missing, falls back to fixed 0.6/0.4 blend with no extra calibration.
 
 Isotonic calibration can push favorites to 99.9%+ while Monte Carlo often sits ~55–80%.
 For **reported** headline probabilities we apply **upper-tail-only** moderation: the
-50–90% band is left intact so matchups stay distinguishable; only mass above ~90% is
-soft-compressed toward a cap ~94% so blowouts do not print as 99.9%. Disable with
-``IPLPRED_WIN_P_NO_MODERATE=1``. Set ``IPLPRED_WIN_P_SKIP_ISOTONIC=1`` to skip learned
+sub‑93% band is left intact so matchups stay distinguishable; only mass above that is
+soft-compressed so isotonic tails do not all print as the same ~94% (legacy cap bug).
+Disable with ``IPLPRED_WIN_P_NO_MODERATE=1``. Set ``IPLPRED_WIN_P_SKIP_ISOTONIC=1`` to skip learned
 isotonic and keep only stack/linear blend plus moderation (useful when ML vs MC diverge
 and isotonic inflates the headline). Set ``IPLPRED_WIN_P_ML_SHARE`` to a float in ``[0,1]``
 to **replace** the blended probability with ``share * ml_p + (1-share) * sim_p`` (skips
@@ -49,21 +49,22 @@ def _finalize_report_p(p: float) -> float:
 
 def _moderate_display_win_p_upper(p: float, b: dict[str, Any] | None) -> float:
     """
-    Compress only the extreme upper tail (default: above ~90%).
+    Compress only the extreme upper tail (default: above ~93%).
 
     Probabilities at or below ``report_win_p_upper_thr`` pass through unchanged so
-    plausible favorites (e.g. 62% vs 78%) are not collapsed toward a single ~80%.
+    plausible favorites (e.g. 58% vs 72%) stay distinct. A too-low cap (~0.94) with
+    aggressive scale previously **flattened** almost every strong favorite to the same headline.
     """
     if os.environ.get("IPLPRED_WIN_P_NO_MODERATE", "").strip() == "1":
         return float(p)
-    # Defaults tuned so the 0.50–0.90 range is preserved; only isotonic-saturated
-    # tails get nudged down from ~99% toward the mid-90s.
-    thr = float(b.get("report_win_p_upper_thr", 0.90)) if b else 0.90
-    scale = float(b.get("report_win_p_upper_scale", 0.45)) if b else 0.45
-    cap = float(b.get("report_win_p_upper_cap", 0.94)) if b else 0.94
-    thr = float(np.clip(thr, 0.55, 0.95))
+    # Defaults: high thr + gentle scale + high cap so isotonic output keeps variance
+    # (old defaults thr=0.90 cap=0.94 made ~every big favorite print as 94/6).
+    thr = float(b.get("report_win_p_upper_thr", 0.93)) if b else 0.93
+    scale = float(b.get("report_win_p_upper_scale", 0.78)) if b else 0.78
+    cap = float(b.get("report_win_p_upper_cap", 0.992)) if b else 0.992
+    thr = float(np.clip(thr, 0.55, 0.96))
     scale = float(np.clip(scale, 0.15, 1.0))
-    cap = float(np.clip(cap, thr + 0.02, 0.97))
+    cap = float(np.clip(cap, thr + 0.02, 0.995))
     p = float(p)
     if p <= thr:
         return p
@@ -75,7 +76,19 @@ def load_ensemble_bundle() -> dict[str, Any] | None:
     if not ENSEMBLE_BUNDLE_PATH.is_file():
         return None
     b = joblib.load(ENSEMBLE_BUNDLE_PATH)
-    return b if isinstance(b, dict) else None
+    if not isinstance(b, dict):
+        return None
+    # Legacy bundles capped almost every strong favorite at 0.94 (flat 94/6 headlines).
+    # Upgrade display-moderation keys unless the bundle already opts into newer values.
+    cap = float(b.get("report_win_p_upper_cap", 1.0))
+    if cap <= 0.95:
+        b = {
+            **b,
+            "report_win_p_upper_thr": 0.93,
+            "report_win_p_upper_scale": 0.78,
+            "report_win_p_upper_cap": 0.992,
+        }
+    return b
 
 
 def apply_ensemble_and_calibrate(

@@ -1,0 +1,40 @@
+{
+  "match_id": "match29-pbks-lsg-2026-04-19",
+  "match_date": "2026-04-19",
+  "team1_name": "Punjab Kings",
+  "team2_name": "Lucknow Super Giants",
+  "venue": "Maharaja Yadavindra Singh International Cricket Stadium, Mullanpur, New Chandigarh",
+  "toss_winner": "Lucknow Super Giants",
+  "elected_to": "bowl",
+  "team1_desperation": 0.18,
+  "team2_desperation": 0.48,
+  "match_chaos": 1.0,
+  "pitch_text": "Pitch and conditions (Mullanpur): Chandigarh hot; brand new square at this modern stadium — only 13 games on this square, scores from 80s to 220s, seven 200+ scores in those games. Grass covering on the surface, odd crack possible; swing for pacers possible; curator says no dew. Dimensions: point ~61m, square leg ~70m, straight ~73m, cow ~74m — one side shorter; high-scoring ground, ~200 par discussed. Touch humid.",
+  "xi1": [
+    "prabhsimran-singh",
+    "priyansh-arya",
+    "cooper-connolly",
+    "shreyas-iyer",
+    "shashank-singh",
+    "nehal-wadhera",
+    "marcus-stoinis",
+    "marco-jansen",
+    "xavier-bartlett",
+    "arshdeep-singh",
+    "yuzvendra-chahal"
+  ],
+  "xi2": [
+    "aiden-markram",
+    "mitchell-marsh",
+    "rishabh-pant",
+    "nicholas-pooran",
+    "ayush-badoni",
+    "mukul-choudhary",
+    "mohammed-shami",
+    "avesh-khan",
+    "prince-yadav",
+    "manimaran-siddharth",
+    "mohsin-khan"
+  ],
+  "notes": "Match 29 PBKS vs LSG Mullanpur. LSG won toss, chose to bowl → PBKS bat first (team1 = 1st innings). Impacts: Vijaykumar Vyshak (PBKS), Digvesh Singh Rathi (LSG). Process 1B. Impact pools — LSG: Abdul Samad, digvesh-singh-rathi, Matthew Breetzke, Mayank Yadav, Himmat Singh. PBKS: vijaykumar-vyshak, Harpreet Brar, Suryansh Shedge, Yash Thakur, Vishnu Vinod."
+}

@@ -1,0 +1,13 @@
+{
+  "match_key": "match31-srh-dc-2026-04-22",
+  "actual_winner": "SRH",
+  "actual_top_scorer": "abhishek-sharma",
+  "actual_top_scorer_runs": 135,
+  "actual_top_wicket_bowler": "eshan-malinga",
+  "actual_top_wickets": 4,
+  "official_potm": "abhishek-sharma",
+  "bbb_match_file": "matches/match31_srh_vs_dc.csv",
+  "actual_first_innings_team_runs": 243,
+  "actual_second_innings_team_runs": 195,
+  "post_notes": "Process 2 from BBB matches/match31_srh_vs_dc.csv. SRH 243 vs DC 195. Winner: SRH. Top scorer abhishek-sharma (135), top wickets eshan-malinga (4)."
+}
