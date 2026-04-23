@@ -88,7 +88,7 @@
     <article class="compare-card panel" data-match-key="{{ r.match_key }}">
       <header class="compare-card-head">
         <div class="compare-card-head-top">
-          <span class="compare-card-date">{{ r.match_date or "—" }}</span>
+          <span class="compare-card-date">{{ r.match_date or "—" }}{% if r.match_key %} · {{ r.match_key }}{% endif %}</span>
           <div class="process-steps" role="group" aria-label="Workflow">
             <span class="process-step{% if r.process_p1_done %} process-step--done{% endif %}" title="P1">1</span>
             <span class="process-step{% if r.process_p2_done %} process-step--done{% endif %}" title="P2">2</span>

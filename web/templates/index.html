@@ -106,7 +106,7 @@
       <tbody>
         {% for r in recent %}
         <tr>
-          <td>{{ r.match_date or "—" }}</td>
+          <td>{{ r.match_date or "—" }}{% if r.match_key %}<br><span class="mono">{{ r.match_key }}</span>{% endif %}</td>
           <td class="cell-matchup" title="{{ r.teams }}">{{ r.teams }}</td>
           <td class="table-meta">
             <span class="process-step-mark{% if r.process_p1_done %} process-step-mark--on{% endif %}" title="P1">1</span>

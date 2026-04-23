@@ -1,0 +1,28 @@
+{
+  "match_key": "match30-gt-mi-2026-04-21",
+  "match_date": "2026-04-21",
+  "venue": "Ahmedabad",
+  "team1_name": "Mumbai Indians",
+  "team2_name": "Gujarat Titans",
+  "team1_bats_first": true,
+  "pred_winner": "MI",
+  "pred_p_team1_win": 0.5,
+  "pred_best_bat": "tilak-varma",
+  "pred_best_bowl": "ashwani-kumar",
+  "pred_top5_bats": [
+    "tilak-varma",
+    "naman-dhir",
+    "washington-sundar",
+    "shahrukh-khan",
+    "hardik-pandya"
+  ],
+  "pred_top3_bowls": [
+    "ashwani-kumar",
+    "kagiso-rabada",
+    "am-ghazanfar"
+  ],
+  "pred_potm": "tilak-varma",
+  "pred_extra": {
+    "backfill_note": "Retroactive Process 1 row added to enable Process 2 and Process 3 logging for match30."
+  }
+}

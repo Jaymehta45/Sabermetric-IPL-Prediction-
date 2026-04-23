@@ -413,17 +413,23 @@ def _sort_log_for_display(df: pd.DataFrame) -> pd.DataFrame:
         d["_pre"] = pd.to_datetime(d["logged_at_pre"], errors="coerce")
     else:
         d["_pre"] = pd.NaT
+    d["_match_seq"] = (
+        d["match_key"].astype(str).str.extract(r"(?i)match(\d+)")[0]
+        if "match_key" in d.columns
+        else pd.Series([pd.NA] * len(d), index=d.index)
+    )
+    d["_match_seq"] = pd.to_numeric(d["_match_seq"], errors="coerce")
     if "match_key" in d.columns:
         d["_mk"] = d["match_key"].astype(str)
         d = d.sort_values(
-            ["_sort", "_pre", "_mk"],
-            ascending=[False, False, False],
+            ["_sort", "_match_seq", "_pre", "_mk"],
+            ascending=[False, False, False, False],
             na_position="last",
         )
         d = d.drop(columns=["_mk"], errors="ignore")
     else:
         d = d.sort_values(["_sort", "_pre"], ascending=[False, False], na_position="last")
-    return d.drop(columns=["_sort", "_pre"], errors="ignore")
+    return d.drop(columns=["_sort", "_pre", "_match_seq"], errors="ignore")
 
 
 def _comparison_rows(df: pd.DataFrame) -> list[dict]:

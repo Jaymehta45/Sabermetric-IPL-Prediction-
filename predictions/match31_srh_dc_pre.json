@@ -1,0 +1,28 @@
+{
+  "match_key": "match31-srh-dc-2026-04-22",
+  "match_date": "2026-04-22",
+  "venue": "Hyderabad",
+  "team1_name": "Sunrisers Hyderabad",
+  "team2_name": "Delhi Capitals",
+  "team1_bats_first": true,
+  "pred_winner": "SRH",
+  "pred_p_team1_win": 0.5,
+  "pred_best_bat": "abhishek-sharma",
+  "pred_best_bowl": "eshan-malinga",
+  "pred_top5_bats": [
+    "abhishek-sharma",
+    "nitish-rana",
+    "sameer-rizvi",
+    "heinrich-klaasen",
+    "rahul"
+  ],
+  "pred_top3_bowls": [
+    "eshan-malinga",
+    "harsh-dubey",
+    "axar-patel"
+  ],
+  "pred_potm": "abhishek-sharma",
+  "pred_extra": {
+    "backfill_note": "Retroactive Process 1 row added to enable Process 2 and Process 3 logging for match31."
+  }
+}
