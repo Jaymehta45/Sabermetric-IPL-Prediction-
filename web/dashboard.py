@@ -229,6 +229,17 @@ def _team_initials(name: str) -> str:
     return (parts[0][:5] + "…") if len(parts[0]) > 6 else parts[0]
 
 
+def _match_label(match_key: str) -> str:
+    """Compact match label (e.g., 'Match 29') parsed from match_key."""
+    mk = (match_key or "").strip()
+    if not mk:
+        return ""
+    m = re.search(r"(?i)match(\d+)", mk)
+    if m:
+        return f"Match {int(m.group(1))}"
+    return ""
+
+
 def _grade_label(wc: bool | None, has_actual: bool) -> str:
     if not has_actual:
         return "waiting"
@@ -546,6 +557,7 @@ def _comparison_rows(df: pd.DataFrame) -> list[dict]:
         rows.append(
             {
                 "match_key": mk,
+                "match_label": _match_label(mk),
                 "match_date": md,
                 "teams": teams,
                 "process_p1_done": p1_done,
