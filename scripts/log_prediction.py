@@ -289,6 +289,27 @@ def _normalize(s: str) -> str:
     return " ".join(str(s).lower().strip().split())
 
 
+_TEAM_WINNER_ALIASES = {
+    "pbks": "punjab kings",
+    "pk": "punjab kings",
+    "dc": "delhi capitals",
+    "mi": "mumbai indians",
+    "csk": "chennai super kings",
+    "rcb": "royal challengers bengaluru",
+    "rr": "rajasthan royals",
+    "kkr": "kolkata knight riders",
+    "lsg": "lucknow super giants",
+    "gt": "gujarat titans",
+    "srh": "sunrisers hyderabad",
+}
+
+
+def _normalize_winner_team(s: str) -> str:
+    """Normalize winner strings so short tags (PBKS/MI/...) match full team names."""
+    t = _normalize(s)
+    return _TEAM_WINNER_ALIASES.get(t, t)
+
+
 def _actual_winner_is_no_result(s: str) -> bool:
     """Rain / abandonment — no winner to compare against the pre-match pick."""
     t = _normalize(s)
@@ -348,9 +369,9 @@ def cmd_post(args: argparse.Namespace) -> None:
         timezone.utc
     ).isoformat()
 
-    pred_w = _normalize(str(df.iat[i, df.columns.get_loc("pred_winner")]))
+    pred_w = _normalize_winner_team(str(df.iat[i, df.columns.get_loc("pred_winner")]))
     raw_act_w = str(df.iat[i, df.columns.get_loc("actual_winner")]).strip()
-    act_w = _normalize(raw_act_w)
+    act_w = _normalize_winner_team(raw_act_w)
     if act_w:
         if _actual_winner_is_no_result(raw_act_w):
             # Avoid the literal "n/a" — pandas read_csv treats it as NaN.
